@@ -30,9 +30,12 @@ A project moves to a stage when it meets the entrance criteria of that stage:
 | 4 | Relied on. | It has dependents, mostly me. I use it regularly. | Grow it with care. |
 | 5 | Stable. | Version 1.0.0 in semver. | Maintain it. |
 
-The scale of a project sets the form of its plan. A toy is one agent, one
-session, and a new directory. A toy needs only a PROMPT.md. All other work
-needs an [orckit](https://github.com/indexzero/orckit).
+The stage records maturity, not importance or potential value which are stored along with other metadata in the frontmatter of the `PROMPT.md` or `orckit`
+
+The scale of a project sets the form of its plan. If one agent can finish the
+project unattended from one `PROMPT.md`, the project is a toy. All other work
+needs an [orckit](https://github.com/indexzero/orckit). The orckit lets that
+work finish with little or no oversight.
 
 A stage 0 directory can hold a long `PROMPT.md`. The stage records whether the
 idea is sound. It does not record how much text exists.
@@ -58,5 +61,6 @@ git commit -m "hairball: move to stage 3"
 
 Nothing enforces the entrance criteria except me, yet.
 
-The line between a toy and larger work is not exact because two sizes is enough
-for now
+The line between a toy and larger work is a human judgement, for now
+
+The frontmatter keys for importance are not yet specified and will be replaced by a manifest file over time as the schema presents itself through necessity
