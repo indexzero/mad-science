@@ -13,6 +13,9 @@ const SHAPES = {
   dns: 'div-rect',
   'relay-set': 'processes',
   dht: 'cloud',
+  chain: 'bow-rect',
+  keyserver: 'h-cyl',
+  issuer: 'trap-t',
 };
 const JURISDICTIONS = [
   { id: 'US', label: 'United States', color: CATEGORICAL[0] },

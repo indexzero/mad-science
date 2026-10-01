@@ -11,7 +11,8 @@ const { offerings, lenses, assignments, facts } = load();
 const names = new Map(offerings.map((o) => [o.id, o.name]));
 const factIds = [...new Set(facts.map((f) => f.fact))];
 
-// yes/no/unknown, or an ordinal 0-3 on the sequential ramp.
+// yes/no/unknown/na, or an ordinal 0-3 on the sequential ramp. `unknown` and
+// `na` (does not apply) are outlined and marked, so neither reads as `no`.
 const fill = (v) => {
   if (v === 'yes') return SEQUENTIAL[2];
   if (v === 'no') return INK.neutral;
@@ -52,12 +53,12 @@ for (const [n, lens] of lenses.entries()) {
         x: 'fact',
         y: 'row',
         fill: (d) => fill(d.value),
-        stroke: (d) => (d.value === 'unknown' ? INK.grid : 'none'),
+        stroke: (d) => (['unknown', 'na'].includes(d.value) ? INK.grid : 'none'),
         rx: 2,
         title: (d) => `${names.get(d.offering)}\n${d.fact} = ${d.value}${d.source_url ? `\n${d.source_url} (${d.source_date})` : ''}`,
       }),
-      Plot.text(cells.filter((d) => d.value === 'unknown'), {
-        x: 'fact', y: 'row', text: () => '?', fill: INK.muted,
+      Plot.text(cells.filter((d) => ['unknown', 'na'].includes(d.value)), {
+        x: 'fact', y: 'row', text: (d) => (d.value === 'na' ? '–' : '?'), fill: INK.muted,
       }),
     ],
   });

@@ -10,7 +10,9 @@
     "build:bipartite": "node scripts/bipartite.mjs && node scripts/render-mermaid.mjs",
     "build:index": "node scripts/index-page.mjs",
     "browsers": "playwright install chromium-headless-shell",
-    "build:images": "node scripts/screenshots.mjs"
+    "build:images": "node scripts/screenshots.mjs",
+    "research": "node scripts/merge.mjs && node scripts/lenses.mjs && node scripts/score.mjs",
+    "specs": "node scripts/fetch-specs.mjs"
   },
   "dependencies": {
     "@observablehq/plot": "^0.6.17",

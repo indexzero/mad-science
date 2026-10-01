@@ -25,6 +25,8 @@ write('index.html', `<!doctype html>
 ${files.includes('parallel-sets.svg') ? inline('parallel-sets.svg') : '<p>Not built.</p>'}
 <h2>Facts ordered by each lens (heatmaps)</h2>
 <div class="multiples">${heatmaps.map(inline).join('\n')}</div>
+<h2>Scores</h2>
+${files.includes('scores.md') ? `<pre style="font-size:11px;white-space:pre">${inline('scores.md').replace(/&/g, '&amp;').replace(/</g, '&lt;')}</pre>` : '<p>Not scored.</p>'}
 <h2>Sovereignty (offerings ↔ operators)</h2>
 ${files.includes('sovereignty.svg') ? '<img src="sovereignty.svg" alt="Sovereignty bipartite graph">' : '<p>Not built.</p>'}
 </html>
