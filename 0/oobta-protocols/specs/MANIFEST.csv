@@ -1,6 +1,11 @@
 offering,title,url,path,retrieved_at,status,sha256,bytes
 _common,W3C Decentralized Identifiers (DIDs) v1.0,https://www.w3.org/TR/did-core/,specs/_common/w3c-decentralized-identifiers-dids-v1-0.html,2026-10-01T04:38:53.532Z,200,5e44345740d9bfaa852d3b66c57e98c9beb6c5bf6083b0126dd5daac377b9993,730300
 _common,W3C Verifiable Credentials Data Model v2.0,https://www.w3.org/TR/vc-data-model-2.0/,specs/_common/w3c-verifiable-credentials-data-model-v2-0.html,2026-10-01T04:38:53.616Z,200,a9196a3d0b6601356c4e127bad24f8c7f2c17f6ed22e41b35755a910104156f8,1023165
+_forks,atproto XRPC,https://atproto.com/specs/xrpc,specs/_forks/atproto-xrpc.html,2026-10-01T05:33:23.020Z,200,4631b4e3841f62c4b2028149ec6972b05794956e7dbfdf59ceb2630afa3fa1cc,148341
+_forks,CAIP-122 SIWx,https://raw.githubusercontent.com/ChainAgnostic/CAIPs/main/CAIPs/caip-122.md,specs/_forks/caip-122-siwx.md,2026-10-01T05:33:23.440Z,200,13138ae5b97bfa8c8b47e931ac8cc5cfc8ac7623417d27449af1befac210902c,12025
+_forks,CAIP-74 CACAO,https://raw.githubusercontent.com/ChainAgnostic/CAIPs/main/CAIPs/caip-74.md,specs/_forks/caip-74-cacao.md,2026-10-01T05:33:23.252Z,200,89296440eb1c1d28d560d2768db2bfcc400752aec0d982f9510c69ffa1befca8,9343
+_forks,Fly.io Macaroons Escalated Quickly,https://fly.io/blog/macaroons-escalated-quickly/,specs/_forks/fly-io-macaroons-escalated-quickly.html,2026-10-01T05:33:23.592Z,200,b94423e52fe12f4f51d7cac6b2107e238fe2e95d7778c7e2292b6ae102160db9,185746
+_forks,RCAN README,https://raw.githubusercontent.com/n0-computer/rcan/main/README.md,specs/_forks/rcan-readme.md,2026-10-01T05:33:23.163Z,200,59de0637d7d4f7c37fbdad635a78901c35af83df00a88ffe52f760b6e5085fc8,613
 atproto-handle,AT Protocol Account Migration,https://atproto.com/guides/account-migration,specs/atproto-handle/at-protocol-account-migration.html,2026-10-01T04:39:05.529Z,200,006bba8211f45db2b4ac60b524e9884e547c28908edb62710c4405541cc94ffc,110937
 atproto-handle,AT Protocol Cryptography,https://atproto.com/specs/cryptography,specs/atproto-handle/at-protocol-cryptography.html,2026-10-01T04:39:05.365Z,200,c1f08eb53b34f2aa68b166f8ed9f3a3ff97ec0bc17156ced898bd2766d4006a7,98051
 atproto-handle,AT Protocol DID,https://atproto.com/specs/did,specs/atproto-handle/at-protocol-did.html,2026-10-01T04:39:05.245Z,200,de539f162343dff2c2d6650dbf0ac0a7a67237be33918ea03fa483160ceac27e,131485

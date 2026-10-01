@@ -343,5 +343,30 @@
     "offering": "did-web",
     "title": "W3C DID Methods WG charter draft",
     "url": "https://w3c.github.io/did-methods-wg-charter/2025/did-methods-wg.html"
+  },
+  {
+    "offering": "_forks",
+    "title": "atproto XRPC",
+    "url": "https://atproto.com/specs/xrpc"
+  },
+  {
+    "offering": "_forks",
+    "title": "RCAN README",
+    "url": "https://raw.githubusercontent.com/n0-computer/rcan/main/README.md"
+  },
+  {
+    "offering": "_forks",
+    "title": "CAIP-74 CACAO",
+    "url": "https://raw.githubusercontent.com/ChainAgnostic/CAIPs/main/CAIPs/caip-74.md"
+  },
+  {
+    "offering": "_forks",
+    "title": "CAIP-122 SIWx",
+    "url": "https://raw.githubusercontent.com/ChainAgnostic/CAIPs/main/CAIPs/caip-122.md"
+  },
+  {
+    "offering": "_forks",
+    "title": "Fly.io Macaroons Escalated Quickly",
+    "url": "https://fly.io/blog/macaroons-escalated-quickly/"
   }
 ]
