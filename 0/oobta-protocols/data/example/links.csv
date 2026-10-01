@@ -1,0 +1,11 @@
+offering,layer,operator,forge,censor,disclose
+nip39,record,relays,no,yes,yes
+nip39,anchor,github,no,yes,yes
+nip05,anchor,registrar,yes,yes,no
+atproto,record,plc-today,no,yes,yes
+atproto,record,plc-org,no,yes,yes
+atproto,anchor,registrar,yes,yes,no
+sigstore,proof,fulcio,yes,yes,yes
+sigstore,record,rekor,no,yes,yes
+ucan-mailto,anchor,email,yes,yes,yes
+pkarr,record,dht,no,no,yes

@@ -1,0 +1,23 @@
+{
+  "name": "oobta-protocols",
+  "private": true,
+  "type": "module",
+  "description": "Generators for the OOBTA research diagrams: parallel sets, fact heatmaps, and the sovereignty bipartite graph.",
+  "scripts": {
+    "build": "pnpm build:parallel-sets && pnpm build:heatmaps && pnpm build:bipartite && pnpm build:index && pnpm build:images",
+    "build:parallel-sets": "node scripts/parallel-sets.mjs",
+    "build:heatmaps": "node scripts/heatmaps.mjs",
+    "build:bipartite": "node scripts/bipartite.mjs && node scripts/render-mermaid.mjs",
+    "build:index": "node scripts/index-page.mjs",
+    "browsers": "playwright install chromium-headless-shell",
+    "build:images": "node scripts/screenshots.mjs"
+  },
+  "dependencies": {
+    "@observablehq/plot": "^0.6.17",
+    "d3": "^7.9.0",
+    "d3-sankey": "^0.12.3",
+    "jsdom": "^26.1.0",
+    "mermaid": "^12.0.0",
+    "playwright": "^1.63.0"
+  }
+}

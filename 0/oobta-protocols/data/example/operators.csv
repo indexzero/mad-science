@@ -1,0 +1,10 @@
+id,name,kind,jurisdiction
+github,GitHub,platform,US
+plc-today,PLC directory (Bluesky PBC),registry,US
+plc-org,PLC directory (PLC Organization),registry,CH
+fulcio,Fulcio CA,ca,US
+rekor,Rekor log,log,US
+email,Email provider,platform,other
+registrar,DNS registrar,dns,other
+relays,Nostr relays (user-chosen),relay-set,none
+dht,Mainline DHT,dht,none

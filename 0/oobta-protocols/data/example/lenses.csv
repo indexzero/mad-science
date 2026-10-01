@@ -1,0 +1,5 @@
+id,label,categories
+prediction,My prediction,bidirectional|issuer|delegation|hybrid|misfit
+family,Proof family,bidirectional|issuer|delegation|hybrid|misfit
+pki,PKI vocabulary,self-issued|third-party|hybrid|misfit
+verify-trust,Trusted at verify time,nobody|platform|issuer|registry|misfit

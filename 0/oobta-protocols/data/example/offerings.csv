@@ -1,0 +1,9 @@
+id,name
+nip39,Nostr NIP-39
+nip05,Nostr NIP-05
+atproto,ATProto handle
+keyoxide,Keyoxide
+keybase,Keybase
+sigstore,Sigstore
+ucan-mailto,UCAN + did:mailto
+pkarr,Pkarr
