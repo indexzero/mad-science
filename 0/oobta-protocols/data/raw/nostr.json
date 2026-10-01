@@ -1,0 +1,756 @@
+{
+  "group": "nostr",
+  "offerings": [
+    {
+      "id": "nip39",
+      "facts": [
+        {
+          "fact": "proof.key_signs_claim",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "The claim is an `i` tag (platform:identity, proof) inside a kind 10011 event signed by the Nostr key. Before PR #2216 (merged 2026-02-10) it was in kind 0, which is also signed."
+        },
+        {
+          "fact": "proof.anchor_publishes_key",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "The claimed account publishes a gist, tweet, toot, Telegram message, Bluesky post or Discord message containing 'Verifying that I control the following Nostr public key: <npub>'."
+        },
+        {
+          "fact": "proof.third_party_signs_binding",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "Only the key holder (event signature) and the anchor platform (hosting the post) are involved. No issuer or attestor."
+        },
+        {
+          "fact": "proof.uses_oauth_oidc",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "The user posts the proof by hand. The spec defines no OAuth step."
+        },
+        {
+          "fact": "proof.capability_delegation",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "It is a claim of control ('I control this npub'), not a grant of authority."
+        },
+        {
+          "fact": "proof.anchor_is_dns",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "The defined platforms are github, twitter, mastodon, telegram, bluesky and discord. DNS anchoring is a separate NIP (NIP-05)."
+        },
+        {
+          "fact": "proof.anchor_is_email",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "No email platform is defined."
+        },
+        {
+          "fact": "proof.anchor_is_social",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "GitHub, Twitter/X, Mastodon, Telegram, Bluesky, Discord."
+        },
+        {
+          "fact": "verify.offline_possible",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "The proof is only a pointer (gist id, tweet id). The verifier must fetch the post from the platform to check that it contains the npub."
+        },
+        {
+          "fact": "verify.fetches_anchor",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "For example, fetch https://gist.github.com/<identity>/<proof>."
+        },
+        {
+          "fact": "verify.needs_issuer_trust",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "No issuer key is involved."
+        },
+        {
+          "fact": "verify.needs_registry",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/01.md",
+          "source_date": "2026",
+          "note": "The kind 10011 event authenticates itself (Schnorr signature). It can come from any relay or be presented directly. Relays are transport, not an authority that must be queried."
+        },
+        {
+          "fact": "verify.no_author_service",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "Verification needs only the signed event and the anchor platform. Nostr has no central service run by the spec authors."
+        },
+        {
+          "fact": "verify.breaks_if_api_closed",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/pull/2486",
+          "source_date": "2026-09-27",
+          "note": "Proofs are posts on the platform. The PR states that Discord proofs cannot be checked by clients that are not in the server. X tweet fetching already depends on an API or scraping."
+        },
+        {
+          "fact": "lifecycle.survives_key_rotation",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/README.md",
+          "source_date": "2026",
+          "note": "The proof text names one npub. Nostr has no merged key-rotation NIP (no 41.md on master), and NIP-26 delegation is marked unrecommended. A new key needs new proofs."
+        },
+        {
+          "fact": "lifecycle.explicit_revocation",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "No revocation construct exists. The user can only publish a new replaceable kind 10011 without the tag, or delete the post."
+        },
+        {
+          "fact": "lifecycle.expiry",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "No expiry is defined. The PR asks verifiers to accept old-format proofs indefinitely."
+        },
+        {
+          "fact": "lifecycle.key_recovery",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/pull/1452",
+          "source_date": "2024-08",
+          "note": "Key migration and recovery proposals (#158, #829, #1032, #1056, #1452) are all unmerged. No 41.md exists on master as of 2026-10-01."
+        },
+        {
+          "fact": "lifecycle.replay_protected",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "Proof text has no nonce or date. The created_at of the event is not tied to the post date, and no log exists. Verification is a live fetch, so a proof left on a transferred account (e.g. a Mastodon instance domain changing hands) still verifies."
+        },
+        {
+          "fact": "record.transparency_log",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/01.md",
+          "source_date": "2026",
+          "note": "Kind 10011 is a replaceable event. Relays keep only the latest one, so there is no append-only history."
+        },
+        {
+          "fact": "record.self_hosted_possible",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/01.md",
+          "source_date": "2026",
+          "note": "The user can run their own relay for the record. The proof itself lives on the anchor platform by design."
+        },
+        {
+          "fact": "record.multi_operator",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/pull/2486",
+          "source_date": "2026-09-27",
+          "note": "The survey in the PR collected kind 10011 from 11 major relays. Clients publish the same signed event to many independent relays."
+        },
+        {
+          "fact": "portability.generic_key",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "The proof text names an npub (secp256k1 BIP-340 key), and the claim must be a signed Nostr event."
+        },
+        {
+          "fact": "portability.extensible_anchors",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/pull/2486",
+          "source_date": "2026-09-27",
+          "note": "Platform names are open strings. The survey found Bluesky (271) and Discord (70) claims published before the spec defined them. Verifiers still need per-platform fetch logic."
+        },
+        {
+          "fact": "adoption.spec_maturity",
+          "value": "2",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "Community NIP, labeled 'draft optional'."
+        },
+        {
+          "fact": "adoption.active_2026",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/commits/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "Two substantive changes in 2026: moved to kind 10011 (2026-02-10, #2216), and unified text plus Bluesky and Discord (2026-09-27, #2486)."
+        },
+        {
+          "fact": "adoption.client_display",
+          "value": "no",
+          "source_url": "https://github.com/vitorpamplona/amethyst/blob/main/amethyst/src/main/java/com/vitorpamplona/amethyst/ui/screen/loggedIn/profile/header/DrawAdditionalInfo.kt",
+          "source_date": "2026",
+          "note": "Amethyst shows each claim with an icon and opens the proof URL on tap, but does not fetch or check it. Code search found no NIP-39 or kind 10011 code in Damus or primal-web-app. nostr.band, formerly the best-known verifier, was unreachable on 2026-10-01. Smaller tools (nostr-components directory, gittr) verify."
+        },
+        {
+          "fact": "effort.attachable",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "This only works if the key you own is a Nostr secp256k1 key that publishes signed events to relays. For an existing Nostr user it is attach tier."
+        },
+        {
+          "fact": "effort.requires_platform_migration",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+          "source_date": "2026-09-27",
+          "note": "A holder of a non-Nostr key (DID, ed25519, PGP) must adopt a Nostr keypair and relay presence to use it."
+        }
+      ],
+      "summary": {
+        "C1": "Bidirectional public proof. The Nostr key signs a kind 10011 event with `i` tags such as `github:alice` plus a proof pointer. The anchor account publishes a post containing 'Verifying that I control the following Nostr public key: <npub>' (https://github.com/nostr-protocol/nips/blob/master/39.md). No OAuth, no issuer, no delegation.",
+        "C2": "The verifier needs the signed event, from any relay or presented directly, and a live fetch of the post from the anchor platform. No Nostr-run service is needed, but every check depends on the platform serving the post publicly. The newly added Discord proofs can only be read by members of the server (https://github.com/nostr-protocol/nips/pull/2486).",
+        "C3": "Defined anchors are GitHub, Twitter/X, Mastodon, Telegram, Bluesky and Discord. DNS and email are not covered, since DNS is NIP-05's job. Platform names are free-form strings, and users already published Bluesky and Discord claims before the spec added them. Fragility follows each platform's openness, and X is the weakest point.",
+        "C4": "Proofs name one npub, so a key change breaks every link and the user must re-post all proofs. Nostr has no merged rotation or recovery NIP. NIP-26 delegation is marked 'unrecommended: adds unnecessary burden for little gain' (https://github.com/nostr-protocol/nips/blob/master/26.md). The NIP-41 migration proposals (#158, #829, #1032, #1056, #1452) remain unmerged, and the master README index lists no key migration NIP (https://github.com/nostr-protocol/nips/blob/master/README.md). The only revocation is replacing the kind 10011 event or deleting the post.",
+        "C5": "Nothing expires, and the proof text carries no nonce or date. PR #2486 asks verifiers to accept any proof that contains the npub, whatever its wording, so old proofs stay valid forever. The kind 10011 record is replaceable, with no history or log.",
+        "C6": "A verifier trusts that the platform shows the real account holder's post. The platform can fake the post, and a relay can withhold the event but cannot forge it. Most clients show the claim without checking it, so in practice an unverified `i` tag looks the same as a verified one. Claims are cheap to fake at the display layer.",
+        "C7": "Tied to Nostr keys. The proof text requires an npub, and the claim must be a BIP-340 signed Nostr event. A generic DID or ed25519 key cannot use it without a Nostr key in between.",
+        "C8": "Community NIP marked 'draft optional', with active changes in 2026: moved from kind 0 to kind 10011 in Feb 2026 (https://github.com/nostr-protocol/nips/pull/2216) and unified text in Sep 2026. Uptake is modest. Alex Gleason's survey found 756 authors with `i` tags out of 5,859 with kind 10011, and only 27 of 611 proofs matched the exact spec text. Amethyst displays claims without verifying them (https://github.com/vitorpamplona/amethyst/blob/main/amethyst/src/main/java/com/vitorpamplona/amethyst/ui/screen/loggedIn/profile/header/DrawAdditionalInfo.kt).",
+        "C9": "Attach tier for someone who already has a Nostr key: publish one event, post one gist. Migrate tier for anyone else, who must adopt a Nostr keypair and relays. Building a verifier takes per-platform fetchers.",
+        "C10": "The record sits on many independent relays, and the user can run their own relay. Each proof lives on one centralized platform (GitHub, X, Discord in the US, Telegram in the UAE/BVI), which can censor or fabricate it. Relays and platforms both see request metadata."
+      },
+      "misfit_notes": "Fits the 'bidirectional public proof' family cleanly. It is essentially Keybase-style proofs without a sigchain or a Keybase server. The effort tier is the misfit: it is attach-tier only if 'the key system I own' is already a Nostr key, and migrate-tier otherwise. Even then the 'platform' you migrate to is only a key format plus a relay set, not an operator. Since Feb 2026 the claim also lives in a dedicated event (kind 10011), separate from the profile, so the 'identity record' and the 'claim list' are distinct records.",
+      "surprises": "NIP-39 moved out of the kind 0 profile into kind 10011 in Feb 2026, partly because 'almost nobody supports' it, so older clients that read kind 0 miss new claims. A Sep 2026 survey found only 27 of 611 live proofs used the exact spec text, which is why the spec now says to accept any proof containing the npub. Amethyst, the main client advertising NIP-39, shows claims without verifying them, and nostr.band, the best-known verifier, was offline as of 2026-10-01. Discord was added as an anchor even though most verifiers cannot read Discord messages."
+    },
+    {
+      "id": "nip05",
+      "facts": [
+        {
+          "fact": "proof.key_signs_claim",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "The `nip05` field ('bob@example.com') is in the kind 0 metadata event signed by the key."
+        },
+        {
+          "fact": "proof.anchor_publishes_key",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "https://<domain>/.well-known/nostr.json?name=<local> returns names -> lowercase hex pubkey."
+        },
+        {
+          "fact": "proof.third_party_signs_binding",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "Nothing is signed besides the kind 0 event. The domain asserts the mapping through HTTPS only. Hosted NIP-05 providers act as the domain (anchor), not as a separate signer."
+        },
+        {
+          "fact": "proof.uses_oauth_oidc",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "Static JSON file. No login step."
+        },
+        {
+          "fact": "proof.capability_delegation",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "A name-to-key mapping. The spec calls it 'identification, not verification'."
+        },
+        {
+          "fact": "proof.anchor_is_dns",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "The anchor is a web domain, served over HTTPS at /.well-known."
+        },
+        {
+          "fact": "proof.anchor_is_email",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "Email-shaped identifier but resolved by HTTPS GET to the domain's nostr.json; no mailbox involved (also stated by https://www.name.com/blog/how-to-get-nostr-verified-on-a-custom-domain)."
+        },
+        {
+          "fact": "proof.anchor_is_social",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "Domains only. Platform-hosted names (e.g. user@primal.net) are domain anchors run by a platform."
+        },
+        {
+          "fact": "verify.offline_possible",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "The client must make a GET to the domain's nostr.json."
+        },
+        {
+          "fact": "verify.fetches_anchor",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "Live HTTPS fetch, which must not follow redirects."
+        },
+        {
+          "fact": "verify.needs_issuer_trust",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "No issuer key. Trust rests on the domain via WebPKI TLS."
+        },
+        {
+          "fact": "verify.needs_registry",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "Only the signed kind 0 and the domain's file are needed. DNS resolution is implicit, but no registry, log or chain is queried."
+        },
+        {
+          "fact": "verify.no_author_service",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "No central Nostr service is involved."
+        },
+        {
+          "fact": "verify.breaks_if_api_closed",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "A plain static file on a domain the user can control, with no platform API. For names hosted by a provider (e.g. primal.net), verification depends on that provider continuing to serve the file."
+        },
+        {
+          "fact": "lifecycle.survives_key_rotation",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "The mapping names one hex key. The domain owner can re-point the name to a new key without the old key, which is the de facto Nostr 'migration'. But the spec says clients follow pubkeys, not identifiers, so follows do not move."
+        },
+        {
+          "fact": "lifecycle.explicit_revocation",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "Removing or changing the nostr.json entry is the only path. Clients 'should cease displaying' the identifier when the domain stops confirming it."
+        },
+        {
+          "fact": "lifecycle.expiry",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "No expiry. Clients cache at their own discretion, e.g. Brainstorm-UI caches 30 min (https://github.com/NosFabrica/Brainstorm-UI/pull/87)."
+        },
+        {
+          "fact": "lifecycle.key_recovery",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/README.md",
+          "source_date": "2026",
+          "note": "Nostr has no merged recovery NIP. NIP-05 lets a name be re-pointed, but the old pubkey's followers and history are not migrated."
+        },
+        {
+          "fact": "lifecycle.replay_protected",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "No timestamps, nonces or log. Verification is a live fetch, so a new domain owner fully controls the result. An old proof cannot be replayed, but the new owner can re-bind the name."
+        },
+        {
+          "fact": "record.transparency_log",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "Neither kind 0 (replaceable) nor nostr.json keeps history."
+        },
+        {
+          "fact": "record.self_hosted_possible",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "The user can host nostr.json on their own domain and the kind 0 on their own relay. A registrar is still needed for the domain."
+        },
+        {
+          "fact": "record.multi_operator",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/01.md",
+          "source_date": "2026",
+          "note": "The kind 0 record replicates across independent relays. The nostr.json proof is on a single web host."
+        },
+        {
+          "fact": "portability.generic_key",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "Maps names to Nostr hex pubkeys (secp256k1 x-only), and the claim side is a signed Nostr kind 0."
+        },
+        {
+          "fact": "portability.extensible_anchors",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "Domains only."
+        },
+        {
+          "fact": "adoption.spec_maturity",
+          "value": "2",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "Community NIP, status 'final optional'."
+        },
+        {
+          "fact": "adoption.active_2026",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/commits/master/05.md",
+          "source_date": "2026-06",
+          "note": "Feb 2026: explicit lowercase hex requirement. Jun 2026: formatting."
+        },
+        {
+          "fact": "adoption.client_display",
+          "value": "yes",
+          "source_url": "https://github.com/damus-io/damus/blob/master/damus/Features/NIP05/Models/NIP05.swift",
+          "source_date": "2026",
+          "note": "Damus fetches /.well-known/nostr.json to verify, and Amethyst has a Nip05 verifier in quartz/nip05DnsIdentifiers. Primal shows a checkmark next to verified names (https://www.name.com/blog/how-to-get-nostr-verified-on-a-custom-domain)."
+        },
+        {
+          "fact": "effort.attachable",
+          "value": "no",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "Only for Nostr keys. An existing Nostr user attaches by adding one JSON file, which is attach tier for them."
+        },
+        {
+          "fact": "effort.requires_platform_migration",
+          "value": "yes",
+          "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+          "source_date": "2026-06",
+          "note": "A non-Nostr key holder must adopt a Nostr keypair and kind 0 profile."
+        }
+      ],
+      "summary": {
+        "C1": "Bidirectional public proof. The key signs a kind 0 profile containing `nip05: bob@example.com`, and the domain serves /.well-known/nostr.json mapping `bob` to the hex pubkey (https://github.com/nostr-protocol/nips/blob/master/05.md). No issuer, OAuth or delegation.",
+        "C2": "One HTTPS GET to the domain, with no redirects allowed and CORS required for web clients. No Nostr-operated service is needed. Verification cannot happen offline, and it trusts WebPKI plus whoever controls the domain.",
+        "C3": "DNS/web domains only, with no social, email or other anchor types. Fragility is low when the user owns the domain, and higher with hosted name providers (primal.net, nostrplebs, etc.), which can drop the entry. nostr.band, once a big NIP-05 name provider, was unreachable on 2026-10-01.",
+        "C4": "The binding names a single key. The domain holder can re-point a name to a new key without the old key, which makes NIP-05 the closest thing Nostr has to key migration. But the spec says clients must follow pubkeys, not identifiers, so social graphs do not move. Nostr has no merged rotation or recovery NIP: NIP-26 delegation is 'unrecommended' (https://github.com/nostr-protocol/nips/blob/master/26.md), and the NIP-41 proposals are unmerged (https://github.com/nostr-protocol/nips/pull/829, https://github.com/nostr-protocol/nips/pull/1452).",
+        "C5": "Freshness comes only from live lookup: clients 'should cease displaying' a name the domain no longer confirms. Bindings carry no timestamps, expiry or log. Clients cache results by their own rules.",
+        "C6": "The spec says NIP-05 is 'identification, not verification'. The domain operator, registrar or web host can bind the name to any key. Clients have shipped checkmarks without fetching nostr.json at all, which let a dozen keys all claim _@hzrd149.com (https://github.com/NosFabrica/Brainstorm-UI/pull/87, fixed 2026-09-23).",
+        "C7": "Nostr-only. The file maps names to Nostr hex pubkeys, and the other side of the link is a signed Nostr kind 0. The JSON format could carry any 32-byte key, but the spec defines no other key types.",
+        "C8": "Community NIP marked 'final', the most widely shown identity signal in Nostr. Damus (https://github.com/damus-io/damus/blob/master/damus/Features/NIP05/Models/NIP05.swift), Amethyst and Primal show it. The spec text was last substantively changed in Feb 2026.",
+        "C9": "Attach tier for a Nostr key holder with a domain: one static JSON file and one profile field. Migrate tier for other key systems, which must adopt a Nostr keypair.",
+        "C10": "The record lives on many relays and can be self-hosted. The proof lives on one web host under one registrar, either of which can censor it or re-bind the name. Hosted name providers can see lookup metadata."
+      },
+      "misfit_notes": "Fits 'bidirectional public proof' with the domain as anchor. One misfit: the domain side asserts a name-to-key mapping that it can rewrite at will, so in practice the domain operator is also a de facto issuer (hosted providers such as primal.net or nostrplebs assign names to users). The arrangement sits between public proof and issuer attestation, but nothing is signed. The effort tier depends on already having a Nostr key, just as with NIP-39.",
+      "surprises": "The spec says NIP-05 is 'identification, not verification', yet clients show it as a blue-check-style badge, and some UIs drew the check without fetching nostr.json at all (fixed in Brainstorm-UI 2026-09-23). The domain owner can re-point a name to a new key without the old key, so DNS, not the Nostr key, is the stable identity root for users who rotate. Because the spec says to follow pubkeys rather than names, re-pointing does not move followers."
+    }
+  ],
+  "operators": [
+    {
+      "id": "nostr-relays",
+      "name": "Nostr relays (independent operators)",
+      "kind": "relay-set",
+      "jurisdiction": "none",
+      "jurisdiction_note": "Many independently run relays in many countries. Clients publish to several. The PR #2486 survey used 11 major relays.",
+      "source_url": "https://github.com/nostr-protocol/nips/pull/2486"
+    },
+    {
+      "id": "github",
+      "name": "GitHub, Inc. (Microsoft)",
+      "kind": "platform",
+      "jurisdiction": "US",
+      "jurisdiction_note": "San Francisco, CA; Microsoft subsidiary.",
+      "source_url": "https://en.wikipedia.org/wiki/GitHub"
+    },
+    {
+      "id": "x",
+      "name": "X (formerly Twitter), now part of SpaceXAI/SpaceX",
+      "kind": "platform",
+      "jurisdiction": "US",
+      "jurisdiction_note": "HQ Bastrop, Texas. Folded into SpaceXAI, a SpaceX subsidiary, on 2026-02-02 per Wikipedia.",
+      "source_url": "https://en.wikipedia.org/wiki/X_Corp."
+    },
+    {
+      "id": "mastodon",
+      "name": "Mastodon instances",
+      "kind": "platform",
+      "jurisdiction": "other",
+      "jurisdiction_note": "Each instance is a separate operator in its own country.",
+      "source_url": "https://github.com/nostr-protocol/nips/blob/master/39.md"
+    },
+    {
+      "id": "telegram",
+      "name": "Telegram",
+      "kind": "platform",
+      "jurisdiction": "other",
+      "jurisdiction_note": "Operational center in Dubai, UAE; registered in the British Virgin Islands.",
+      "source_url": "https://en.wikipedia.org/wiki/Telegram_(software)"
+    },
+    {
+      "id": "bluesky",
+      "name": "Bluesky Social PBC (AppView)",
+      "kind": "platform",
+      "jurisdiction": "US",
+      "jurisdiction_note": "Official address in Seattle, WA. NIP-39 Bluesky proofs are fetched through the public AppView.",
+      "source_url": "https://en.wikipedia.org/wiki/Bluesky"
+    },
+    {
+      "id": "discord",
+      "name": "Discord Inc.",
+      "kind": "platform",
+      "jurisdiction": "US",
+      "jurisdiction_note": "San Francisco, CA.",
+      "source_url": "https://en.wikipedia.org/wiki/Discord"
+    },
+    {
+      "id": "dns-registrar",
+      "name": "Domain registrar / DNS operator",
+      "kind": "dns",
+      "jurisdiction": "other",
+      "jurisdiction_note": "Depends on the user's registrar and TLD registry.",
+      "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md"
+    },
+    {
+      "id": "web-host",
+      "name": "Web host serving /.well-known/nostr.json (self or hosted NIP-05 provider)",
+      "kind": "platform",
+      "jurisdiction": "other",
+      "jurisdiction_note": "Self-hosted or a provider such as primal.net or nostrplebs.com. Jurisdiction varies.",
+      "source_url": "https://github.com/nostr-protocol/nips/blob/master/05.md"
+    }
+  ],
+  "links": [
+    {
+      "offering": "nip39",
+      "layer": "record",
+      "operator": "nostr-relays",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Events are Schnorr-signed, so relays cannot forge them. Any single relay can drop the kind 10011, but the user can publish to others. Relays see client IPs and query patterns."
+    },
+    {
+      "offering": "nip39",
+      "layer": "proof",
+      "operator": "github",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "GitHub could plant a gist in user X's account naming an attacker-controlled npub. It cannot make the victim's key sign anything. Proof and anchor are the same operator."
+    },
+    {
+      "offering": "nip39",
+      "layer": "anchor",
+      "operator": "github",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Same as the proof layer: GitHub controls the account and can bind it to a key it controls."
+    },
+    {
+      "offering": "nip39",
+      "layer": "proof",
+      "operator": "x",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Tweet-based proof. Same analysis as github. Verification needs X's API or scraping."
+    },
+    {
+      "offering": "nip39",
+      "layer": "anchor",
+      "operator": "x",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Controls the account."
+    },
+    {
+      "offering": "nip39",
+      "layer": "proof",
+      "operator": "mastodon",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "The instance admin controls posts and accounts on that instance."
+    },
+    {
+      "offering": "nip39",
+      "layer": "anchor",
+      "operator": "mastodon",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Instance admin."
+    },
+    {
+      "offering": "nip39",
+      "layer": "proof",
+      "operator": "telegram",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "The proof is a public channel message."
+    },
+    {
+      "offering": "nip39",
+      "layer": "anchor",
+      "operator": "telegram",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Controls the account."
+    },
+    {
+      "offering": "nip39",
+      "layer": "proof",
+      "operator": "bluesky",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "The proof is a Bluesky post fetched through the AppView. Forge is 'yes' if the user's PDS is Bluesky-hosted. A self-hosted PDS would reduce this, which is not analysed here."
+    },
+    {
+      "offering": "nip39",
+      "layer": "anchor",
+      "operator": "bluesky",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Handle and account on Bluesky-hosted infrastructure."
+    },
+    {
+      "offering": "nip39",
+      "layer": "proof",
+      "operator": "discord",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Messages are readable only by server members, so most verifiers cannot check them at all (PR #2486)."
+    },
+    {
+      "offering": "nip39",
+      "layer": "anchor",
+      "operator": "discord",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Controls the account."
+    },
+    {
+      "offering": "nip05",
+      "layer": "record",
+      "operator": "nostr-relays",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "The kind 0 is signed, so relays cannot forge it. Each relay can drop it, and they see IPs and queries."
+    },
+    {
+      "offering": "nip05",
+      "layer": "proof",
+      "operator": "web-host",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Whoever serves nostr.json can map the name to a key it controls; a hosted provider can reassign names. It cannot make the victim's key claim anything. It sees every verifier's lookup (IP, name queried)."
+    },
+    {
+      "offering": "nip05",
+      "layer": "anchor",
+      "operator": "dns-registrar",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Can redirect the domain to a host that serves a different key, or seize or suspend the domain. Holds registrant data."
+    }
+  ],
+  "sources": [
+    {
+      "title": "NIP-39 Linking Profiles to Other Platforms",
+      "url": "https://github.com/nostr-protocol/nips/blob/master/39.md",
+      "date": "2026-09-27"
+    },
+    {
+      "title": "NIP-39 commit history",
+      "url": "https://github.com/nostr-protocol/nips/commits/master/39.md",
+      "date": "2026-09-27"
+    },
+    {
+      "title": "PR #2216 NIP-39: moves i tags out of kind 0",
+      "url": "https://github.com/nostr-protocol/nips/pull/2216",
+      "date": "2026-02-10"
+    },
+    {
+      "title": "PR #2486 NIP-39: unify verification text, add bluesky and discord",
+      "url": "https://github.com/nostr-protocol/nips/pull/2486",
+      "date": "2026-09-27"
+    },
+    {
+      "title": "NIP-05 Mapping Nostr keys to DNS-based internet identifiers",
+      "url": "https://github.com/nostr-protocol/nips/blob/master/05.md",
+      "date": "2026-06"
+    },
+    {
+      "title": "NIP-05 commit history",
+      "url": "https://github.com/nostr-protocol/nips/commits/master/05.md",
+      "date": "2026-06"
+    },
+    {
+      "title": "NIP-26 Delegated Event Signing (unrecommended)",
+      "url": "https://github.com/nostr-protocol/nips/blob/master/26.md",
+      "date": "2026"
+    },
+    {
+      "title": "NIPs README index",
+      "url": "https://github.com/nostr-protocol/nips/blob/master/README.md",
+      "date": "2026"
+    },
+    {
+      "title": "PR #829 NIP-41 simple account migration (unmerged)",
+      "url": "https://github.com/nostr-protocol/nips/pull/829",
+      "date": "2023-10"
+    },
+    {
+      "title": "PR #1452 Key Migration and Revocation (unmerged)",
+      "url": "https://github.com/nostr-protocol/nips/pull/1452",
+      "date": "2024-08"
+    },
+    {
+      "title": "PR #1056 Key Revocation (unmerged)",
+      "url": "https://github.com/nostr-protocol/nips/pull/1056",
+      "date": "2024"
+    },
+    {
+      "title": "W3C public-nostr: status of NIP-41?",
+      "url": "https://lists.w3.org/Archives/Public/public-nostr/2025Dec/0002.html",
+      "date": "2025-12"
+    },
+    {
+      "title": "Amethyst DrawAdditionalInfo.kt (NIP-39 display)",
+      "url": "https://github.com/vitorpamplona/amethyst/blob/main/amethyst/src/main/java/com/vitorpamplona/amethyst/ui/screen/loggedIn/profile/header/DrawAdditionalInfo.kt",
+      "date": "2026"
+    },
+    {
+      "title": "Damus NIP05.swift",
+      "url": "https://github.com/damus-io/damus/blob/master/damus/Features/NIP05/Models/NIP05.swift",
+      "date": "2026"
+    },
+    {
+      "title": "Brainstorm-UI PR #87: only show NIP-05 check when domain confirms",
+      "url": "https://github.com/NosFabrica/Brainstorm-UI/pull/87",
+      "date": "2026-09-23"
+    },
+    {
+      "title": "streets PR #567: remove relay.nostr.band (unreachable)",
+      "url": "https://github.com/eyemono-moe/streets/pull/567",
+      "date": "2026-09-24"
+    },
+    {
+      "title": "Name.com: How to get NOSTR verified on a custom domain",
+      "url": "https://www.name.com/blog/how-to-get-nostr-verified-on-a-custom-domain",
+      "date": "unknown"
+    }
+  ]
+}

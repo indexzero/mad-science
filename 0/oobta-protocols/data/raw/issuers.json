@@ -1,0 +1,1300 @@
+{
+  "group": "issuers",
+  "offerings": [
+    {
+      "id": "sigstore",
+      "facts": [
+        {
+          "fact": "proof.key_signs_claim",
+          "value": "yes",
+          "source_url": "https://github.com/sigstore/fulcio/blob/main/docs/how-certificate-issuing-works.md",
+          "source_date": "2024-09-25",
+          "note": "Proof of possession: the client signs the OIDC token's subject claim (e.g. the email) with its key, or submits a CSR; this signed challenge names the anchor identity."
+        },
+        {
+          "fact": "proof.anchor_publishes_key",
+          "value": "no",
+          "source_url": "https://github.com/sigstore/fulcio/blob/main/docs/how-certificate-issuing-works.md",
+          "source_date": "2024-09-25",
+          "note": "The IdP (GitHub, Google, Microsoft) only issues an OIDC token; nothing naming the key is published on the anchor account."
+        },
+        {
+          "fact": "proof.third_party_signs_binding",
+          "value": "yes",
+          "source_url": "https://github.com/sigstore/architecture-docs/blob/main/sigstore-public-deployment-spec.md",
+          "source_date": "2025-10-05",
+          "note": "Fulcio (OpenSSF public-good CA, keys in GCP KMS/CAS) signs an X.509 cert binding the key to the OIDC identity."
+        },
+        {
+          "fact": "proof.uses_oauth_oidc",
+          "value": "yes",
+          "source_url": "https://docs.sigstore.dev/certificate_authority/oidc-in-fulcio/",
+          "source_date": "2026",
+          "note": "Certificates are issued only on presentation of an OIDC ID token (via Sigstore's Dex at oauth2.sigstore.dev or a directly configured issuer)."
+        },
+        {
+          "fact": "proof.capability_delegation",
+          "value": "no",
+          "source_url": "https://github.com/sigstore/fulcio/blob/main/docs/certificate-specification.md",
+          "source_date": "2023-05-24",
+          "note": "The cert asserts that the key belongs to the SAN identity (email or URI); not a capability."
+        },
+        {
+          "fact": "proof.anchor_is_dns",
+          "value": "no",
+          "source_url": "https://github.com/sigstore/architecture-docs/blob/main/sigstore-public-deployment-spec.md",
+          "source_date": "2025-10-05",
+          "note": "Public-good Fulcio accepts email-based, workflow-based (GitHub Actions, GitLab CI) and SPIFFE OIDC identities; a bare domain is not an anchor."
+        },
+        {
+          "fact": "proof.anchor_is_email",
+          "value": "yes",
+          "source_url": "https://docs.sigstore.dev/certificate_authority/oidc-in-fulcio/",
+          "source_date": "2026",
+          "note": "Email-based OIDC: the SAN carries the email from the Google, Microsoft or GitHub login."
+        },
+        {
+          "fact": "proof.anchor_is_social",
+          "value": "yes",
+          "source_url": "https://docs.sigstore.dev/certificate_authority/oidc-in-fulcio/",
+          "source_date": "2026",
+          "note": "GitHub login is accepted, but the cert carries the account's email, not the GitHub username; GitHub Actions workflow identities carry the repo/workflow URI."
+        },
+        {
+          "fact": "verify.offline_possible",
+          "value": "yes",
+          "source_url": "https://github.com/sigstore/architecture-docs/blob/main/client-spec.md",
+          "source_date": "2026-05-19",
+          "note": "A Sigstore bundle carries cert chain, SCT, log inclusion proof and signed checkpoint/timestamp; given a trusted root, verification needs no network fetch."
+        },
+        {
+          "fact": "verify.fetches_anchor",
+          "value": "no",
+          "source_url": "https://github.com/sigstore/architecture-docs/blob/main/client-spec.md",
+          "source_date": "2026-05-19",
+          "note": "Verifier never contacts the IdP; it checks the cert identity against an expected value."
+        },
+        {
+          "fact": "verify.needs_issuer_trust",
+          "value": "yes",
+          "source_url": "https://github.com/sigstore/architecture-docs/blob/main/client-spec.md",
+          "source_date": "2026-05-19",
+          "note": "Verifier must trust the Fulcio root/intermediate, the CT log key and the Rekor/TSA keys from the trusted root."
+        },
+        {
+          "fact": "verify.needs_registry",
+          "value": "no",
+          "source_url": "https://github.com/sigstore/architecture-docs/blob/main/client-spec.md",
+          "source_date": "2026-05-19",
+          "note": "Log inclusion is checked from the proof in the bundle; no live query is required (online lookup is optional)."
+        },
+        {
+          "fact": "verify.no_author_service",
+          "value": "yes",
+          "source_url": "https://github.com/sigstore/architecture-docs/blob/main/client-spec.md",
+          "source_date": "2026-05-19",
+          "note": "With a pinned trusted_root.json and a bundle, no Sigstore-run service is contacted at verify time; default clients refresh the root via Sigstore's TUF CDN."
+        },
+        {
+          "fact": "verify.breaks_if_api_closed",
+          "value": "no",
+          "source_url": "https://github.com/sigstore/fulcio/blob/main/docs/security-model.md",
+          "source_date": "2022-08-02",
+          "note": "Existing certs stay verifiable from logged material; only new issuance needs the IdP."
+        },
+        {
+          "fact": "lifecycle.survives_key_rotation",
+          "value": "no",
+          "source_url": "https://github.com/sigstore/fulcio/blob/main/docs/security-model.md",
+          "source_date": "2022-08-02",
+          "note": "Each cert binds one key for 10 minutes; a new key needs a new cert. Old signatures remain valid because they were logged in the validity window."
+        },
+        {
+          "fact": "lifecycle.explicit_revocation",
+          "value": "no",
+          "source_url": "https://github.com/sigstore/fulcio/blob/main/docs/security-model.md",
+          "source_date": "2022-08-02",
+          "note": "Fulcio avoids leaf revocation by issuing short-lived certs; revocation exists only for infrastructure keys via TUF."
+        },
+        {
+          "fact": "lifecycle.expiry",
+          "value": "yes",
+          "source_url": "https://github.com/sigstore/fulcio/blob/main/docs/security-model.md",
+          "source_date": "2022-08-02",
+          "note": "Leaf certificates are valid for 10 minutes."
+        },
+        {
+          "fact": "lifecycle.key_recovery",
+          "value": "no",
+          "source_url": "https://github.com/sigstore/fulcio/blob/main/docs/security-model.md",
+          "source_date": "2022-08-02",
+          "note": "No recovery of a key identity is defined; the design assumes ephemeral keys and re-authentication via OIDC for every signing event."
+        },
+        {
+          "fact": "lifecycle.replay_protected",
+          "value": "yes",
+          "source_url": "https://github.com/sigstore/architecture-docs/blob/main/client-spec.md",
+          "source_date": "2026-05-19",
+          "note": "Verifier checks that the log or TSA timestamp falls inside the 10-minute cert window, so a cert cannot be reused later."
+        },
+        {
+          "fact": "record.transparency_log",
+          "value": "yes",
+          "source_url": "https://github.com/sigstore/fulcio/blob/main/docs/how-certificate-issuing-works.md",
+          "source_date": "2024-09-25",
+          "note": "Certs go to a CT log (SCT embedded); signatures go to Rekor. As of 2026-06 the public-good default remains Rekor v1; Rekor v2 (tile-based, GA 2025-10) runs in parallel as opt-in."
+        },
+        {
+          "fact": "record.self_hosted_possible",
+          "value": "no",
+          "source_url": "https://docs.sigstore.dev/certificate_authority/overview/",
+          "source_date": "2026",
+          "note": "Users can run a private Fulcio/Rekor, but then verifiers must trust that deployment; links under the public-good trust root require OpenSSF-run services."
+        },
+        {
+          "fact": "record.multi_operator",
+          "value": "no",
+          "source_url": "https://github.com/sigstore/architecture-docs/blob/main/sigstore-public-deployment-spec.md",
+          "source_date": "2025-10-05",
+          "note": "One public-good deployment on GCP, run by volunteers from several vendors under one OpenSSF Operations SIG; not independent replicas."
+        },
+        {
+          "fact": "portability.generic_key",
+          "value": "yes",
+          "source_url": "https://github.com/sigstore/fulcio/blob/main/docs/certificate-specification.md",
+          "source_date": "2023-05-24",
+          "note": "Issued certs may carry ECDSA P-256/384/521, RSA 2048-4096 or Ed25519 public keys, so a raw ed25519 key can be bound; DIDs are not understood."
+        },
+        {
+          "fact": "portability.extensible_anchors",
+          "value": "yes",
+          "source_url": "https://github.com/sigstore/architecture-docs/blob/main/sigstore-public-deployment-spec.md",
+          "source_date": "2025-10-05",
+          "note": "Deployers configure which OIDC issuers to accept; new issuers are added by configuration, not spec change."
+        },
+        {
+          "fact": "adoption.spec_maturity",
+          "value": "2",
+          "source_url": "https://github.com/sigstore/architecture-docs/blob/main/client-spec.md",
+          "source_date": "2026-05-19",
+          "note": "Community specs in sigstore/architecture-docs under OpenSSF (Fulcio, Rekor v2, client spec); not IETF/W3C."
+        },
+        {
+          "fact": "adoption.active_2026",
+          "value": "yes",
+          "source_url": "https://blog.sigstore.dev/rekor-evolution/",
+          "source_date": "2026-06-28",
+          "note": "2026-06 blog on Rekor default; Fulcio commits through 2026-09-30."
+        },
+        {
+          "fact": "adoption.client_display",
+          "value": "yes",
+          "source_url": "https://docs.npmjs.com/viewing-package-provenance",
+          "source_date": "2026",
+          "note": "npmjs.com shows a provenance check mark with a link to the transparency-log entry."
+        },
+        {
+          "fact": "effort.attachable",
+          "value": "yes",
+          "source_url": "https://github.com/sigstore/fulcio/blob/main/docs/how-certificate-issuing-works.md",
+          "source_date": "2024-09-25",
+          "note": "The client may submit its own existing public key (or CSR) rather than an ephemeral one."
+        },
+        {
+          "fact": "effort.requires_platform_migration",
+          "value": "no",
+          "source_url": "https://github.com/sigstore/fulcio/blob/main/docs/how-certificate-issuing-works.md",
+          "source_date": "2024-09-25",
+          "note": "No new identity system is adopted; the existing OIDC account and an existing key are used."
+        }
+      ],
+      "summary": {
+        "C1": "Issuer attestation after OIDC: the client proves possession of a key by signing the OIDC subject, and Fulcio signs a 10-minute X.509 cert binding that key to the email or workflow URI (https://github.com/sigstore/fulcio/blob/main/docs/how-certificate-issuing-works.md). The anchor never publishes anything naming the key.",
+        "C2": "Verification is offline-capable from a bundle (cert, SCT, inclusion proof, timestamp) plus a trusted root (https://github.com/sigstore/architecture-docs/blob/main/client-spec.md). The verifier must trust Fulcio, the CT log and Rekor/TSA keys distributed via Sigstore's TUF root; it never contacts the IdP.",
+        "C3": "Anchors are OIDC identities: email via Google/Microsoft/GitHub login, CI workflow identities (GitHub Actions, GitLab), and SPIFFE (https://github.com/sigstore/architecture-docs/blob/main/sigstore-public-deployment-spec.md). For GitHub user login the cert carries the email, not the username (https://docs.sigstore.dev/certificate_authority/oidc-in-fulcio/). Closing an IdP stops new issuance but not verification of logged signatures.",
+        "C4": "Keys are meant to be ephemeral; there is no leaf revocation, only 10-minute expiry, with infrastructure revocation via TUF (https://github.com/sigstore/fulcio/blob/main/docs/security-model.md). A long-lived key can be bound, but only for 10 minutes per cert, so rotation simply means new certs.",
+        "C5": "Freshness is enforced by checking that the Rekor or TSA timestamp lies within the cert's validity window. Everything is logged: certs in a CT log, signatures in Rekor. Rekor v2 (tile-backed, Trillian-Tessera) went GA on 2025-10-10 (https://blog.sigstore.dev/rekor-v2-ga/), but on 2026-06-28 Sigstore said the public-good instance keeps Rekor v1 as default for the foreseeable future (https://blog.sigstore.dev/rekor-evolution/).",
+        "C6": "Fulcio assumes a valid OIDC token proves ownership of the identity; a compromised IdP or Fulcio can mint certs, which is mitigated only by public logs and third-party monitoring (https://docs.sigstore.dev/about/security/). Rekor v2 adds built-in witnessing for append-only guarantees.",
+        "C7": "Fulcio accepts ECDSA, RSA and Ed25519 public keys (https://github.com/sigstore/fulcio/blob/main/docs/certificate-specification.md), so a raw ed25519 key can be named in a cert. It has no notion of DIDs, npubs or other identifiers.",
+        "C8": "OpenSSF graduated project with community specs in sigstore/architecture-docs; actively developed in 2026. npm shows provenance badges linked to Rekor entries (https://docs.npmjs.com/viewing-package-provenance).",
+        "C9": "Attach tier: an existing key can be submitted to Fulcio (https://github.com/sigstore/fulcio/blob/main/docs/how-certificate-issuing-works.md). But the binding lasts 10 minutes, so it attests a signing event, not a durable key-to-account link.",
+        "C10": "The public-good instance is run by the OpenSSF (Linux Foundation, US) with volunteer on-call engineers from Chainguard, GitHub, Google, Red Hat, Stacklok, on Google Cloud Platform with keys in GCP KMS/CAS (https://openssf.org/blog/2023/10/03/running-sigstore-as-a-managed-service-a-tour-of-sigstores-public-good-instance/, https://github.com/sigstore/architecture-docs/blob/main/sigstore-public-deployment-spec.md). Fulcio and the IdP can each forge; Rekor can censor."
+      },
+      "misfit_notes": "Fits the 'issuer attestation after OAuth' family, but the attestation binds a key for 10 minutes, not durably: it proves 'this signature was made by whoever controlled this account at time T', not 'this key belongs to this account'. Using it as an OOBTA link for a long-lived DID requires the holder to re-sign a statement (e.g. 'my DID is X') during a cert window and have that logged, which is a build-tier composition, not something Sigstore offers. It also has a key_signs_claim (PoP signature over the OIDC subject), making it a hybrid of self-signed claim and issuer attestation.",
+      "surprises": "GitHub login yields a cert carrying the account's email, not the GitHub username, so it cannot directly prove 'npub X is github.com/alice'. Rekor v2 reached GA in Oct 2025, but in June 2026 Sigstore reversed course and kept Rekor v1 as the public-good default indefinitely, partly to batch breaking changes with the post-quantum transition. The 'OpenSSF' instance physically runs on Google Cloud with Google KMS/CAS-held CA keys. Fulcio accepts Ed25519 keys."
+    },
+    {
+      "id": "passport",
+      "facts": [
+        {
+          "fact": "proof.key_signs_claim",
+          "value": "no",
+          "source_url": "https://github.com/passportxyz/passport/blob/main/identity/src/challenge.ts",
+          "source_date": "2025-03-31",
+          "note": "The wallet signs a session/challenge such as 'I commit that this stamp is my unique and only <provider> verification' with a nonce; it names the platform type, not the specific account."
+        },
+        {
+          "fact": "proof.anchor_publishes_key",
+          "value": "no",
+          "source_url": "https://github.com/passportxyz/passport/blob/main/identity/src/credentials.ts",
+          "source_date": "2025-05-07",
+          "note": "The anchor account publishes nothing; the IAM server checks it via OAuth/API."
+        },
+        {
+          "fact": "proof.third_party_signs_binding",
+          "value": "yes",
+          "source_url": "https://github.com/passportxyz/passport/blob/main/identity/src/credentials.ts",
+          "source_date": "2025-05-07",
+          "note": "Human Passport's IAM server signs an EIP-712 VC (issuer did:ethr from its key; prod config still lists a did:key issuer) whose subject is did:pkh:eip155:1:<address>."
+        },
+        {
+          "fact": "proof.uses_oauth_oidc",
+          "value": "yes",
+          "source_url": "https://passport.human.tech/privacy",
+          "source_date": "2026",
+          "note": "Web2 stamps use temporary OAuth login data that is discarded after validation."
+        },
+        {
+          "fact": "proof.capability_delegation",
+          "value": "no",
+          "source_url": "https://github.com/passportxyz/passport/blob/main/identity/src/credentials.ts",
+          "source_date": "2025-05-07",
+          "note": "The VC asserts provider + hashed nullifiers for an address; not a capability."
+        },
+        {
+          "fact": "proof.anchor_is_dns",
+          "value": "no",
+          "source_url": "https://github.com/passportxyz/passport/tree/main/platforms/src",
+          "source_date": "2026-09",
+          "note": "Provider list (GitHub, X, Google, Discord, LinkedIn, ENS, Steam, ZKEmail, ...) has no domain/DNS stamp."
+        },
+        {
+          "fact": "proof.anchor_is_email",
+          "value": "no",
+          "source_url": "https://github.com/passportxyz/passport/blob/main/platforms/src/ZKEmail/Providers-config.ts",
+          "source_date": "2025-12-01",
+          "note": "No stamp binds a named email address; the ZK Email stamp proves receipt of Uber/Amazon emails, and the Google stamp proves a Google account but stores only a hash."
+        },
+        {
+          "fact": "proof.anchor_is_social",
+          "value": "yes",
+          "source_url": "https://github.com/passportxyz/passport/tree/main/platforms/src",
+          "source_date": "2026-09",
+          "note": "GitHub, X, Discord, LinkedIn, Google, Steam providers exist."
+        },
+        {
+          "fact": "verify.offline_possible",
+          "value": "yes",
+          "source_url": "https://github.com/passportxyz/passport/blob/main/identity/src/credentials.ts",
+          "source_date": "2025-05-07",
+          "note": "A stamp is a self-contained EIP-712 signed VC verifiable against the issuer DID; in practice integrators call the Passport API or read onchain attestations."
+        },
+        {
+          "fact": "verify.fetches_anchor",
+          "value": "no",
+          "source_url": "https://github.com/passportxyz/passport/blob/main/identity/src/credentials.ts",
+          "source_date": "2025-05-07",
+          "note": "Only the issuer contacts the platform at issuance; verifiers check the issuer signature."
+        },
+        {
+          "fact": "verify.needs_issuer_trust",
+          "value": "yes",
+          "source_url": "https://github.com/passportxyz/passport/blob/main/identity/src/issuers.ts",
+          "source_date": "2025-07-07",
+          "note": "Verifier must trust Human Passport's issuer keys (rotating key versions)."
+        },
+        {
+          "fact": "verify.needs_registry",
+          "value": "no",
+          "source_url": "https://docs.passport.human.tech/overview/key-terms",
+          "source_date": "2026-04-07",
+          "note": "Not required for a presented VC; onchain stamps (EAS) require reading a chain, and stamps are normally fetched from Passport's store."
+        },
+        {
+          "fact": "verify.no_author_service",
+          "value": "yes",
+          "source_url": "https://github.com/passportxyz/passport/blob/main/identity/src/credentials.ts",
+          "source_date": "2025-05-07",
+          "note": "Possible if the holder presents the VC and the verifier pins the issuer key; the default integration uses Human Passport's Stamps/Scorer API."
+        },
+        {
+          "fact": "verify.breaks_if_api_closed",
+          "value": "yes",
+          "source_url": "https://docs.passport.human.tech/building-with-passport/stamps/major-concepts/expirations",
+          "source_date": "2026",
+          "note": "Existing stamps stay valid until 90-day expiry, but they cannot be renewed if the platform API closes, so links lapse within 90 days."
+        },
+        {
+          "fact": "lifecycle.survives_key_rotation",
+          "value": "no",
+          "source_url": "https://docs.passport.human.tech/building-with-passport/stamps/major-concepts/deduplicating-stamps",
+          "source_date": "2026",
+          "note": "Stamps are bound to one Ethereum address; moving to another address means waiting for expiry and reverifying."
+        },
+        {
+          "fact": "lifecycle.explicit_revocation",
+          "value": "yes",
+          "source_url": "https://github.com/passportxyz/passport/blob/main/iam/src/utils/revocations.ts",
+          "source_date": "2025-05-07",
+          "note": "Operator-side only: IAM filters credentials against a revocation list held by the Scorer, and the scorer also keeps bans. The VC has no credentialStatus, and users cannot revoke."
+        },
+        {
+          "fact": "lifecycle.expiry",
+          "value": "yes",
+          "source_url": "https://docs.passport.human.tech/building-with-passport/stamps/major-concepts/expirations",
+          "source_date": "2026",
+          "note": "Offchain and onchain stamps expire 90 days after issuance."
+        },
+        {
+          "fact": "lifecycle.key_recovery",
+          "value": "no",
+          "source_url": "https://docs.passport.human.tech/building-with-passport/stamps/major-concepts/deduplicating-stamps",
+          "source_date": "2026",
+          "note": "No recovery for the address; the only path is to reverify stamps on a new wallet after the old ones expire."
+        },
+        {
+          "fact": "lifecycle.replay_protected",
+          "value": "yes",
+          "source_url": "https://docs.passport.human.tech/building-with-passport/stamps/major-concepts/expirations",
+          "source_date": "2026",
+          "note": "90-day expiry plus nonce-bearing challenges; a stale stamp cannot outlive account transfer by more than 90 days."
+        },
+        {
+          "fact": "record.transparency_log",
+          "value": "no",
+          "source_url": "https://docs.passport.human.tech/overview/key-terms",
+          "source_date": "2026-04-07",
+          "note": "Default stamps live in Passport's store; optional onchain EAS attestations are on public chains but are not the default record."
+        },
+        {
+          "fact": "record.self_hosted_possible",
+          "value": "no",
+          "source_url": "https://github.com/passportxyz/passport/blob/main/identity/src/credentials.ts",
+          "source_date": "2025-05-07",
+          "note": "Stamps must be issued and signed by Human Passport's IAM."
+        },
+        {
+          "fact": "record.multi_operator",
+          "value": "no",
+          "source_url": "https://github.com/passportxyz/passport/blob/main/app/.env-prod",
+          "source_date": "2026-06-08",
+          "note": "Stamps are served from Passport's scorer API ('ceramic-cache'); the docs still say Ceramic. Optional onchain copies exist on several EVM chains."
+        },
+        {
+          "fact": "portability.generic_key",
+          "value": "no",
+          "source_url": "https://github.com/passportxyz/passport/blob/main/identity/src/credentials.ts",
+          "source_date": "2025-05-07",
+          "note": "Subject is always did:pkh:eip155:1:<Ethereum address>."
+        },
+        {
+          "fact": "portability.extensible_anchors",
+          "value": "yes",
+          "source_url": "https://github.com/passportxyz/passport/tree/main/platforms/src",
+          "source_date": "2026-09",
+          "note": "New providers are added as platform modules in the operator's code, without any spec; only the operator can add them."
+        },
+        {
+          "fact": "adoption.spec_maturity",
+          "value": "0",
+          "source_url": "https://github.com/passportxyz/passport",
+          "source_date": "2026-09-27",
+          "note": "Vendor-only product; no external spec."
+        },
+        {
+          "fact": "adoption.active_2026",
+          "value": "yes",
+          "source_url": "https://github.com/passportxyz/passport",
+          "source_date": "2026-09-27",
+          "note": "Commits through 2026-09-27."
+        },
+        {
+          "fact": "adoption.client_display",
+          "value": "yes",
+          "source_url": "https://docs.passport.human.tech/overview/key-terms",
+          "source_date": "2026-04-07",
+          "note": "The Passport app and integrator dashboards display verified stamps and scores for an address (but not the account name)."
+        },
+        {
+          "fact": "effort.attachable",
+          "value": "yes",
+          "source_url": "https://github.com/passportxyz/passport/blob/main/identity/src/credentials.ts",
+          "source_date": "2025-05-07",
+          "note": "Only if the existing key is an Ethereum address; any EOA can collect stamps."
+        },
+        {
+          "fact": "effort.requires_platform_migration",
+          "value": "no",
+          "source_url": "https://github.com/passportxyz/passport/blob/main/identity/src/credentials.ts",
+          "source_date": "2025-05-07",
+          "note": "Works with an existing Ethereum wallet; no new identifier is minted, though Passport's app and issuer are required."
+        }
+      ],
+      "summary": {
+        "C1": "Issuer attestation after OAuth: the user logs into GitHub/X/Google etc. and Human Passport's IAM server issues an EIP-712-signed VC with subject did:pkh:eip155:1:<address>, a provider name, and hashed nullifiers instead of the account id (https://github.com/passportxyz/passport/blob/main/identity/src/credentials.ts). The wallet signs only a session/challenge naming the provider type (https://github.com/passportxyz/passport/blob/main/identity/src/challenge.ts).",
+        "C2": "A stamp VC can be checked offline against the issuer key, but verifiers must trust Human Passport as issuer, and typical integration calls its Stamps/Scorer API or reads EAS attestations onchain (https://github.com/passportxyz/eas-proxy/blob/main/docs/00-onchain-data.md).",
+        "C3": "Many social and web3 providers (GitHub, X, Google, Discord, LinkedIn, Steam, ENS, ZK Email, biometrics/KYC via Holonym) but no DNS anchor (https://github.com/passportxyz/passport/tree/main/platforms/src). Each stamp depends on the platform's OAuth/API for issuance and 90-day renewal.",
+        "C4": "Stamps are tied to one Ethereum address and do not survive moving to another address; deduplication means a GitHub account counts only for the first address until that stamp expires (https://docs.passport.human.tech/building-with-passport/stamps/major-concepts/deduplicating-stamps). Revocation exists only as an operator-held list checked by IAM (https://github.com/passportxyz/passport/blob/main/iam/src/utils/revocations.ts).",
+        "C5": "All stamps expire after 90 days (https://docs.passport.human.tech/building-with-passport/stamps/major-concepts/expirations), which bounds replay after an account changes hands. There is no transparency log; optional onchain stamps are public on EVM chains.",
+        "C6": "The issuer can mint any stamp for any address; the anchor platform can impersonate via OAuth. Because the VC hides the account identity behind nullifiers, a third party cannot learn which GitHub account is linked, by design: it is a Sybil-resistance signal, not an identity link.",
+        "C7": "Only Ethereum addresses (did:pkh eip155) are supported subjects; no ed25519 or arbitrary DID.",
+        "C8": "Vendor product, formerly Gitcoin Passport; Holonym Foundation completed the acquisition in Dec 2024 and announced it in Feb 2025 as Human Passport under human.tech (https://passport.human.tech/blog/from-gitcoin-passport-to-human-passport-we-re-now-part-of-human-tech). Actively developed into 2026-09.",
+        "C9": "Attach tier for Ethereum key holders only; everyone else would have to create an Ethereum wallet, which is effectively migration.",
+        "C10": "Human Passport (Holonym Foundation, Wilmington DE per privacy policy https://passport.human.tech/policy) operates the issuer and the stamp store; anchors are US platforms. Optional onchain copies sit on public EVM chains such as OP Mainnet."
+      },
+      "misfit_notes": "Fits 'issuer attestation after OAuth' structurally, but it is not an OOBTA link in the study's sense: the credential deliberately omits which account was verified (only a provider name and hashed nullifiers), so a verifier learns 'this address controls some GitHub account', not 'this address is github.com/alice'. It is a Sybil score, not a sameness proof. Also restricted to Ethereum addresses, so 'attach' only applies to EVM key systems.",
+      "surprises": "Stamps do not reveal the linked account, only a hash, so they cannot be used to show that a key belongs to a specific GitHub user. The issuer moved from did:key/Ed25519 (still shown in docs and prod config) to EIP-712 did:ethr signing in code. Docs (updated 2026-04) still say stamps are stored on Ceramic, while the app reads them from Passport's own 'ceramic-cache' API. Deduplication is first-come per scorer, so the same GitHub account can be scored differently by different apps."
+    },
+    {
+      "id": "dif-wellknown",
+      "facts": [
+        {
+          "fact": "proof.key_signs_claim",
+          "value": "yes",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "A Domain Linkage Credential is a self-issued VC (issuer = subject = DID) with credentialSubject.origin, signed by a DID key (JSON-LD proof or JWT)."
+        },
+        {
+          "fact": "proof.anchor_publishes_key",
+          "value": "yes",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "The origin serves /.well-known/did-configuration.json listing the linked DIDs' credentials."
+        },
+        {
+          "fact": "proof.third_party_signs_binding",
+          "value": "no",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Self-issued; only the DID controller signs."
+        },
+        {
+          "fact": "proof.uses_oauth_oidc",
+          "value": "no",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Control of the origin is shown by hosting the file over HTTPS."
+        },
+        {
+          "fact": "proof.capability_delegation",
+          "value": "no",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Verifier SHOULD consider the origin controller and DID controller the same entity: a sameness claim."
+        },
+        {
+          "fact": "proof.anchor_is_dns",
+          "value": "yes",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Anchor is a web origin (HTTPS domain)."
+        },
+        {
+          "fact": "proof.anchor_is_email",
+          "value": "no",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Only domain origins."
+        },
+        {
+          "fact": "proof.anchor_is_social",
+          "value": "no",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Only domain origins; a hosted subdomain on a platform could serve the file, but the spec requires the origin root."
+        },
+        {
+          "fact": "verify.offline_possible",
+          "value": "no",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Verifier must fetch the well-known resource from the origin and resolve the DID."
+        },
+        {
+          "fact": "verify.fetches_anchor",
+          "value": "yes",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Fetch https://<origin>/.well-known/did-configuration.json."
+        },
+        {
+          "fact": "verify.needs_issuer_trust",
+          "value": "no",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Signature is checked against the DID's own assertionMethod keys; the only implicit trust is WebPKI/TLS."
+        },
+        {
+          "fact": "verify.needs_registry",
+          "value": "no",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Not by the spec; DID resolution may hit a registry depending on DID method (none for did:key/did:web)."
+        },
+        {
+          "fact": "verify.no_author_service",
+          "value": "yes",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "No DIF-run service is involved."
+        },
+        {
+          "fact": "verify.breaks_if_api_closed",
+          "value": "no",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Anchor is a domain the user controls; no platform API."
+        },
+        {
+          "fact": "lifecycle.survives_key_rotation",
+          "value": "no",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Credentials are validated against current assertionMethod keys in the resolved DID document; after rotation they must be re-signed."
+        },
+        {
+          "fact": "lifecycle.explicit_revocation",
+          "value": "no",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Spec defines no revocation; removal from the file or expiry are the only mechanisms."
+        },
+        {
+          "fact": "lifecycle.expiry",
+          "value": "yes",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "issuanceDate and expirationDate MUST be present."
+        },
+        {
+          "fact": "lifecycle.key_recovery",
+          "value": "no",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Delegated entirely to the DID method; not defined by this spec."
+        },
+        {
+          "fact": "lifecycle.replay_protected",
+          "value": "yes",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Mandatory expirationDate and origin matching bound replay; there is no nonce or log."
+        },
+        {
+          "fact": "record.transparency_log",
+          "value": "no",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "No log."
+        },
+        {
+          "fact": "record.self_hosted_possible",
+          "value": "yes",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "The file is hosted on the user's own origin; the DID record's hosting depends on the method."
+        },
+        {
+          "fact": "record.multi_operator",
+          "value": "no",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Single web host per origin."
+        },
+        {
+          "fact": "portability.generic_key",
+          "value": "yes",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Any DID method; spec examples use did:key. The DID-to-origin direction (LinkedDomains service) needs a method whose DID document supports services, so did:key cannot do it."
+        },
+        {
+          "fact": "portability.extensible_anchors",
+          "value": "no",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Web origins only."
+        },
+        {
+          "fact": "adoption.spec_maturity",
+          "value": "2",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "v1.0.0 is a 'DIF Ratified Deliverable' of the Identifiers & Discovery WG; editor's draft continues."
+        },
+        {
+          "fact": "adoption.active_2026",
+          "value": "yes",
+          "source_url": "https://github.com/decentralized-identity/well-known-did-configuration",
+          "source_date": "2025-10-31",
+          "note": "Last spec changes 2025-10-31 (VC 1.1 link fixes, reference implementations); no 2026 commits found."
+        },
+        {
+          "fact": "adoption.client_display",
+          "value": "yes",
+          "source_url": "https://learn.microsoft.com/en-us/entra/verified-id/how-to-dnsbind",
+          "source_date": "2026-03-25",
+          "note": "Microsoft Authenticator shows a Verified domain page, or a full-page unverified-domain warning, based on the DID's LinkedDomains and did-configuration.json."
+        },
+        {
+          "fact": "effort.attachable",
+          "value": "yes",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "Any existing DID can sign a DLC and the user hosts it on their domain."
+        },
+        {
+          "fact": "effort.requires_platform_migration",
+          "value": "no",
+          "source_url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+          "source_date": "2025-10-31",
+          "note": "No new identity system."
+        }
+      ],
+      "summary": {
+        "C1": "Bidirectional public proof: the DID signs a self-issued DomainLinkageCredential naming the origin, the domain hosts it at /.well-known/did-configuration.json, and the DID document lists the origin in a LinkedDomains service (https://identity.foundation/well-known-did-configuration/resources/did-configuration/).",
+        "C2": "The verifier fetches the well-known file, resolves the DID, checks the signature against assertionMethod keys and checks that origin matches. No third-party issuer, but it is online-only and relies on DNS and WebPKI.",
+        "C3": "Only web origins; no social or email anchors. Fragility is that of the user's own web hosting; Microsoft Authenticator also rejects HTTP redirects (https://learn.microsoft.com/en-us/entra/verified-id/how-to-dnsbind).",
+        "C4": "No revocation beyond expiry or removal; credentials must be re-signed after key rotation since they validate against the current DID document. Key recovery is left to the DID method.",
+        "C5": "expirationDate is mandatory, so stale credentials lapse; no nonce or log. A domain that changes owner stops serving the file, so the link disappears.",
+        "C6": "Whoever controls the domain's web content or DNS can delete the link but cannot forge a signature from the DID. For did:web DIDs on the same domain, the domain controller controls both sides, which collapses the two-party check.",
+        "C7": "DID-method-agnostic, so any DID (including did:key wrapping an ed25519 key) can sign a DLC; the reverse LinkedDomains discovery needs a method with service endpoints.",
+        "C8": "v1.0.0 is a DIF Ratified Deliverable; the editor's draft was last changed 2025-10. Deployed in Microsoft Entra Verified ID, whose Authenticator displays a verified domain (https://learn.microsoft.com/en-us/entra/verified-id/how-to-dnsbind).",
+        "C9": "Attach tier: any existing DID holder with a domain can generate and host the file.",
+        "C10": "Record and proof live on the user's own web host and DNS; no DIF-run service. The web host and registrar can censor; neither can forge without the DID key unless the DID itself is did:web on that domain."
+      },
+      "misfit_notes": "Fits 'bidirectional public proof' cleanly, but only for domains. One subtlety: when the DID is did:web on the same domain (Microsoft's default), the 'link' is circular: the domain vouches for itself, so it adds no independent evidence. The DID-to-origin direction is optional and impossible for did:key, so for some DIDs it is effectively one-directional.",
+      "surprises": "Expiry is mandatory, which few people expect for a domain-link file. Microsoft Entra Verified ID uses it with did:web, which makes the link largely self-referential, and Microsoft says changing the linked domain is unsupported: you must opt out and re-onboard. Spec examples use did:key, which cannot express the LinkedDomains back-link."
+    },
+    {
+      "id": "did-web",
+      "facts": [
+        {
+          "fact": "proof.key_signs_claim",
+          "value": "no",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "The DID document is not signed; the spec defines no proof (hashlinks MAY aid integrity)."
+        },
+        {
+          "fact": "proof.anchor_publishes_key",
+          "value": "yes",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "The domain serves did.json at /.well-known/did.json or a path, listing verification keys."
+        },
+        {
+          "fact": "proof.third_party_signs_binding",
+          "value": "no",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "No issuer; only the TLS certificate (WebPKI CA) authenticates the host, not the DID key."
+        },
+        {
+          "fact": "proof.uses_oauth_oidc",
+          "value": "no",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "Publishing a file over HTTPS."
+        },
+        {
+          "fact": "proof.capability_delegation",
+          "value": "no",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "The domain is the identifier and lists its keys; not a delegation."
+        },
+        {
+          "fact": "proof.anchor_is_dns",
+          "value": "yes",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "The method-specific id is the domain and MUST match the TLS certificate common name."
+        },
+        {
+          "fact": "proof.anchor_is_email",
+          "value": "no",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "Domain only."
+        },
+        {
+          "fact": "proof.anchor_is_social",
+          "value": "no",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "Domain only; path-based DIDs on a shared host (did:web:example.com:u:bob) make the host operator the controller."
+        },
+        {
+          "fact": "verify.offline_possible",
+          "value": "no",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "Resolution requires an HTTPS fetch."
+        },
+        {
+          "fact": "verify.fetches_anchor",
+          "value": "yes",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "Resolve by fetching https://<domain>/.well-known/did.json."
+        },
+        {
+          "fact": "verify.needs_issuer_trust",
+          "value": "no",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "No credential issuer; implicit trust in DNS and the WebPKI CA."
+        },
+        {
+          "fact": "verify.needs_registry",
+          "value": "no",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "No method registry; DNS resolution is required (and DNSSEC recommended)."
+        },
+        {
+          "fact": "verify.no_author_service",
+          "value": "yes",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "No W3C CCG service is involved."
+        },
+        {
+          "fact": "verify.breaks_if_api_closed",
+          "value": "no",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "Depends only on the user's web host."
+        },
+        {
+          "fact": "lifecycle.survives_key_rotation",
+          "value": "yes",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "Update did.json; the DID stays the same."
+        },
+        {
+          "fact": "lifecycle.explicit_revocation",
+          "value": "no",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "Deactivate = remove did.json or make it unavailable."
+        },
+        {
+          "fact": "lifecycle.expiry",
+          "value": "no",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "No expiry defined."
+        },
+        {
+          "fact": "lifecycle.key_recovery",
+          "value": "yes",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "Implicit: whoever controls the domain's web content can replace the keys; no other mechanism."
+        },
+        {
+          "fact": "lifecycle.replay_protected",
+          "value": "no",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "No history or versioning is mandated; a new domain owner silently becomes the DID controller."
+        },
+        {
+          "fact": "record.transparency_log",
+          "value": "no",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "No log; git history suggested only as optional practice."
+        },
+        {
+          "fact": "record.self_hosted_possible",
+          "value": "yes",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "User hosts did.json, though DNS registrar and a TLS CA are still required."
+        },
+        {
+          "fact": "record.multi_operator",
+          "value": "no",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "Single web host."
+        },
+        {
+          "fact": "portability.generic_key",
+          "value": "yes",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "The DID document can list any verification method type (examples include Ed25519 and secp256k1)."
+        },
+        {
+          "fact": "portability.extensible_anchors",
+          "value": "no",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "Domains only."
+        },
+        {
+          "fact": "adoption.spec_maturity",
+          "value": "1",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "W3C CCG document with respec specStatus 'unofficial' (editor's draft); listed as a candidate in a proposed DID Methods WG charter that is not yet chartered."
+        },
+        {
+          "fact": "adoption.active_2026",
+          "value": "yes",
+          "source_url": "https://github.com/w3c-ccg/did-method-web",
+          "source_date": "2026-05-08",
+          "note": "Only change in 2025-2026 is a 2026-05-08 editor-affiliation edit; method widely deployed (Entra Verified ID, atproto)."
+        },
+        {
+          "fact": "adoption.client_display",
+          "value": "yes",
+          "source_url": "https://learn.microsoft.com/en-us/entra/verified-id/how-to-dnsbind",
+          "source_date": "2026-03-25",
+          "note": "Microsoft Authenticator resolves did:web issuers and shows the verified domain (via the DIF linkage file)."
+        },
+        {
+          "fact": "effort.attachable",
+          "value": "no",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "An existing key can be listed in did.json, but the identifier becomes did:web:<domain>; an existing DID or npub is not linked unless separately referenced."
+        },
+        {
+          "fact": "effort.requires_platform_migration",
+          "value": "yes",
+          "source_url": "https://w3c-ccg.github.io/did-method-web/",
+          "source_date": "2026-05-08",
+          "note": "The identity is the domain-based DID, not the existing key identifier; no vendor platform, but a new identifier."
+        }
+      ],
+      "summary": {
+        "C1": "did:web does not anchor a key to a domain; it makes the domain the identity. did:web:example.com resolves to https://example.com/.well-known/did.json, and whatever keys that file lists are the DID's keys (https://w3c-ccg.github.io/did-method-web/). The document is unsigned; HTTPS is the only authentication.",
+        "C2": "Every verification fetches did.json over HTTPS, trusting DNS and the WebPKI; the spec recommends DNSSEC and DoH and warns that the web host and DNS provider can track resolutions.",
+        "C3": "Only domains, including path-based identifiers on shared hosts, where the host operator is the real controller. Fragility is that of DNS registration and web hosting.",
+        "C4": "Rotation is trivial (edit did.json) and the DID persists; deactivation is deleting the file. There is no history, so past key states cannot be verified.",
+        "C5": "No timestamps, versions or log; when a domain lapses and is re-registered, the new owner fully inherits the DID. Hashlinks are mentioned only as optional integrity aids.",
+        "C6": "Whoever controls the web server, DNS or registrar, or can MITM DNS, controls the identity. No signature by a prior key is required to change keys.",
+        "C7": "Any verification method type can be listed, so an ed25519 key can be published, but the identifier is the domain, not the key.",
+        "C8": "W3C CCG unofficial draft, barely edited since 2024 (https://github.com/w3c-ccg/did-method-web); candidate for a proposed W3C DID Methods WG (https://w3c.github.io/did-methods-wg-charter/2025/did-methods-wg.html). Widely deployed, e.g. as Microsoft Entra Verified ID's only trust system (https://learn.microsoft.com/en-us/entra/verified-id/how-to-dnsbind).",
+        "C9": "Migrate-ish: you adopt a new identifier (the domain DID), though with no vendor platform and possibly reusing an existing key.",
+        "C10": "Record lives on the user's web host under the user's DNS registrar; both can forge and censor, and both see resolution requests."
+      },
+      "misfit_notes": "Does not fit the proof-family map: there is no link between two identities, because the domain and the identity are one thing. For this study, did:web is better treated as a domain-rooted identity system (or as a resolver for keys published at a domain), not as an OOBTA mechanism; it becomes an anchor only when combined with something else (e.g. a did:key listed in alsoKnownAs, or the DIF Well-Known linkage). It also fits neither 'attach' nor a platform 'migrate' tier: you adopt a new identifier without any vendor platform.",
+      "surprises": "The DID document carries no signature, and key changes need no authorization from the old key; domain control is everything, so an expired-and-re-registered domain hands its DID to a stranger with no trace. The spec is still an 'unofficial' CCG draft, yet it is the only trust system Microsoft Entra Verified ID supports."
+    }
+  ],
+  "operators": [
+    {
+      "id": "fulcio",
+      "name": "Sigstore Fulcio public-good CA (OpenSSF, on GCP)",
+      "kind": "ca",
+      "jurisdiction": "US",
+      "jurisdiction_note": "Run by the OpenSSF (Linux Foundation, US) with volunteer engineers from Chainguard, GitHub, Google, Red Hat, Stacklok; hosted on Google Cloud, CA keys in GCP KMS/Certificate Authority Service.",
+      "source_url": "https://github.com/sigstore/architecture-docs/blob/main/sigstore-public-deployment-spec.md"
+    },
+    {
+      "id": "rekor",
+      "name": "Sigstore Rekor public-good transparency log (OpenSSF, on GCP)",
+      "kind": "log",
+      "jurisdiction": "US",
+      "jurisdiction_note": "Same OpenSSF operations SIG; Rekor v1 remains default as of 2026-06, Rekor v2 shards (logYEAR-rev.rekor.sigstore.dev) run in parallel.",
+      "source_url": "https://blog.sigstore.dev/rekor-evolution/"
+    },
+    {
+      "id": "github",
+      "name": "GitHub (Microsoft)",
+      "kind": "platform",
+      "jurisdiction": "US",
+      "jurisdiction_note": "GitHub, Inc., US; acts as OIDC IdP for Sigstore (via Dex and Actions) and OAuth provider for Passport.",
+      "source_url": "https://docs.sigstore.dev/certificate_authority/oidc-in-fulcio/"
+    },
+    {
+      "id": "google",
+      "name": "Google (OIDC)",
+      "kind": "platform",
+      "jurisdiction": "US",
+      "jurisdiction_note": "Google LLC, US; OIDC IdP for Sigstore and OAuth provider for Passport.",
+      "source_url": "https://docs.sigstore.dev/certificate_authority/oidc-in-fulcio/"
+    },
+    {
+      "id": "microsoft",
+      "name": "Microsoft (OIDC)",
+      "kind": "platform",
+      "jurisdiction": "US",
+      "jurisdiction_note": "Microsoft Corp., US; email OIDC IdP accepted by public-good Fulcio via Dex.",
+      "source_url": "https://docs.sigstore.dev/certificate_authority/oidc-in-fulcio/"
+    },
+    {
+      "id": "x",
+      "name": "X",
+      "kind": "platform",
+      "jurisdiction": "US",
+      "jurisdiction_note": "X Corp., US; OAuth provider for a Passport stamp.",
+      "source_url": "https://github.com/passportxyz/passport/tree/main/platforms/src"
+    },
+    {
+      "id": "human-passport",
+      "name": "Human Passport (Holonym Foundation / human.tech)",
+      "kind": "issuer",
+      "jurisdiction": "US",
+      "jurisdiction_note": "Privacy policy lists Holonym Foundation, Wilmington, DE, United States; acquisition of Gitcoin Passport completed Dec 2024.",
+      "source_url": "https://passport.human.tech/policy"
+    },
+    {
+      "id": "optimism",
+      "name": "OP Mainnet (and other EVM chains hosting EAS stamps)",
+      "kind": "chain",
+      "jurisdiction": "none",
+      "jurisdiction_note": "Public chain; optional onchain Passport stamps via EAS on about a dozen networks.",
+      "source_url": "https://github.com/passportxyz/eas-proxy/blob/main/docs/00-onchain-data.md"
+    },
+    {
+      "id": "web-host",
+      "name": "User's web host",
+      "kind": "platform",
+      "jurisdiction": "other",
+      "jurisdiction_note": "Whoever serves the domain's HTTPS content; varies per user.",
+      "source_url": "https://w3c-ccg.github.io/did-method-web/"
+    },
+    {
+      "id": "dns-registrar",
+      "name": "User's DNS registrar / DNS provider",
+      "kind": "dns",
+      "jurisdiction": "other",
+      "jurisdiction_note": "Varies per domain; ultimately under the TLD registry's jurisdiction.",
+      "source_url": "https://w3c-ccg.github.io/did-method-web/"
+    },
+    {
+      "id": "webpki-ca",
+      "name": "WebPKI TLS certificate authority",
+      "kind": "ca",
+      "jurisdiction": "other",
+      "jurisdiction_note": "Whichever CA issued the domain's TLS cert; did:web requires the DID to match the TLS cert name.",
+      "source_url": "https://w3c-ccg.github.io/did-method-web/"
+    }
+  ],
+  "links": [
+    {
+      "offering": "sigstore",
+      "layer": "proof",
+      "operator": "fulcio",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Fulcio can issue a cert for any identity to any key; detectable only through CT monitoring. It sees OIDC tokens and request metadata."
+    },
+    {
+      "offering": "sigstore",
+      "layer": "record",
+      "operator": "rekor",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Rekor cannot mint certs, but can refuse entries (clients then fail to produce a bundle). Entries are public; the operator also sees request metadata."
+    },
+    {
+      "offering": "sigstore",
+      "layer": "anchor",
+      "operator": "github",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "As IdP it can mint an OIDC token for any account, or suspend the account."
+    },
+    {
+      "offering": "sigstore",
+      "layer": "anchor",
+      "operator": "google",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Same as github, for Google-account emails."
+    },
+    {
+      "offering": "sigstore",
+      "layer": "anchor",
+      "operator": "microsoft",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Same as github, for Microsoft-account emails."
+    },
+    {
+      "offering": "passport",
+      "layer": "proof",
+      "operator": "human-passport",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "The IAM issuer key signs every stamp and could sign one for any address. Per its policy it collects IP/device metadata, though OAuth data is discarded."
+    },
+    {
+      "offering": "passport",
+      "layer": "record",
+      "operator": "human-passport",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Stamps are stored and served by Passport's scorer API; the operator can also ban or revoke stamps."
+    },
+    {
+      "offering": "passport",
+      "layer": "record",
+      "operator": "optimism",
+      "forge": "no",
+      "censor": "no",
+      "disclose": "no",
+      "note": "Optional onchain EAS copies: the chain cannot forge the attester's signature. Censorship would need sequencer collusion beyond forced inclusion, and all data is public anyway."
+    },
+    {
+      "offering": "passport",
+      "layer": "anchor",
+      "operator": "github",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Platform can complete OAuth as any account, or close the account or API, stopping renewals."
+    },
+    {
+      "offering": "passport",
+      "layer": "anchor",
+      "operator": "x",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Same as github."
+    },
+    {
+      "offering": "passport",
+      "layer": "anchor",
+      "operator": "google",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Same as github."
+    },
+    {
+      "offering": "dif-wellknown",
+      "layer": "record",
+      "operator": "web-host",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Applies when the DID is did:web (Microsoft's default): the host controls the DID document and can sign a fresh DLC itself. For other DID methods the record operator is that method's registry."
+    },
+    {
+      "offering": "dif-wellknown",
+      "layer": "proof",
+      "operator": "web-host",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Hosts did-configuration.json and can delete it, but cannot sign a DLC without the DID key (unless the DID is did:web on the same host). Sees verifier fetches."
+    },
+    {
+      "offering": "dif-wellknown",
+      "layer": "anchor",
+      "operator": "dns-registrar",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Can redirect or seize the domain, which breaks the link, but cannot forge the DID signature unless the DID is did:web on that domain."
+    },
+    {
+      "offering": "did-web",
+      "layer": "record",
+      "operator": "web-host",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Controls did.json outright, so it can swap keys; sees every resolution."
+    },
+    {
+      "offering": "did-web",
+      "layer": "anchor",
+      "operator": "dns-registrar",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Can repoint the domain and obtain a TLS cert, then serve any DID document; holds registrant data."
+    },
+    {
+      "offering": "did-web",
+      "layer": "anchor",
+      "operator": "webpki-ca",
+      "forge": "no",
+      "censor": "no",
+      "disclose": "no",
+      "note": "Mis-issuance alone is not enough: forgery also needs a network/DNS position, since the CA does not serve the document."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Fulcio: how certificate issuing works",
+      "url": "https://github.com/sigstore/fulcio/blob/main/docs/how-certificate-issuing-works.md",
+      "date": "2024-09-25"
+    },
+    {
+      "title": "Fulcio certificate specification",
+      "url": "https://github.com/sigstore/fulcio/blob/main/docs/certificate-specification.md",
+      "date": "2023-05-24"
+    },
+    {
+      "title": "Fulcio security model",
+      "url": "https://github.com/sigstore/fulcio/blob/main/docs/security-model.md",
+      "date": "2022-08-02"
+    },
+    {
+      "title": "Sigstore docs: OIDC in Fulcio",
+      "url": "https://docs.sigstore.dev/certificate_authority/oidc-in-fulcio/",
+      "date": "2026"
+    },
+    {
+      "title": "Sigstore docs: Fulcio overview",
+      "url": "https://docs.sigstore.dev/certificate_authority/overview/",
+      "date": "2026"
+    },
+    {
+      "title": "Sigstore public deployment spec",
+      "url": "https://github.com/sigstore/architecture-docs/blob/main/sigstore-public-deployment-spec.md",
+      "date": "2025-10-05"
+    },
+    {
+      "title": "Sigstore client spec",
+      "url": "https://github.com/sigstore/architecture-docs/blob/main/client-spec.md",
+      "date": "2026-05-19"
+    },
+    {
+      "title": "Rekor v2 GA blog",
+      "url": "https://blog.sigstore.dev/rekor-v2-ga/",
+      "date": "2025-10-10"
+    },
+    {
+      "title": "sigstore.dev and Rekor evolution blog",
+      "url": "https://blog.sigstore.dev/rekor-evolution/",
+      "date": "2026-06-28"
+    },
+    {
+      "title": "OpenSSF: tour of Sigstore public good instance",
+      "url": "https://openssf.org/blog/2023/10/03/running-sigstore-as-a-managed-service-a-tour-of-sigstores-public-good-instance/",
+      "date": "2023-10-03"
+    },
+    {
+      "title": "npm docs: viewing package provenance",
+      "url": "https://docs.npmjs.com/viewing-package-provenance",
+      "date": "2026"
+    },
+    {
+      "title": "Human Passport: from Gitcoin Passport to Human Passport",
+      "url": "https://passport.human.tech/blog/from-gitcoin-passport-to-human-passport-we-re-now-part-of-human-tech",
+      "date": "2025-02-09"
+    },
+    {
+      "title": "Human Passport docs: key terms",
+      "url": "https://docs.passport.human.tech/overview/key-terms",
+      "date": "2026-04-07"
+    },
+    {
+      "title": "Human Passport docs: expirations",
+      "url": "https://docs.passport.human.tech/building-with-passport/stamps/major-concepts/expirations",
+      "date": "2026"
+    },
+    {
+      "title": "Human Passport docs: deduplicating stamps",
+      "url": "https://docs.passport.human.tech/building-with-passport/stamps/major-concepts/deduplicating-stamps",
+      "date": "2026"
+    },
+    {
+      "title": "passport repo: identity/src/credentials.ts",
+      "url": "https://github.com/passportxyz/passport/blob/main/identity/src/credentials.ts",
+      "date": "2025-05-07"
+    },
+    {
+      "title": "passport repo: identity/src/challenge.ts",
+      "url": "https://github.com/passportxyz/passport/blob/main/identity/src/challenge.ts",
+      "date": "2025-03-31"
+    },
+    {
+      "title": "passport repo: identity/src/issuers.ts",
+      "url": "https://github.com/passportxyz/passport/blob/main/identity/src/issuers.ts",
+      "date": "2025-07-07"
+    },
+    {
+      "title": "passport repo: iam/src/utils/revocations.ts",
+      "url": "https://github.com/passportxyz/passport/blob/main/iam/src/utils/revocations.ts",
+      "date": "2025-05-07"
+    },
+    {
+      "title": "passport repo: app/.env-prod",
+      "url": "https://github.com/passportxyz/passport/blob/main/app/.env-prod",
+      "date": "2026-06-08"
+    },
+    {
+      "title": "passport repo: ZKEmail providers config",
+      "url": "https://github.com/passportxyz/passport/blob/main/platforms/src/ZKEmail/Providers-config.ts",
+      "date": "2025-12-01"
+    },
+    {
+      "title": "passport repo: platforms",
+      "url": "https://github.com/passportxyz/passport/tree/main/platforms/src",
+      "date": "2026-09"
+    },
+    {
+      "title": "passport repo",
+      "url": "https://github.com/passportxyz/passport",
+      "date": "2026-09-27"
+    },
+    {
+      "title": "passportxyz eas-proxy onchain data doc",
+      "url": "https://github.com/passportxyz/eas-proxy/blob/main/docs/00-onchain-data.md",
+      "date": "2024"
+    },
+    {
+      "title": "Human Passport privacy policy (Holonym Foundation)",
+      "url": "https://passport.human.tech/policy",
+      "date": "2024-08-29"
+    },
+    {
+      "title": "Human Passport privacy page",
+      "url": "https://passport.human.tech/privacy",
+      "date": "2026"
+    },
+    {
+      "title": "DIF Well-Known DID Configuration spec",
+      "url": "https://identity.foundation/well-known-did-configuration/resources/did-configuration/",
+      "date": "2025-10-31"
+    },
+    {
+      "title": "DIF well-known-did-configuration repo",
+      "url": "https://github.com/decentralized-identity/well-known-did-configuration",
+      "date": "2025-10-31"
+    },
+    {
+      "title": "Microsoft Entra Verified ID: link your domain to your DID",
+      "url": "https://learn.microsoft.com/en-us/entra/verified-id/how-to-dnsbind",
+      "date": "2026-03-25"
+    },
+    {
+      "title": "did:web method specification (W3C CCG)",
+      "url": "https://w3c-ccg.github.io/did-method-web/",
+      "date": "2026-05-08"
+    },
+    {
+      "title": "did:web spec repo",
+      "url": "https://github.com/w3c-ccg/did-method-web",
+      "date": "2026-05-08"
+    },
+    {
+      "title": "Draft W3C DID Methods WG charter",
+      "url": "https://w3c.github.io/did-methods-wg-charter/2025/did-methods-wg.html",
+      "date": "2025"
+    }
+  ]
+}

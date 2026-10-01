@@ -1,0 +1,17 @@
+id,name
+nip39,Nostr NIP-39
+nip05,Nostr NIP-05
+atproto-handle,ATProto handle + did:plc
+bsky-verification,Bluesky verification
+ucan,UCAN
+storacha-mailto,Storacha did:mailto
+recap,ReCap (SIWE)
+keybase,Keybase
+keyoxide,Keyoxide / ASP
+indieweb,IndieWeb rel=me + IndieAuth
+sigstore,Sigstore
+passport,Human Passport stamps
+dif-wellknown,DIF Well-Known DID Config
+did-web,did:web
+farcaster,Farcaster verifications
+pkarr,Pkarr

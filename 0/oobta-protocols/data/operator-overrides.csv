@@ -1,0 +1,4 @@
+id,field,value,reason,source_url
+optimism,jurisdiction,US,"OP Mainnet runs one centralized sequencer. Optimism lists OP Mainnet operations as handled by OP Labs (US). The issuers agent said none; the others agent said US from model knowledge.",https://optimism.io/blog/what-is-op-enterprise
+optimism,jurisdiction_note,"Single sequencer operated by OP Labs PBC (US); shared sequencing planned but not live in 2026.",,https://optimism.io/blog/what-is-op-enterprise
+web-host,name,"Web host for the user's domain (.well-known files)","Generic operator shared by several offerings; the first agent named it for ATProto only.",

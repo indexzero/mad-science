@@ -1,0 +1,724 @@
+{
+  "group": "atproto",
+  "offerings": [
+    {
+      "id": "atproto-handle",
+      "facts": [
+        {
+          "fact": "proof.key_signs_claim",
+          "value": "yes",
+          "source_url": "https://web.plc.directory/spec/v0.1/did-plc",
+          "source_date": "2025-12",
+          "note": "For did:plc (the deployed default) the at://handle entry in alsoKnownAs is part of a PLC operation signed by a rotation key. For did:web the DID doc is a plain HTTPS file and is not signed."
+        },
+        {
+          "fact": "proof.anchor_publishes_key",
+          "value": "yes",
+          "source_url": "https://atproto.com/specs/handle",
+          "source_date": "2026",
+          "note": "The domain publishes the DID in DNS TXT _atproto.<handle> (did=...) or at https://<handle>/.well-known/atproto-did."
+        },
+        {
+          "fact": "proof.third_party_signs_binding",
+          "value": "no",
+          "source_url": "https://web.plc.directory/spec/v0.1/did-plc",
+          "source_date": "2025-12",
+          "note": "The PLC directory validates and orders operations but does not sign them; only rotation keys sign. No third-party attestation is involved."
+        },
+        {
+          "fact": "proof.uses_oauth_oidc",
+          "value": "no",
+          "source_url": "https://atproto.com/specs/handle",
+          "source_date": "2026",
+          "note": "The link is made by editing DNS or a well-known file and updating the DID doc. No OAuth login to the domain is involved."
+        },
+        {
+          "fact": "proof.capability_delegation",
+          "value": "no",
+          "source_url": "https://atproto.com/specs/handle",
+          "source_date": "2026",
+          "note": "This is a two-way claim of sameness (DID doc names the handle, domain names the DID). It does not delegate authority."
+        },
+        {
+          "fact": "proof.anchor_is_dns",
+          "value": "yes",
+          "source_url": "https://atproto.com/specs/handle",
+          "source_date": "2026",
+          "note": "The handle is a DNS name, resolved via DNS TXT or HTTPS well-known."
+        },
+        {
+          "fact": "proof.anchor_is_email",
+          "value": "no",
+          "source_url": "https://atproto.com/specs/handle",
+          "source_date": "2026",
+          "note": "The only handle form is a DNS hostname. Email addresses are not handles."
+        },
+        {
+          "fact": "proof.anchor_is_social",
+          "value": "no",
+          "source_url": "https://atproto.com/specs/handle",
+          "source_date": "2026",
+          "note": "Only domains are supported. A platform can act as an anchor only by giving out subdomains (as bsky.social does)."
+        },
+        {
+          "fact": "verify.offline_possible",
+          "value": "no",
+          "source_url": "https://atproto.com/specs/handle",
+          "source_date": "2026",
+          "note": "The spec requires live resolution of both handle to DID and DID to doc, and says handles must not be trusted until the DID doc is confirmed to link back."
+        },
+        {
+          "fact": "verify.fetches_anchor",
+          "value": "yes",
+          "source_url": "https://atproto.com/specs/handle",
+          "source_date": "2026",
+          "note": "The verifier must query DNS or fetch https://<handle>/.well-known/atproto-did."
+        },
+        {
+          "fact": "verify.needs_issuer_trust",
+          "value": "no",
+          "source_url": "https://web.plc.directory/spec/v0.1/did-plc",
+          "source_date": "2025-12",
+          "note": "There is no issuer. PLC operations are self-certifying through rotation-key signatures."
+        },
+        {
+          "fact": "verify.needs_registry",
+          "value": "yes",
+          "source_url": "https://web.plc.directory/spec/v0.1/did-plc",
+          "source_date": "2025-12",
+          "note": "did:plc (the deployed default) must be resolved via the PLC directory or a replica. did:web avoids the registry but is a minority path."
+        },
+        {
+          "fact": "verify.no_author_service",
+          "value": "yes",
+          "source_url": "https://atproto.com/blog/plc-replicas",
+          "source_date": "2026-02-18",
+          "note": "did:plc can be resolved from community mirrors or self-run validating replicas (open source, go-didplc), and did:web needs no Bluesky service at all. In practice most clients use plc.directory, which Bluesky PBC still runs."
+        },
+        {
+          "fact": "verify.breaks_if_api_closed",
+          "value": "no",
+          "source_url": "https://atproto.com/specs/handle",
+          "source_date": "2026",
+          "note": "The anchor is DNS or HTTPS on the user's own domain, so there is no platform API to close."
+        },
+        {
+          "fact": "lifecycle.survives_key_rotation",
+          "value": "yes",
+          "source_url": "https://web.plc.directory/spec/v0.1/did-plc",
+          "source_date": "2025-12",
+          "note": "The handle binds to the DID, not to a key. Rotation and signing keys can change through PLC operations without breaking the DNS record."
+        },
+        {
+          "fact": "lifecycle.explicit_revocation",
+          "value": "yes",
+          "source_url": "https://web.plc.directory/spec/v0.1/did-plc",
+          "source_date": "2025-12",
+          "note": "A signed PLC operation can remove or replace alsoKnownAs, which ends the bidirectional link. Removing the DNS TXT also works."
+        },
+        {
+          "fact": "lifecycle.expiry",
+          "value": "no",
+          "source_url": "https://atproto.com/specs/handle",
+          "source_date": "2026",
+          "note": "Handles do not expire by design. The spec only recommends periodic re-resolution of cached results."
+        },
+        {
+          "fact": "lifecycle.key_recovery",
+          "value": "yes",
+          "source_url": "https://web.plc.directory/spec/v0.1/did-plc",
+          "source_date": "2025-12",
+          "note": "Rotation keys are listed in priority order (1-5 keys). A higher-priority key can override operations by lower keys within 72 hours."
+        },
+        {
+          "fact": "lifecycle.replay_protected",
+          "value": "yes",
+          "source_url": "https://atproto.com/specs/handle",
+          "source_date": "2026",
+          "note": "Verification is a live two-way check. If the domain changes hands and the new owner repoints DNS, the old DID's claim fails and is shown as handle.invalid. PLC operations are also hash-chained with timestamps."
+        },
+        {
+          "fact": "record.transparency_log",
+          "value": "no",
+          "source_url": "https://dholms.leaflet.pub/3m6zswymcqk2p",
+          "source_date": "2025",
+          "note": "PLC keeps a public audit log (/log/audit, /export), but it is not yet a Merkle transparency log, and the directory can drop accepted operations. A Sunlight-style tlog is planned (sequence numbers were added in Jan 2026)."
+        },
+        {
+          "fact": "record.self_hosted_possible",
+          "value": "yes",
+          "source_url": "https://atproto.com/specs/did",
+          "source_date": "2026",
+          "note": "With did:web plus your own domain, both the record and the proof are self-hosted. did:web gets no migration or recovery support, and did:plc cannot be self-hosted."
+        },
+        {
+          "fact": "record.multi_operator",
+          "value": "no",
+          "source_url": "https://updates.microcosm.blue/3lz7nwvh4zc2u",
+          "source_date": "2025-09-19",
+          "note": "Only one authoritative PLC directory accepts writes. Mirrors and replicas are read-only copies, and in Sept 2025 only about 3 public mirrors existed."
+        },
+        {
+          "fact": "portability.generic_key",
+          "value": "no",
+          "source_url": "https://atproto.com/specs/did",
+          "source_date": "2026",
+          "note": "Only did:plc and did:web are supported, and keys must be secp256k1 or P-256. Ed25519 and other DID methods are not accepted."
+        },
+        {
+          "fact": "portability.extensible_anchors",
+          "value": "no",
+          "source_url": "https://atproto.com/specs/handle",
+          "source_date": "2026",
+          "note": "The only anchor type is a DNS hostname. Any other anchor would need a spec change."
+        },
+        {
+          "fact": "adoption.spec_maturity",
+          "value": "1",
+          "source_url": "https://atproto.com/blog/kicking-off-the-atp-working-group",
+          "source_date": "2026-04-02",
+          "note": "An IETF ATP WG was chartered in March 2026, and its scope covers identifier resolution requirements and a registry of methods such as PLC and did:web. The handle and did:plc specs are still published by Bluesky and PLC, not as adopted drafts."
+        },
+        {
+          "fact": "adoption.active_2026",
+          "value": "yes",
+          "source_url": "https://atproto.com/blog/plc-replicas",
+          "source_date": "2026-02-18",
+          "note": "PLC read replicas (Feb 2026), export API changes (Jan 2026), and the PLC Org setup (Sept 2026)."
+        },
+        {
+          "fact": "adoption.client_display",
+          "value": "yes",
+          "source_url": "https://bsky.social/about/blog/04-21-2025-verification",
+          "source_date": "2025-04-21",
+          "note": "The Bluesky app shows the domain handle as the username. Bluesky reports more than 270,000 domain-handle accounts as of April 2025."
+        },
+        {
+          "fact": "effort.attachable",
+          "value": "no",
+          "source_url": "https://atproto.com/specs/did",
+          "source_date": "2026",
+          "note": "Requires an atproto DID (did:plc or did:web) with secp256k1 or P-256 keys. An existing PGP, nostr, or ed25519 identity cannot be attached."
+        },
+        {
+          "fact": "effort.requires_platform_migration",
+          "value": "yes",
+          "source_url": "https://atproto.com/specs/did",
+          "source_date": "2026",
+          "note": "You must create an atproto identity (DID doc with #atproto key and at:// alsoKnownAs)."
+        }
+      ],
+      "summary": {
+        "C1": "The proof is bidirectional and public. The DID doc lists at://<handle> in alsoKnownAs, and the domain names the DID through DNS TXT _atproto.<handle> or https://<handle>/.well-known/atproto-did (https://atproto.com/specs/handle). For did:plc the alsoKnownAs entry sits inside a rotation-key-signed PLC operation (https://web.plc.directory/spec/v0.1/did-plc). No third party signs the binding.",
+        "C2": "Verifiers resolve both directions live. Handles 'should not be trusted' until the DID doc links back (https://atproto.com/specs/handle). did:plc requires the PLC directory or a replica. Validating read replicas are open source and community mirrors exist (https://atproto.com/blog/plc-replicas), but most clients hit plc.directory, still run by Bluesky PBC.",
+        "C3": "The only anchor is DNS or HTTPS on a domain, so there is no platform API to close and anything a registrar and web host serve works. The flip side is that users without a domain get a subdomain of their PDS operator (e.g. *.bsky.social), where that operator controls both sides of the link.",
+        "C4": "did:plc has 1-5 priority-ordered rotation keys (secp256k1 or P-256). A higher-priority key can undo operations by lower keys within 72 hours (https://web.plc.directory/spec/v0.1/did-plc). The handle binds to the DID, so key rotation never breaks it. By default the PDS holds the rotation keys, and users must add their own recovery key manually (https://whtwnd.com/bnewbold.net/3lj7jmt2ct72r). did:web has no recovery or migration (https://atproto.com/specs/did).",
+        "C5": "Freshness comes from live resolution, not timestamps on the proof. If a domain changes owner, the old DID's claim fails the backlink and shows as handle.invalid. PLC operations are hash-chained and timestamped, and the full history is public via /log/audit and /export, but it is not yet a Merkle transparency log (https://dholms.leaflet.pub/3m6zswymcqk2p).",
+        "C6": "The PLC directory cannot forge operations but can reject or remove accepted ones, so it must be trusted to keep the set of valid operations (https://dholms.leaflet.pub/3m6zswymcqk2p). The main forgery risks are the DNS registrar or host, which can repoint the domain to another DID, and the PDS, which by default holds the rotation keys and can rewrite the DID doc. Handle history in alsoKnownAs stays public forever (https://web.plc.directory/spec/v0.1/did-plc).",
+        "C7": "It works only with atproto DIDs (did:plc and did:web), and keys must be secp256k1 or P-256. Ed25519 and other DID methods are explicitly out of scope (https://atproto.com/specs/did).",
+        "C8": "The offering is in heavy production use: more than 40M PLC identifiers (https://web.plc.directory/) and more than 270k domain handles as of April 2025 (https://bsky.social/about/blog/04-21-2025-verification). An IETF ATP WG was chartered in March 2026 and covers identifier resolution requirements (https://atproto.com/blog/kicking-off-the-atp-working-group). Handle and PLC specs are still published by Bluesky and PLC.",
+        "C9": "This is the migrate tier: you must hold an atproto identity. Within atproto, adding a domain handle is cheap (one DNS TXT record).",
+        "C10": "The record lives in the PLC directory, still run by Bluesky PBC (US). The Swiss PLC Organization formally exists, but its next step is 'to get ready to take over the PLC directory assets and operations', so the transfer is NOT complete as of 2026-09-28 (https://blog.plcred.org/3mwlphq42d227). Only one authoritative writer exists. Community proposals for federated or BFT directories remain open (https://github.com/bluesky-social/atproto/discussions/4002), and as of Sept 2025 there were only about 3 public mirrors (https://updates.microcosm.blue/3lz7nwvh4zc2u)."
+      },
+      "misfit_notes": "It fits bidirectional public proof, with three twists. (1) One direction (DID to handle) is stored in a registry log rather than published by the key holder on a host it controls. (2) The anchor is the identity's primary name, not a secondary linked account. The domain IS the username, so the offering merges naming with anchoring and supports only one anchor at a time (the first valid alsoKnownAs). (3) For default users the custodial PDS holds the signing and rotation keys and also controls the *.bsky.social subdomain, so both ends of the 'bidirectional' proof sit with one operator, which collapses it into a platform assertion. It cannot be attached to an existing key system, so it is migrate tier only. did:web is a partial build or self-host path but loses recovery.",
+      "surprises": "The PLC directory transfer to the Swiss association is still not done a year after the Sept 2025 announcement: the org was formally set up only in Sept 2026 (https://blog.plcred.org/3mwlphq42d227). Most users' DID rotation keys are held by their PDS (Bluesky), not by the user. Ed25519 is not supported. The PLC 'ledger' is not yet a transparency log, and the directory can silently drop accepted operations. Domain handles (more than 270k accounts) are explicitly NOT the blue check. Old handles stay in the public PLC audit log forever."
+    },
+    {
+      "id": "bsky-verification",
+      "facts": [
+        {
+          "fact": "proof.key_signs_claim",
+          "value": "no",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json",
+          "source_date": "2025-04",
+          "note": "The record lives in the verifier's repo. The subject's key never signs anything."
+        },
+        {
+          "fact": "proof.anchor_publishes_key",
+          "value": "no",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json",
+          "source_date": "2025-04",
+          "note": "No external anchor publishes anything. The verifier's record names the subject DID, handle, and displayName."
+        },
+        {
+          "fact": "proof.third_party_signs_binding",
+          "value": "yes",
+          "source_url": "https://atproto.com/specs/repository",
+          "source_date": "2026",
+          "note": "The verifier (Bluesky or a trusted-verifier org) writes the record into its own repo, and that repo commit is signed by the verifier's atproto signing key."
+        },
+        {
+          "fact": "proof.uses_oauth_oidc",
+          "value": "no",
+          "source_url": "https://bsky.social/about/blog/04-21-2025-verification",
+          "source_date": "2025-04-21",
+          "note": "Verification is an editorial decision by Bluesky moderation or a trusted verifier org. No OAuth to an external account is involved."
+        },
+        {
+          "fact": "proof.capability_delegation",
+          "value": "no",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json",
+          "source_date": "2025-04",
+          "note": "The record is an attestation about a subject DID, not a delegation. Trusted-verifier status works like a CA hierarchy, but it is configured in the AppView rather than expressed as a capability."
+        },
+        {
+          "fact": "proof.anchor_is_dns",
+          "value": "no",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json",
+          "source_date": "2025-04",
+          "note": "The record snapshots the handle string, which may be a domain, but it attests to off-protocol authenticity and notability, not control of a domain. Bluesky says domain handles are 'different from a verification badge'."
+        },
+        {
+          "fact": "proof.anchor_is_email",
+          "value": "no",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json",
+          "source_date": "2025-04",
+          "note": "The record has no email field."
+        },
+        {
+          "fact": "proof.anchor_is_social",
+          "value": "no",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json",
+          "source_date": "2025-04",
+          "note": "The record has no field for an external account. It attests that the atproto account belongs to an authentic or notable entity."
+        },
+        {
+          "fact": "verify.offline_possible",
+          "value": "no",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/actor/defs.json",
+          "source_date": "2025-04",
+          "note": "Validity requires the issuer to be trusted by the app and the current handle and displayName to match the record. Both need live state, and in the Bluesky app the AppView computes them."
+        },
+        {
+          "fact": "verify.fetches_anchor",
+          "value": "no",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json",
+          "source_date": "2025-04",
+          "note": "There is no external anchor to fetch. The verifier reads the issuer repo or the AppView."
+        },
+        {
+          "fact": "verify.needs_issuer_trust",
+          "value": "yes",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json",
+          "source_date": "2025-04",
+          "note": "Per the lexicon, verifications are valid only if issued by an account the app considers trusted."
+        },
+        {
+          "fact": "verify.needs_registry",
+          "value": "yes",
+          "source_url": "https://web.plc.directory/spec/v0.1/did-plc",
+          "source_date": "2025-12",
+          "note": "Issuer and subject DIDs (mostly did:plc) must be resolved to check signatures and current handles."
+        },
+        {
+          "fact": "verify.no_author_service",
+          "value": "no",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/actor/defs.json",
+          "source_date": "2025-04",
+          "note": "In practice validity (verifiedStatus, trustedVerifierStatus, isValid) is computed by the Bluesky AppView. The root issuer bsky.app and its records are on Bluesky infrastructure, and the trusted-verifier list is set by Bluesky."
+        },
+        {
+          "fact": "verify.breaks_if_api_closed",
+          "value": "no",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json",
+          "source_date": "2025-04",
+          "note": "There is no external anchor platform. Issuer records stay readable from PDS and relays even without Bluesky's AppView, though a client would need its own verifier list."
+        },
+        {
+          "fact": "lifecycle.survives_key_rotation",
+          "value": "yes",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json",
+          "source_date": "2025-04",
+          "note": "The record names the subject DID, not a key, so key rotation does not affect it. Changing the handle or displayName does invalidate it."
+        },
+        {
+          "fact": "lifecycle.explicit_revocation",
+          "value": "yes",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/actor/defs.json",
+          "source_date": "2025-04",
+          "note": "Besides deleting the record, the AppView can mark a trusted verifier invalid (trustedVerifierStatus), which voids all of its verifications. Handle or displayName changes also invalidate automatically."
+        },
+        {
+          "fact": "lifecycle.expiry",
+          "value": "no",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json",
+          "source_date": "2025-04",
+          "note": "Only createdAt is stored. There is no expiry field."
+        },
+        {
+          "fact": "lifecycle.key_recovery",
+          "value": "yes",
+          "source_url": "https://web.plc.directory/spec/v0.1/did-plc",
+          "source_date": "2025-12",
+          "note": "Inherited from did:plc rotation keys for the subject and issuer accounts. The verification feature itself defines no recovery."
+        },
+        {
+          "fact": "lifecycle.replay_protected",
+          "value": "yes",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json",
+          "source_date": "2025-04",
+          "note": "The record binds a DID plus a snapshot of the handle and displayName, and is valid only while both still match. The record is mutable and can be deleted live."
+        },
+        {
+          "fact": "record.transparency_log",
+          "value": "no",
+          "source_url": "https://atproto.com/specs/repository",
+          "source_date": "2026",
+          "note": "Repos are mutable signed Merkle trees. Records can be deleted with no tombstone, and there is no append-only log."
+        },
+        {
+          "fact": "record.self_hosted_possible",
+          "value": "no",
+          "source_url": "https://bsky.social/about/blog/04-21-2025-verification",
+          "source_date": "2025-04-21",
+          "note": "The proof must be issued by Bluesky or a Bluesky-approved trusted verifier from that verifier's repo. A user cannot self-issue a recognized check."
+        },
+        {
+          "fact": "record.multi_operator",
+          "value": "no",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/actor/defs.json",
+          "source_date": "2025-04",
+          "note": "Records are relayed over the firehose, but recognized validity comes from one operator, the Bluesky AppView. Other networks such as Eurosky/mu run separate verifier sets."
+        },
+        {
+          "fact": "portability.generic_key",
+          "value": "no",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json",
+          "source_date": "2025-04",
+          "note": "The subject must be an atproto DID."
+        },
+        {
+          "fact": "portability.extensible_anchors",
+          "value": "no",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json",
+          "source_date": "2025-04",
+          "note": "No external anchors are defined. New trusted verifiers can be added without a spec change, but those are issuers, not anchors."
+        },
+        {
+          "fact": "adoption.spec_maturity",
+          "value": "0",
+          "source_url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json",
+          "source_date": "2025-04",
+          "note": "This is a vendor lexicon (app.bsky.*), and the IETF ATP charter excludes app-specific schemas and the moderation system."
+        },
+        {
+          "fact": "adoption.active_2026",
+          "value": "yes",
+          "source_url": "https://github.com/singi-labs/sifa-workspace/issues/258",
+          "source_date": "2026-07-13",
+          "note": "In 2026 Eurosky/mu reuses app.bsky.graph.verification with its own verifiers, and other apps (Sifa) are adding attributed display."
+        },
+        {
+          "fact": "adoption.client_display",
+          "value": "yes",
+          "source_url": "https://bsky.social/about/blog/04-21-2025-verification",
+          "source_date": "2025-04-21",
+          "note": "The Bluesky app shows blue checks and scalloped trusted-verifier badges. Tapping a check shows the issuers."
+        },
+        {
+          "fact": "effort.attachable",
+          "value": "no",
+          "source_url": "https://bsky.social/about/blog/04-21-2025-verification",
+          "source_date": "2025-04-21",
+          "note": "Only works for atproto accounts, verified by Bluesky or its trusted verifiers."
+        },
+        {
+          "fact": "effort.requires_platform_migration",
+          "value": "yes",
+          "source_url": "https://bsky.social/about/blog/04-21-2025-verification",
+          "source_date": "2025-04-21",
+          "note": "Requires an atproto (Bluesky) account and approval by Bluesky or a trusted verifier."
+        }
+      ],
+      "summary": {
+        "C1": "This is issuer attestation. Bluesky (bsky.app) or a trusted-verifier org writes an app.bsky.graph.verification record {subject DID, handle, displayName, createdAt} into its own signed repo (https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json, https://atproto.com/specs/repository). It does not link to any external account. It attests off-protocol that the account is 'authentic and notable', reviewed by Bluesky moderation (https://bsky.social/about/blog/04-21-2025-verification).",
+        "C2": "A verification is valid only if issued by an account the app trusts, and only while the subject's current handle and displayName match the snapshot. The Bluesky AppView computes verifiedStatus, trustedVerifierStatus and isValid (https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/actor/defs.json). Any client can read the records, but the recognized trust list is Bluesky's.",
+        "C3": "No external platforms are anchored, so there is no API fragility. Coverage is set by Bluesky's and the trusted verifiers' editorial choices (NYT, FT, The Athletic and others). Reviewers reportedly check for a link to the Bluesky account on the applicant's official site, but that check is off-protocol and leaves no record.",
+        "C4": "The record names the subject DID, so key rotation does not affect it, and account recovery is inherited from did:plc. Changing your handle or displayName silently invalidates the check until it is re-issued (https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json). Revocation is deleting the record, or Bluesky marking a verifier invalid.",
+        "C5": "There is no expiry. Freshness comes from comparing the snapshot with current state and from records being live and deletable. Repos are mutable and deletions leave no tombstone (https://atproto.com/specs/repository), so past verifications are not auditable.",
+        "C6": "The trust model is a CA hierarchy: Bluesky acts as root, with trusted verifiers as sub-CAs (https://github.com/bluesky-social/atproto/discussions/3785). Bluesky or any trusted verifier can, alone, mark any account verified, and Bluesky can strip any verifier. It protects against impersonation of notable entities, not against the platform.",
+        "C7": "Only atproto DIDs can be subjects. The lexicon is reusable, and Eurosky/mu runs a separate verifier network with the same record type (https://hello.mu.social/verification/, https://github.com/singi-labs/sifa-workspace/issues/258).",
+        "C8": "Launched 2025-04-21 (https://bsky.social/about/blog/04-21-2025-verification) and shown in the main Bluesky app. It is a vendor lexicon outside the IETF ATP charter (https://atproto.com/blog/kicking-off-the-atp-working-group). In 2026 it was reused by Eurosky/mu, and Sifa proposes attributed display.",
+        "C9": "This is the migrate tier. You need an atproto account and must be approved by Bluesky or a trusted verifier. There is no build or attach path for outsiders, though anyone can issue unrecognized records with the same lexicon.",
+        "C10": "Bluesky PBC (US) runs the root issuer account, the PDS hosting its records, the AppView that decides validity, and the trusted-verifier list. Trusted verifiers are third-party orgs in various jurisdictions. Identity records resolve through the PLC directory, still Bluesky-run as of 2026-09-28 (https://blog.plcred.org/3mwlphq42d227)."
+      },
+      "misfit_notes": "It sits in the issuer-attestation family but without OAuth: the issuer's check is editorial and off-protocol, so nothing is anchored to any external account or domain. The 'anchor' is effectively a real-world entity judged by Bluesky or a trusted verifier, which is outside the OOBTA definition. The verifier is both issuer and trust root, with a sub-CA delegation (trusted verifiers) configured in the AppView rather than as a protocol capability. The record format is open and reusable (Eurosky/mu), so the 'issuer set' is per-app policy rather than a property of the offering.",
+      "surprises": "A Bluesky blue check does not link to any external account. It is an editorial attestation of 'authentic and notable', separate from domain handles. Changing your own handle or display name silently voids your check. Verification records are mutable repo entries with no tombstone, so past verifications cannot be audited. Validity is computed by Bluesky's AppView from a Bluesky-chosen list of trusted verifiers. As of 2026, Eurosky/mu reuses the same lexicon with its own verifier set, so 'verified' depends on which app you use."
+    }
+  ],
+  "operators": [
+    {
+      "id": "plc-bsky",
+      "name": "PLC directory (plc.directory) as operated by Bluesky Social PBC",
+      "kind": "registry",
+      "jurisdiction": "US",
+      "jurisdiction_note": "Bluesky Social PBC is a US public benefit corporation and still operates plc.directory. The PLC Org says it must still 'get ready to take over the PLC directory assets and operations' (transfer NOT complete as of 2026-09-28).",
+      "source_url": "https://blog.plcred.org/3mwlphq42d227"
+    },
+    {
+      "id": "plc-org",
+      "name": "Public Ledger of Credentials Organization (Swiss Association)",
+      "kind": "registry",
+      "jurisdiction": "CH",
+      "jurisdiction_note": "Registered Swiss Association announced Sept 2025 and formally established by 2026-09-28. It does not yet operate the directory. Its board includes a Bluesky engineer (Bryan Newbold), and funding is a bootstrap payment from Bluesky.",
+      "source_url": "https://blog.plcred.org/3mwlphq42d227"
+    },
+    {
+      "id": "bluesky",
+      "name": "Bluesky Social PBC AppView / Bluesky app",
+      "kind": "platform",
+      "jurisdiction": "US",
+      "jurisdiction_note": "US public benefit corporation. The AppView computes verification validity and hosts the trusted-verifier policy.",
+      "source_url": "https://bsky.social/about/blog/04-21-2025-verification"
+    },
+    {
+      "id": "bluesky-pds",
+      "name": "Bluesky Social PBC PDS hosting (bsky.social / *.bsky.network)",
+      "kind": "platform",
+      "jurisdiction": "US",
+      "jurisdiction_note": "US company. By default it holds users' repo signing key and did:plc rotation keys, and it controls the *.bsky.social handle namespace.",
+      "source_url": "https://whtwnd.com/bnewbold.net/3lj7jmt2ct72r"
+    },
+    {
+      "id": "dns-registrar",
+      "name": "DNS registrar / authoritative DNS host for the handle domain",
+      "kind": "dns",
+      "jurisdiction": "other",
+      "jurisdiction_note": "Varies by registrar and TLD.",
+      "source_url": "https://atproto.com/specs/handle"
+    },
+    {
+      "id": "web-host",
+      "name": "Web host serving /.well-known/atproto-did",
+      "kind": "platform",
+      "jurisdiction": "other",
+      "jurisdiction_note": "Varies by the host the user picks.",
+      "source_url": "https://atproto.com/specs/handle"
+    },
+    {
+      "id": "bsky-trusted-verifiers",
+      "name": "Bluesky Trusted Verifier organizations (e.g. NYT, FT, The Athletic)",
+      "kind": "issuer",
+      "jurisdiction": "other",
+      "jurisdiction_note": "Multiple organizations in various jurisdictions (many US media orgs), approved by Bluesky.",
+      "source_url": "https://bsky.social/about/blog/04-21-2025-verification"
+    }
+  ],
+  "links": [
+    {
+      "offering": "atproto-handle",
+      "layer": "record",
+      "operator": "plc-bsky",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Cannot forge signed operations, but can reject or remove valid ones. Holds request logs. The operation log itself is public."
+    },
+    {
+      "offering": "atproto-handle",
+      "layer": "record",
+      "operator": "plc-org",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Same powers once it takes over. The transfer was not complete as of 2026-09-28."
+    },
+    {
+      "offering": "atproto-handle",
+      "layer": "record",
+      "operator": "bluesky-pds",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "By default holds the rotation keys and can sign PLC operations that change keys or alsoKnownAs, taking over the DID that the domain points at. Users can add a higher-priority key of their own to override within 72h."
+    },
+    {
+      "offering": "atproto-handle",
+      "layer": "proof",
+      "operator": "dns-registrar",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Can repoint _atproto TXT to an attacker DID whose doc claims the handle, and the verifier will accept it."
+    },
+    {
+      "offering": "atproto-handle",
+      "layer": "proof",
+      "operator": "web-host",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "For the well-known method, the host can serve a different DID."
+    },
+    {
+      "offering": "atproto-handle",
+      "layer": "proof",
+      "operator": "bluesky-pds",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Only for *.bsky.social handles, where Bluesky controls the subdomain resolution."
+    },
+    {
+      "offering": "atproto-handle",
+      "layer": "anchor",
+      "operator": "dns-registrar",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "The registrar controls the domain itself (it can seize, transfer, or suspend it)."
+    },
+    {
+      "offering": "bsky-verification",
+      "layer": "record",
+      "operator": "plc-bsky",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Issuer and subject DIDs resolve via PLC."
+    },
+    {
+      "offering": "bsky-verification",
+      "layer": "record",
+      "operator": "bluesky-pds",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Hosts the bsky.app root-issuer repo and most subjects' repos. It can write verification records with the issuer's key."
+    },
+    {
+      "offering": "bsky-verification",
+      "layer": "proof",
+      "operator": "bluesky",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "The AppView decides who is a trusted verifier and computes isValid. Bluesky is also the root issuer and can verify anyone or void any verifier."
+    },
+    {
+      "offering": "bsky-verification",
+      "layer": "proof",
+      "operator": "bsky-trusted-verifiers",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Each trusted verifier can, alone, issue a recognized check for any account and delete it at will."
+    },
+    {
+      "offering": "bsky-verification",
+      "layer": "anchor",
+      "operator": "bluesky",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "There is no external anchor account. The attested real-world identity is judged off-protocol by Bluesky moderation, which reviews all verifications."
+    }
+  ],
+  "sources": [
+    {
+      "title": "did:plc Specification v0.3",
+      "url": "https://web.plc.directory/spec/v0.1/did-plc",
+      "date": "2025-12"
+    },
+    {
+      "title": "atproto Handle spec",
+      "url": "https://atproto.com/specs/handle",
+      "date": "2026"
+    },
+    {
+      "title": "atproto DID spec",
+      "url": "https://atproto.com/specs/did",
+      "date": "2026"
+    },
+    {
+      "title": "atproto Repository spec",
+      "url": "https://atproto.com/specs/repository",
+      "date": "2026"
+    },
+    {
+      "title": "First steps of the PLC organization",
+      "url": "https://blog.plcred.org/3mwlphq42d227",
+      "date": "2026-09-28"
+    },
+    {
+      "title": "did:plc Directory landing page",
+      "url": "https://web.plc.directory/",
+      "date": "2026"
+    },
+    {
+      "title": "PLC Read Replicas",
+      "url": "https://atproto.com/blog/plc-replicas",
+      "date": "2026-02-18"
+    },
+    {
+      "title": "PLC Export API Update (January 2026)",
+      "url": "https://github.com/bluesky-social/atproto/discussions/4508",
+      "date": "2026-01-06"
+    },
+    {
+      "title": "PLC Threat-modeling & Auditability (Daniel Holmgren)",
+      "url": "https://dholms.leaflet.pub/3m6zswymcqk2p",
+      "date": "2025"
+    },
+    {
+      "title": "Adversarial PLC directory migration (microcosm)",
+      "url": "https://updates.microcosm.blue/3lz7nwvh4zc2u",
+      "date": "2025-09-19"
+    },
+    {
+      "title": "Minimal web-of-trust governance for did:plc (#4002)",
+      "url": "https://github.com/bluesky-social/atproto/discussions/4002",
+      "date": "2026-06-14"
+    },
+    {
+      "title": "Bluesky decentralization reassessment (plurality)",
+      "url": "https://plurality.leaflet.pub/3mfergx7i7c2b",
+      "date": "2026-01-19"
+    },
+    {
+      "title": "Kicking off the ATP Working Group at the IETF",
+      "url": "https://atproto.com/blog/kicking-off-the-atp-working-group",
+      "date": "2026-04-02"
+    },
+    {
+      "title": "Creating an Independent PLC Directory Organization",
+      "url": "https://atproto.com/blog/plc-directory-org",
+      "date": "2025-09"
+    },
+    {
+      "title": "Registering Identity Recovery Keys via PDS, using goat",
+      "url": "https://whtwnd.com/bnewbold.net/3lj7jmt2ct72r",
+      "date": "2025"
+    },
+    {
+      "title": "A New Form of Verification on Bluesky",
+      "url": "https://bsky.social/about/blog/04-21-2025-verification",
+      "date": "2025-04-21"
+    },
+    {
+      "title": "app.bsky.graph.verification lexicon",
+      "url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/graph/verification.json",
+      "date": "2025-04"
+    },
+    {
+      "title": "app.bsky.actor.defs (verificationState)",
+      "url": "https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/actor/defs.json",
+      "date": "2025-04"
+    },
+    {
+      "title": "Bluecheck Verification discussion #3785",
+      "url": "https://github.com/bluesky-social/atproto/discussions/3785",
+      "date": "2025-04"
+    },
+    {
+      "title": "Sifa: show verification from other AT Protocol verifiers",
+      "url": "https://github.com/singi-labs/sifa-workspace/issues/258",
+      "date": "2026-07-13"
+    },
+    {
+      "title": "mu verification",
+      "url": "https://hello.mu.social/verification/",
+      "date": "2026"
+    }
+  ]
+}

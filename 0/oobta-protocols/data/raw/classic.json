@@ -1,0 +1,1219 @@
+{
+  "group": "classic",
+  "offerings": [
+    {
+      "id": "keybase",
+      "facts": [
+        {
+          "fact": "proof.key_signs_claim",
+          "value": "yes",
+          "source_url": "https://book.keybase.io/docs/server",
+          "source_date": "2026-05",
+          "note": "Each identity proof is a sigchain link signed by one of the user's device/PGP keys naming the remote account or domain."
+        },
+        {
+          "fact": "proof.anchor_publishes_key",
+          "value": "yes",
+          "source_url": "https://book.keybase.io/docs/server",
+          "source_date": "2026-05",
+          "note": "User posts the signed proof text (Keybase username + sig id) on the anchor (tweet, gist, Reddit post, HN profile, DNS TXT, file on website); client scrapes it."
+        },
+        {
+          "fact": "proof.third_party_signs_binding",
+          "value": "no",
+          "source_url": "https://book.keybase.io/docs/server/stellar",
+          "source_date": "2020-01",
+          "note": "Keybase server signs the global Merkle root (and posts its hash to Stellar), which commits to sigchains; this is a log commitment, not an attestation of the binding itself."
+        },
+        {
+          "fact": "proof.uses_oauth_oidc",
+          "value": "no",
+          "source_url": "https://book.keybase.io/docs/server",
+          "source_date": "2026-05",
+          "note": "User posts proof text to the anchor; no OAuth to the anchor. Generic 'proof integration' partners (e.g. Mastodon instances) use the partner site's own logged-in session, not OAuth."
+        },
+        {
+          "fact": "proof.capability_delegation",
+          "value": "no",
+          "source_url": "https://book.keybase.io/docs/server",
+          "source_date": "2026-05",
+          "note": "Proofs are claims of sameness between Keybase account and remote account; no authority is delegated."
+        },
+        {
+          "fact": "proof.anchor_is_dns",
+          "value": "yes",
+          "source_url": "https://book.keybase.io/account",
+          "source_date": "2026-05",
+          "note": "Personal website and DNS TXT proofs are supported (also seen as 'dns' and 'generic_web_site' proof types in the live user lookup API)."
+        },
+        {
+          "fact": "proof.anchor_is_email",
+          "value": "no",
+          "source_url": "https://book.keybase.io/account",
+          "source_date": "2026-05",
+          "note": "Public proofs listed are website, Twitter, GitHub, Reddit, Hacker News (+ generic partners); email is used privately for account/search, not as a public proof."
+        },
+        {
+          "fact": "proof.anchor_is_social",
+          "value": "yes",
+          "source_url": "https://book.keybase.io/account",
+          "source_date": "2026-05",
+          "note": "Twitter/X, GitHub, Reddit, Hacker News, plus Mastodon instances and other partners via proof integration."
+        },
+        {
+          "fact": "verify.offline_possible",
+          "value": "no",
+          "source_url": "https://book.keybase.io/docs/server",
+          "source_date": "2026-05",
+          "note": "Client must fetch the sigchain/Merkle path from Keybase and scrape the proof from the anchor."
+        },
+        {
+          "fact": "verify.fetches_anchor",
+          "value": "yes",
+          "source_url": "https://book.keybase.io/docs/server",
+          "source_date": "2026-05",
+          "note": "Docs: the keybase client scrapes the social site itself rather than trusting the server."
+        },
+        {
+          "fact": "verify.needs_issuer_trust",
+          "value": "no",
+          "source_url": "https://book.keybase.io/docs/server",
+          "source_date": "2026-05",
+          "note": "Binding is signed by the user's key; the Keybase server key only signs Merkle roots, and server misbehaviour is meant to be detectable rather than trusted."
+        },
+        {
+          "fact": "verify.needs_registry",
+          "value": "yes",
+          "source_url": "https://book.keybase.io/docs/server/stellar",
+          "source_date": "2020-01",
+          "note": "Verifier fetches the user's sigchain and Merkle path from the Keybase server, optionally cross-checking the root on Stellar."
+        },
+        {
+          "fact": "verify.no_author_service",
+          "value": "no",
+          "source_url": "https://book.keybase.io/docs/server",
+          "source_date": "2026-05",
+          "note": "Sigchains are only served by keybase.io (Zoom); no alternate server or mirror exists."
+        },
+        {
+          "fact": "verify.breaks_if_api_closed",
+          "value": "yes",
+          "source_url": "https://github.com/keybase/client/issues/27225",
+          "source_date": "2024-07-09",
+          "note": "Open issue (2024-07, unresolved) reports new/redone Twitter/X and Reddit proofs can no longer be detected after platform API changes."
+        },
+        {
+          "fact": "lifecycle.survives_key_rotation",
+          "value": "yes",
+          "source_url": "https://book.keybase.io/docs/server",
+          "source_date": "2026-05",
+          "note": "Docs: after a device key is revoked, 'any previous links they've signed are still valid'; proofs belong to the sigchain, not one key. Account reset, however, starts a new sigchain and drops proofs."
+        },
+        {
+          "fact": "lifecycle.explicit_revocation",
+          "value": "yes",
+          "source_url": "https://book.keybase.io/docs/server",
+          "source_date": "2026-05",
+          "note": "Sigchain supports revoke links (for keys and earlier sigs, including proofs), logged in the Merkle tree."
+        },
+        {
+          "fact": "lifecycle.expiry",
+          "value": "no",
+          "source_url": "https://github.com/keybase/client/blob/master/go/libkb/expire_times.go",
+          "source_date": "2026-09-30",
+          "note": "Sig payloads carry expire_in, but the client's HonorSigchainExpireTime() returns 0 (expiry not honored), and it is only applied to keys, not proofs."
+        },
+        {
+          "fact": "lifecycle.key_recovery",
+          "value": "yes",
+          "source_url": "https://book.keybase.io/account",
+          "source_date": "2026-05",
+          "note": "Paper keys and other provisioned devices let a user recover after losing a device; losing all of them forces account reset."
+        },
+        {
+          "fact": "lifecycle.replay_protected",
+          "value": "unknown",
+          "note": "Sigchain links have ctime and seqno and the Merkle log records them, but no source found on whether a re-posted old proof on a re-assigned handle is rejected."
+        },
+        {
+          "fact": "record.transparency_log",
+          "value": "yes",
+          "source_url": "https://book.keybase.io/docs/server/stellar",
+          "source_date": "2020-01",
+          "note": "All sigchains sit in a global Merkle tree; roots posted hourly to Stellar (live: latest memo 2026-10-01 via Horizon API)."
+        },
+        {
+          "fact": "record.self_hosted_possible",
+          "value": "no",
+          "source_url": "https://book.keybase.io/docs/server",
+          "source_date": "2026-05",
+          "note": "Sigchains live only on Keybase servers; no federation or self-hosting. Website/DNS proof can be self-hosted, the record cannot."
+        },
+        {
+          "fact": "record.multi_operator",
+          "value": "no",
+          "source_url": "https://book.keybase.io/docs/server",
+          "source_date": "2026-05",
+          "note": "Single operator (Keybase/Zoom); Stellar holds only root hashes, not records."
+        },
+        {
+          "fact": "portability.generic_key",
+          "value": "no",
+          "source_url": "https://book.keybase.io/docs/server",
+          "source_date": "2026-05",
+          "note": "Binds a Keybase account (per-device NaCl keys, optional PGP key). Cannot anchor an arbitrary DID or external ed25519 key as the identity."
+        },
+        {
+          "fact": "portability.extensible_anchors",
+          "value": "yes",
+          "source_url": "https://keybase.io/blog/keybase-proofs-for-mastodon-and-everyone",
+          "source_date": "2019-04-15",
+          "note": "Proof integration lets partner sites add a config + JSON endpoints; the scraping rules (PVL) and proof-service config are server-distributed and committed in the Merkle root (pvl_hash, proof_services_hash), so no client release needed. Keybase must approve each partner."
+        },
+        {
+          "fact": "adoption.spec_maturity",
+          "value": "0",
+          "source_url": "https://book.keybase.io/docs/server",
+          "source_date": "2026-05",
+          "note": "Vendor-only; documented by Keybase, no independent spec."
+        },
+        {
+          "fact": "adoption.active_2026",
+          "value": "yes",
+          "source_url": "https://github.com/keybase/client/releases",
+          "source_date": "2026-06-03",
+          "note": "Releases v6.5.2 (2026-02-04), v6.6.0 (2026-03-06), v6.6.2 (2026-04-08), v6.6.3 (2026-06-03); commits on 2026-09-30. Maintenance-only, no new features."
+        },
+        {
+          "fact": "adoption.client_display",
+          "value": "yes",
+          "source_url": "https://book.keybase.io/docs/server",
+          "source_date": "2026-05",
+          "note": "Keybase app/CLI and keybase.io profile show verified proofs. Note: Twitter/Reddit verification broken for new proofs."
+        },
+        {
+          "fact": "effort.attachable",
+          "value": "no",
+          "source_url": "https://book.keybase.io/docs/server",
+          "source_date": "2026-05",
+          "note": "An existing PGP key can be added to a Keybase account, but the link is made from the Keybase sigchain; you cannot add Keybase proofs to your own key system without a Keybase account."
+        },
+        {
+          "fact": "effort.requires_platform_migration",
+          "value": "yes",
+          "source_url": "https://book.keybase.io/docs/server",
+          "source_date": "2026-05",
+          "note": "Requires creating a Keybase account and sigchain on keybase.io."
+        }
+      ],
+      "summary": {
+        "C1": "Bidirectional public proof: the user signs a sigchain link naming the remote account with a Keybase device key, then posts the signed text on the anchor (https://book.keybase.io/docs/server). The Keybase server signs Merkle roots over all sigchains but does not attest bindings.",
+        "C2": "Clients scrape anchors themselves but must get sigchains and Merkle paths from keybase.io. The Stellar-anchored root (https://book.keybase.io/docs/server/stellar) detects server forks but not unavailability. There is no offline or third-party path.",
+        "C3": "Supports Twitter/X, GitHub, Reddit, HN, DNS, websites, plus partner sites via proof integration (https://keybase.io/blog/keybase-proofs-for-mastodon-and-everyone). New or redone Twitter/X and Reddit proofs fail after API changes (https://github.com/keybase/client/issues/27225, open since 2024-07). The lookup API still reports old proofs as OK.",
+        "C4": "Per-device keys with paper-key recovery; revoking a device leaves earlier signed proofs valid (https://book.keybase.io/docs/server). Proofs can be revoked by sigchain revoke links. Account reset discards the sigchain and all proofs.",
+        "C5": "Every link has ctime/seqno and is committed to a Merkle tree anchored hourly in Stellar (latest 2026-10-01). Signatures carry expire_in, but the client ignores sigchain expiry (https://github.com/keybase/client/blob/master/go/libkb/expire_times.go).",
+        "C6": "Designed against a malicious Keybase server: it cannot forge, roll back, or fork sigchains undetected. It can still censor, withhold, or reset accounts. Anchor platforms can delete proofs but cannot forge them.",
+        "C7": "Anchors only the Keybase account identity (NaCl device keys, optional PGP). Generic DIDs or external ed25519 keys cannot be the subject.",
+        "C8": "Vendor-only. Zoom acquired Keybase in 2020 (https://www.zoom.com/en/blog/zoom-acquires-keybase-and-announces-goal-of-developing-the-most-broadly-used-enterprise-end-to-end-encryption-offering/). Releases continued into 2026 (v6.6.3 2026-06-03, https://github.com/keybase/client/releases) and Stellar root publishing is live, but it is maintenance-only and keybase.pub was shut down in 2023.",
+        "C9": "Migrate tier: you must create a Keybase account and sigchain. Existing PGP keys can be imported but the proof belongs to the Keybase account.",
+        "C10": "Keybase (US, Zoom) is the sole record operator and can censor and holds account and metadata. Anchors (GitHub, X, Reddit, HN, DNS) can delete proofs. Only the hourly Stellar root hash is out of Keybase's control."
+      },
+      "misfit_notes": "Fits the bidirectional public proof family, with an extra layer the map lacks: a vendor-run append-only log (Merkle tree anchored in Stellar) that orders proofs and revocations. The Keybase server is neither the anchor nor an issuer; it is a mandatory registry/log. Effort tier is migrate, though importing an existing PGP key looks like attach. Proof integration (partner sites hosting the proof and exposing a check API) blurs toward a platform-cooperative model that is neither pure public proof nor OAuth attestation.",
+      "surprises": "Keybase is not dead: releases v6.5.2-v6.6.3 shipped Feb-Jun 2026, commits landed 2026-09-30, and Merkle roots still post to Stellar hourly (last seen 2026-10-01). Yet new Twitter/X and Reddit proofs have been broken since 2024 while the lookup API still shows old ones as state OK. The client hard-codes HonorSigchainExpireTime() to 0, so signature expire_in is ignored. Scraping rules (PVL) are pushed from the server and committed in the Merkle root."
+    },
+    {
+      "id": "keyoxide",
+      "facts": [
+        {
+          "fact": "proof.key_signs_claim",
+          "value": "yes",
+          "source_url": "https://ariadne.id/core/0/",
+          "source_date": "2022-11-22",
+          "note": "OpenPGP profile: claim stored as proof@ariadne.id=<URI> notation in a self-signature; ASP: claims inside a JWS signed by the profile key."
+        },
+        {
+          "fact": "proof.anchor_publishes_key",
+          "value": "yes",
+          "source_url": "https://ariadne.id/core/0/",
+          "source_date": "2022-11-22",
+          "note": "Bidirectional: the account/domain must contain the key fingerprint (openpgp4fpr:...) or ASP URI, optionally hashed."
+        },
+        {
+          "fact": "proof.third_party_signs_binding",
+          "value": "no",
+          "source_url": "https://ariadne.id/core/0/",
+          "source_date": "2022-11-22",
+          "note": "Only the key holder signs; no issuer."
+        },
+        {
+          "fact": "proof.uses_oauth_oidc",
+          "value": "no",
+          "source_url": "https://ariadne.id/core/0/",
+          "source_date": "2022-11-22",
+          "note": "User adds the claim to the key and posts the fingerprint on the account; no OAuth to the anchor."
+        },
+        {
+          "fact": "proof.capability_delegation",
+          "value": "no",
+          "source_url": "https://ariadne.id/core/0/",
+          "source_date": "2022-11-22",
+          "note": "Claim of control/sameness, not delegation."
+        },
+        {
+          "fact": "proof.anchor_is_dns",
+          "value": "yes",
+          "source_url": "https://docs.keyoxide.org/service-providers/",
+          "source_date": "2024-12-04",
+          "note": "DNS TXT service provider supported."
+        },
+        {
+          "fact": "proof.anchor_is_email",
+          "value": "no",
+          "source_url": "https://docs.keyoxide.org/service-providers/",
+          "source_date": "2024-12-04",
+          "note": "No email service provider in the list. keys.openpgp.org separately verifies UID emails, but Keyoxide does not treat that as a claim."
+        },
+        {
+          "fact": "proof.anchor_is_social",
+          "value": "yes",
+          "source_url": "https://docs.keyoxide.org/service-providers/",
+          "source_date": "2024-12-04",
+          "note": "GitHub, GitLab, Mastodon/ActivityPub, Bluesky, Reddit, Twitter, Hacker News, Lobste.rs, Matrix, XMPP, Discord, Telegram and more (doipjs ships 31 provider modules)."
+        },
+        {
+          "fact": "verify.offline_possible",
+          "value": "no",
+          "source_url": "https://ariadne.id/core/0/",
+          "source_date": "2022-11-22",
+          "note": "Verifier fetches the proof from the service provider locations."
+        },
+        {
+          "fact": "verify.fetches_anchor",
+          "value": "yes",
+          "source_url": "https://ariadne.id/core/0/",
+          "source_date": "2022-11-22",
+          "note": "Verification: deduce proof location from provider definition, fetch, search for the fingerprint."
+        },
+        {
+          "fact": "verify.needs_issuer_trust",
+          "value": "no",
+          "source_url": "https://ariadne.id/core/0/",
+          "source_date": "2022-11-22",
+          "note": "No issuer."
+        },
+        {
+          "fact": "verify.needs_registry",
+          "value": "no",
+          "source_url": "https://docs.keyoxide.org/guides/openpgp-gnupg/",
+          "source_date": "2024-12",
+          "note": "Key can come from WKD on the user's own domain, an ASPE server, or keys.openpgp.org; a keyserver is optional, so no registry is mandatory."
+        },
+        {
+          "fact": "verify.no_author_service",
+          "value": "yes",
+          "source_url": "https://codeberg.org/keyoxide/doipjs",
+          "source_date": "2025-03-04",
+          "note": "doip-js library/CLI and keyoxide-web are open source and self-hostable; keys can be fetched via WKD. Note: keyoxide.org's web verifier fetches through its own proxy servers for CORS/DNS."
+        },
+        {
+          "fact": "verify.breaks_if_api_closed",
+          "value": "yes",
+          "source_url": "https://codeberg.org/keyoxide/doipjs/src/branch/main/src/serviceProviders/twitter.js",
+          "source_date": "2025-03-04",
+          "note": "Each provider scrapes a platform endpoint (e.g. Twitter via publish.twitter.com/oembed); closure breaks that provider."
+        },
+        {
+          "fact": "lifecycle.survives_key_rotation",
+          "value": "no",
+          "source_url": "https://ariadne.id/core/0/",
+          "source_date": "2022-11-22",
+          "note": "Proofs embed the primary key fingerprint (or ASP fingerprint); a new primary key needs new proofs on every anchor. OpenPGP subkey rotation does not change the fingerprint."
+        },
+        {
+          "fact": "lifecycle.explicit_revocation",
+          "value": "yes",
+          "source_url": "https://codeberg.org/keyoxide/doipjs/src/branch/main/src/openpgp.js",
+          "source_date": "2025-03-04",
+          "note": "OpenPGP UID/key revocation signatures mark the persona revoked in doipjs; ASP supports signed delete requests (and optional exp)."
+        },
+        {
+          "fact": "lifecycle.expiry",
+          "value": "no",
+          "source_url": "https://ariadne.id/related/ariadne-signature-profile-0/",
+          "source_date": "2023-09-13",
+          "note": "Expiry is optional: ASP 'exp' claim and OpenPGP key expiry are both opt-in, not by design."
+        },
+        {
+          "fact": "lifecycle.key_recovery",
+          "value": "no",
+          "source_url": "https://ariadne.id/core/0/",
+          "source_date": "2022-11-22",
+          "note": "No recovery defined; losing the key means a new profile and re-posting proofs."
+        },
+        {
+          "fact": "lifecycle.replay_protected",
+          "value": "no",
+          "source_url": "https://ariadne.id/core/0/",
+          "source_date": "2022-11-22",
+          "note": "Proof on the anchor is just the fingerprint (optionally hashed); no timestamp, nonce, or log."
+        },
+        {
+          "fact": "record.transparency_log",
+          "value": "no",
+          "source_url": "https://ariadne.id/core/0/",
+          "source_date": "2022-11-22",
+          "note": "No log; profiles live in keyservers, WKD, or ASPE servers."
+        },
+        {
+          "fact": "record.self_hosted_possible",
+          "value": "yes",
+          "source_url": "https://docs.keyoxide.org/guides/openpgp-gnupg/",
+          "source_date": "2024-12",
+          "note": "Key with notations can be published via WKD on your own domain; ASPE servers are self-hostable (aspe-server-rs)."
+        },
+        {
+          "fact": "record.multi_operator",
+          "value": "no",
+          "source_url": "https://keys.openpgp.org/about",
+          "source_date": "2025",
+          "note": "keys.openpgp.org is a single non-federated keyserver; WKD and ASPE are single-host. Users can publish in several places manually, but nothing replicates."
+        },
+        {
+          "fact": "portability.generic_key",
+          "value": "yes",
+          "source_url": "https://ariadne.id/related/ariadne-signature-profile-0/",
+          "source_date": "2023-09-13",
+          "note": "Besides OpenPGP keys, ASP profiles are raw Ed25519 (EdDSA) or P-256 JWKs. Cannot anchor a DID directly."
+        },
+        {
+          "fact": "portability.extensible_anchors",
+          "value": "yes",
+          "source_url": "https://ariadne.id/core/0/",
+          "source_date": "2022-11-22",
+          "note": "Service providers are defined outside the core spec (ARCs), so adding one needs no spec change, but it does need a doipjs code release."
+        },
+        {
+          "fact": "adoption.spec_maturity",
+          "value": "1",
+          "source_url": "https://ariadne.id/core/0/",
+          "source_date": "2022-11-22",
+          "note": "Single-project spec: core v0 is a draft ('not recommended to base implementations on'); ASP v0 marked active 2023-09 but Keyoxide still calls ASP 'in testing'."
+        },
+        {
+          "fact": "adoption.active_2026",
+          "value": "yes",
+          "source_url": "https://codeberg.org/keyoxide/keyoxide-web",
+          "source_date": "2025-09-24",
+          "note": "keyoxide-web commit 2025-09-24, doipjs 2025-03-04. No 2026 commits found in the main repos (no 2026 activity found)."
+        },
+        {
+          "fact": "adoption.client_display",
+          "value": "yes",
+          "source_url": "https://codeberg.org/keyoxide/keyoxide-web",
+          "source_date": "2025-09-24",
+          "note": "keyoxide.org web and Keyoxide mobile app show verified claims; niche audience."
+        },
+        {
+          "fact": "effort.attachable",
+          "value": "yes",
+          "source_url": "https://docs.keyoxide.org/guides/openpgp-gnupg/",
+          "source_date": "2024-12",
+          "note": "Add notations to an existing OpenPGP key with gpg --edit-key notation; no new identity system."
+        },
+        {
+          "fact": "effort.requires_platform_migration",
+          "value": "no",
+          "source_url": "https://docs.keyoxide.org/guides/openpgp-gnupg/",
+          "source_date": "2024-12",
+          "note": "Works with the user's existing OpenPGP key."
+        }
+      ],
+      "summary": {
+        "C1": "Bidirectional public proof: an OpenPGP key carries signed proof@ariadne.id=<URI> notations (or an ASP JWS lists claims), and the account posts the fingerprint back (https://ariadne.id/core/0/, https://ariadne.id/related/ariadne-signature-profile-0/).",
+        "C2": "Verifier fetches the key (WKD, keys.openpgp.org, or ASPE server) and the proof from each anchor. doip-js and keyoxide-web are self-hostable (https://codeberg.org/keyoxide/doipjs), though keyoxide.org verifies via its own proxy.",
+        "C3": "Broad coverage, about 30-47 providers including fediverse, Bluesky, GitHub, DNS, Matrix, XMPP (https://docs.keyoxide.org/service-providers/). Each relies on a scraped endpoint (e.g. Twitter oEmbed, https://codeberg.org/keyoxide/doipjs/src/branch/main/src/serviceProviders/twitter.js) and breaks when platforms change.",
+        "C4": "Proofs embed the primary fingerprint, so rotating the primary key means re-posting all proofs. UID/key revocation is honored by doipjs. No recovery defined.",
+        "C5": "No timestamps, nonces, or log on the anchor side. ASP has an optional exp claim and OpenPGP keys can expire, but neither is required.",
+        "C6": "No trusted third party. Keyservers or web hosts can withhold keys but cannot forge notations. The keyoxide.org web verifier and its proxies are trusted to report results honestly unless you verify locally.",
+        "C7": "OpenPGP keys of any algorithm, and ASP profiles from raw Ed25519 or P-256 JWKs. No DID support.",
+        "C8": "Ariadne core spec v0 is a 2022 draft; ASP v0 marked active 2023 but still called 'in testing'. Code activity continued in 2025 (keyoxide-web 2025-09-24, https://codeberg.org/keyoxide/keyoxide-web); no 2026 commits found. NLnet-funded.",
+        "C9": "Attach tier for anyone with an OpenPGP key: add notations and re-upload. ASP lets non-PGP users create a key-backed profile without migrating to a platform.",
+        "C10": "Record can be fully self-hosted via WKD. keys.openpgp.org (volunteer-run, hosted at Hetzner, Germany) strips UIDs without verified emails and thus their notations. Anchors can delete proofs but cannot forge them."
+      },
+      "misfit_notes": "Fits bidirectional public proof cleanly and is the clearest attach-tier example for OpenPGP holders. ASP blurs attach and build: users without a key system get a fresh Ed25519/P-256 key plus an ASPE server profile, which looks like a lightweight platform. Verification often runs through keyoxide.org and its proxies, making the author service a de facto verifier even though it is optional.",
+      "surprises": "The core Ariadne spec v0 still says not to base implementations on it. ASP v0 is marked 'active' but Keyoxide calls it 'in testing'. keys.openpgp.org strips UIDs without a verified email, and notations live on UIDs, so claims can silently vanish. Twitter verification still works via the unauthenticated oEmbed endpoint, but only for hashed proofs. Main-repo activity stops in 2025."
+    },
+    {
+      "id": "indieweb",
+      "facts": [
+        {
+          "fact": "proof.key_signs_claim",
+          "value": "no",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "No key at all: rel=me is an HTML link between two URLs; nothing is signed."
+        },
+        {
+          "fact": "proof.anchor_publishes_key",
+          "value": "yes",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "Anchor profile (GitHub, Mastodon) must link back to the identifier, which is a URL, not a key."
+        },
+        {
+          "fact": "proof.third_party_signs_binding",
+          "value": "no",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "No signatures by anyone."
+        },
+        {
+          "fact": "proof.uses_oauth_oidc",
+          "value": "no",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "Creating rel=me links needs no OAuth. IndieAuth is an identity layer on OAuth 2.0, and IndieLogin.com uses OAuth to GitHub/GitLab/Codeberg after finding the rel=me link, but those are for logging in, not for creating the link."
+        },
+        {
+          "fact": "proof.capability_delegation",
+          "value": "no",
+          "source_url": "https://indieauth.spec.indieweb.org/",
+          "source_date": "2024-07-11",
+          "note": "rel=me claims sameness. IndieAuth does delegate login to an authorization server named on the user's domain, but that is not the identity link."
+        },
+        {
+          "fact": "proof.anchor_is_dns",
+          "value": "yes",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "The user's own domain/home page is the identity; rel=me ties it to other profiles."
+        },
+        {
+          "fact": "proof.anchor_is_email",
+          "value": "yes",
+          "source_url": "https://indielogin.com/setup",
+          "source_date": "2026-09",
+          "note": "IndieLogin.com accepts a rel=me mailto: link and sends a code. One-directional (email cannot link back)."
+        },
+        {
+          "fact": "proof.anchor_is_social",
+          "value": "yes",
+          "source_url": "https://docs.joinmastodon.org/user/profile/",
+          "source_date": "2026",
+          "note": "Mastodon verifies rel=me links; GitHub, GitLab, Codeberg used by IndieLogin."
+        },
+        {
+          "fact": "verify.offline_possible",
+          "value": "no",
+          "source_url": "https://github.com/mastodon/mastodon/blob/main/app/services/verify_link_service.rb",
+          "source_date": "2026-09-30",
+          "note": "Verifier must fetch the linked page and look for rel=me."
+        },
+        {
+          "fact": "verify.fetches_anchor",
+          "value": "yes",
+          "source_url": "https://github.com/mastodon/mastodon/blob/main/app/services/verify_link_service.rb",
+          "source_date": "2026-09-30",
+          "note": "Mastodon's VerifyLinkService fetches the URL and parses rel=me links."
+        },
+        {
+          "fact": "verify.needs_issuer_trust",
+          "value": "no",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "No issuer. Viewers of a Mastodon checkmark trust the instance that ran the check."
+        },
+        {
+          "fact": "verify.needs_registry",
+          "value": "no",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "Plain HTTP fetches; no registry."
+        },
+        {
+          "fact": "verify.no_author_service",
+          "value": "yes",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "Any client can fetch both pages; there is no central service."
+        },
+        {
+          "fact": "verify.breaks_if_api_closed",
+          "value": "yes",
+          "source_url": "https://github.com/mastodon/mastodon/blob/main/app/services/verify_link_service.rb",
+          "source_date": "2026-09-30",
+          "note": "Needs plain-HTML fetch of the profile without JavaScript; platforms that block scraping or render client-side break it."
+        },
+        {
+          "fact": "lifecycle.survives_key_rotation",
+          "value": "yes",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "Vacuous: no key exists. Links are URL-to-URL and no key change affects them. Treat as N/A."
+        },
+        {
+          "fact": "lifecycle.explicit_revocation",
+          "value": "no",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "Only by removing the link."
+        },
+        {
+          "fact": "lifecycle.expiry",
+          "value": "no",
+          "source_url": "https://github.com/mastodon/mastodon/blob/main/app/models/account/field.rb",
+          "source_date": "2026-09-30",
+          "note": "No expiry; Mastodon stores verified_at and only re-verifies fields that are not yet verified."
+        },
+        {
+          "fact": "lifecycle.key_recovery",
+          "value": "no",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "No key; recovery of the identity is domain/registrar recovery, outside the mechanism. Treat as N/A."
+        },
+        {
+          "fact": "lifecycle.replay_protected",
+          "value": "no",
+          "source_url": "https://github.com/mastodon/mastodon/blob/main/app/models/account/field.rb",
+          "source_date": "2026-09-30",
+          "note": "No timestamps or nonces. Mastodon keeps a verified checkmark until the field changes, even if the backlink is later removed."
+        },
+        {
+          "fact": "record.transparency_log",
+          "value": "no",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "No log."
+        },
+        {
+          "fact": "record.self_hosted_possible",
+          "value": "yes",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "Identity record is the user's own home page."
+        },
+        {
+          "fact": "record.multi_operator",
+          "value": "no",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "Single web host per domain."
+        },
+        {
+          "fact": "portability.generic_key",
+          "value": "no",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "Binds URLs, not keys. Can point at a did:web or key profile URL but checks no key control."
+        },
+        {
+          "fact": "portability.extensible_anchors",
+          "value": "yes",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "Any page that can emit rel=me works without spec change."
+        },
+        {
+          "fact": "adoption.spec_maturity",
+          "value": "2",
+          "source_url": "https://www.w3.org/TR/indieauth/",
+          "source_date": "2018-01-23",
+          "note": "IndieAuth: W3C Social Web WG Note (2018), now an IndieWeb Living Standard (2024-07-11). rel=me: microformats/XFN 1.1 community spec. Neither is a W3C Rec or RFC."
+        },
+        {
+          "fact": "adoption.active_2026",
+          "value": "yes",
+          "source_url": "https://github.com/indieweb/indieauth",
+          "source_date": "2026-09-20",
+          "note": "IndieAuth spec repo commits 2026-09-20; Mastodon v4.7.2 (2026-09-15) still verifies rel=me."
+        },
+        {
+          "fact": "adoption.client_display",
+          "value": "yes",
+          "source_url": "https://docs.joinmastodon.org/user/profile/",
+          "source_date": "2026",
+          "note": "Mastodon shows a green verified checkmark on profile links."
+        },
+        {
+          "fact": "effort.attachable",
+          "value": "no",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "No key binding: adding rel=me to a key system just links URLs. Only a URL-shaped identifier (did:web domain) gains anything."
+        },
+        {
+          "fact": "effort.requires_platform_migration",
+          "value": "no",
+          "source_url": "https://microformats.org/wiki/rel-me",
+          "source_date": "2023-08-11",
+          "note": "Works with an existing website and accounts."
+        }
+      ],
+      "summary": {
+        "C1": "No cryptographic key is involved. rel=me is a bidirectional public link between two URLs (https://microformats.org/wiki/rel-me). IndieAuth is an OAuth 2.0-based login protocol where the user's domain names its authorization server (https://indieauth.spec.indieweb.org/).",
+        "C2": "Anyone can verify by fetching both pages. In practice Mastodon instances verify and cache the result (https://github.com/mastodon/mastodon/blob/main/app/services/verify_link_service.rb), and each remote instance re-verifies independently (https://github.com/mastodon/mastodon/blob/main/app/services/activitypub/process_account_service.rb).",
+        "C3": "Any site emitting rel=me works: Mastodon, GitHub, GitLab, Codeberg, and email via IndieLogin (https://indielogin.com/setup). Platforms that render client-side or block scraping break it.",
+        "C4": "No key lifecycle: identity is the domain, so key rotation is moot. Domain loss means identity loss, with no revocation besides removing the link.",
+        "C5": "No freshness. Mastodon sets verified_at once and only re-checks unverified fields (https://github.com/mastodon/mastodon/blob/main/app/models/account/field.rb), so a checkmark can outlive the backlink. An expired domain bought by someone else inherits the identity.",
+        "C6": "Whoever controls the domain's hosting or DNS controls the identity. A Mastodon instance controls the checkmark shown to its own users. No defense against a compromised web host.",
+        "C7": "Not a key system. It can point at a did:web or keyoxide URL, but checks nothing about key control.",
+        "C8": "rel=me is a microformats/XFN community spec. IndieAuth was a W3C WG Note (2018, https://www.w3.org/TR/indieauth/) and is now a living standard (2024-07-11) with commits in 2026-09. Widely displayed via Mastodon's verified links.",
+        "C9": "Trivial for anyone with a website. There is no key to attach, so for OOBTA it neither attaches to a key system nor requires migration.",
+        "C10": "Record lives on the user's web host and DNS registrar, which can both censor and forge. Anchors (GitHub, Mastodon) can delete backlinks and log fetches."
+      },
+      "misfit_notes": "Misfit for OOBTA: no key is involved at all. rel=me is a bidirectional public proof between two URLs, but neither end is a self-certifying key, so 'key' facts are vacuous (key_rotation marked yes and key_recovery no as N/A). IndieAuth is OAuth 2.0 where the user's domain names its own authorization server, a delegation that fits neither the issuer-attestation family (the user can be the issuer) nor capability delegation of a key. It can serve as the anchor side for other systems (did:web, Keyoxide, Mastodon) rather than as an OOBTA protocol.",
+      "surprises": "Mastodon never re-checks a verified link: verified_at is set once and only unverified fields are re-tested, so a checkmark survives removal of the backlink until the field is edited. Each remote server runs its own check. IndieLogin.com, the main IndieAuth bridge, actually authenticates via OAuth to GitHub/GitLab/Codeberg or an emailed code after finding rel=me. The W3C IndieAuth document is only a 2018 WG Note; the living spec moved on (PKCE mandatory, metadata discovery)."
+    }
+  ],
+  "operators": [
+    {
+      "id": "keybase",
+      "name": "Keybase (Zoom Video Communications)",
+      "kind": "registry",
+      "jurisdiction": "US",
+      "jurisdiction_note": "Acquired by Zoom Video Communications (San Jose, CA, USA) in May 2020.",
+      "source_url": "https://www.zoom.com/en/blog/zoom-acquires-keybase-and-announces-goal-of-developing-the-most-broadly-used-enterprise-end-to-end-encryption-offering/"
+    },
+    {
+      "id": "stellar",
+      "name": "Stellar public network (Keybase Merkle root memos)",
+      "kind": "chain",
+      "jurisdiction": "none",
+      "jurisdiction_note": "Public blockchain; Keybase posts hourly root hashes from account GA72...SV6E.",
+      "source_url": "https://book.keybase.io/docs/server/stellar"
+    },
+    {
+      "id": "github",
+      "name": "GitHub",
+      "kind": "platform",
+      "jurisdiction": "US",
+      "jurisdiction_note": "Microsoft subsidiary, USA.",
+      "source_url": "https://github.com/site/terms"
+    },
+    {
+      "id": "x",
+      "name": "X (Twitter)",
+      "kind": "platform",
+      "jurisdiction": "US",
+      "jurisdiction_note": "X Corp., USA.",
+      "source_url": "https://x.com/en/tos"
+    },
+    {
+      "id": "reddit",
+      "name": "Reddit",
+      "kind": "platform",
+      "jurisdiction": "US",
+      "jurisdiction_note": "Reddit, Inc., USA.",
+      "source_url": "https://www.redditinc.com/policies/user-agreement"
+    },
+    {
+      "id": "hn",
+      "name": "Hacker News (Y Combinator)",
+      "kind": "platform",
+      "jurisdiction": "US",
+      "jurisdiction_note": "Y Combinator, USA.",
+      "source_url": "https://news.ycombinator.com/"
+    },
+    {
+      "id": "mastodon",
+      "name": "Mastodon instances",
+      "kind": "platform",
+      "jurisdiction": "other",
+      "jurisdiction_note": "Each instance is run by a different operator in different countries.",
+      "source_url": "https://docs.joinmastodon.org/user/profile/"
+    },
+    {
+      "id": "dns-registrar",
+      "name": "Domain registrar / DNS provider",
+      "kind": "dns",
+      "jurisdiction": "other",
+      "jurisdiction_note": "Depends on registrar and TLD registry.",
+      "source_url": "https://microformats.org/wiki/rel-me"
+    },
+    {
+      "id": "web-host",
+      "name": "Web host of the user's domain",
+      "kind": "platform",
+      "jurisdiction": "other",
+      "jurisdiction_note": "Depends on hosting provider; can be self-run.",
+      "source_url": "https://microformats.org/wiki/rel-me"
+    },
+    {
+      "id": "keys-openpgp-org",
+      "name": "keys.openpgp.org",
+      "kind": "keyserver",
+      "jurisdiction": "other",
+      "jurisdiction_note": "Volunteer community effort (Sequoia-PGP, OpenKeychain, Enigmail contributors); hosting sponsored by Hetzner Online GmbH, Germany.",
+      "source_url": "https://keys.openpgp.org/about"
+    },
+    {
+      "id": "keyoxide-aspe",
+      "name": "Keyoxide ASPE server (keyoxide.org)",
+      "kind": "registry",
+      "jurisdiction": "other",
+      "jurisdiction_note": "Operated by the Keyoxide project (NLnet-funded); legal entity and country not stated in sources found.",
+      "source_url": "https://ariadne.id/related/ariadne-signature-profile-0/"
+    },
+    {
+      "id": "email-provider",
+      "name": "Email provider",
+      "kind": "platform",
+      "jurisdiction": "other",
+      "jurisdiction_note": "Depends on provider.",
+      "source_url": "https://indielogin.com/setup"
+    }
+  ],
+  "links": [
+    {
+      "offering": "keybase",
+      "layer": "record",
+      "operator": "keybase",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Sigchain links are signed by user keys, so the server cannot forge proofs; forks are detectable via the Merkle/Stellar log. It can withhold or delete accounts, reset them, and holds account, IP and device metadata."
+    },
+    {
+      "offering": "keybase",
+      "layer": "record",
+      "operator": "stellar",
+      "forge": "no",
+      "censor": "no",
+      "disclose": "no",
+      "note": "Only root hashes are posted; public chain."
+    },
+    {
+      "offering": "keybase",
+      "layer": "proof",
+      "operator": "github",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Gist holds the signed proof text; GitHub cannot sign as the user but can delete it."
+    },
+    {
+      "offering": "keybase",
+      "layer": "proof",
+      "operator": "x",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Tweet holds proof; new proofs currently undetectable."
+    },
+    {
+      "offering": "keybase",
+      "layer": "proof",
+      "operator": "reddit",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Proof post in subreddit; new proofs currently undetectable."
+    },
+    {
+      "offering": "keybase",
+      "layer": "proof",
+      "operator": "hn",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Proof in HN profile 'about' field."
+    },
+    {
+      "offering": "keybase",
+      "layer": "proof",
+      "operator": "dns-registrar",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "DNS TXT proof."
+    },
+    {
+      "offering": "keybase",
+      "layer": "proof",
+      "operator": "web-host",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "keybase.txt on the website."
+    },
+    {
+      "offering": "keybase",
+      "layer": "anchor",
+      "operator": "github",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Can suspend the account or reassign the handle."
+    },
+    {
+      "offering": "keybase",
+      "layer": "anchor",
+      "operator": "x",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": ""
+    },
+    {
+      "offering": "keybase",
+      "layer": "anchor",
+      "operator": "reddit",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": ""
+    },
+    {
+      "offering": "keybase",
+      "layer": "anchor",
+      "operator": "hn",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": ""
+    },
+    {
+      "offering": "keybase",
+      "layer": "anchor",
+      "operator": "mastodon",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Partner instances (proof integration) host the proof and a check API."
+    },
+    {
+      "offering": "keybase",
+      "layer": "anchor",
+      "operator": "dns-registrar",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": ""
+    },
+    {
+      "offering": "keyoxide",
+      "layer": "record",
+      "operator": "keys-openpgp-org",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Cannot forge self-signed notations. Strips unverified UIDs (and so their claims) and holds verified email and request logs."
+    },
+    {
+      "offering": "keyoxide",
+      "layer": "record",
+      "operator": "web-host",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "WKD host can withhold or substitute a key, but anchor proofs name the original fingerprint."
+    },
+    {
+      "offering": "keyoxide",
+      "layer": "record",
+      "operator": "keyoxide-aspe",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "ASP profiles are JWS signed by the user key; the server can delete or withhold."
+    },
+    {
+      "offering": "keyoxide",
+      "layer": "proof",
+      "operator": "github",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Proof (fingerprint) in a gist or profile; the key-side claim is still needed."
+    },
+    {
+      "offering": "keyoxide",
+      "layer": "proof",
+      "operator": "mastodon",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Fingerprint in profile field or bio."
+    },
+    {
+      "offering": "keyoxide",
+      "layer": "proof",
+      "operator": "dns-registrar",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "DNS TXT with openpgp4fpr."
+    },
+    {
+      "offering": "keyoxide",
+      "layer": "proof",
+      "operator": "x",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Hashed proof tweet fetched via oEmbed."
+    },
+    {
+      "offering": "keyoxide",
+      "layer": "anchor",
+      "operator": "github",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": ""
+    },
+    {
+      "offering": "keyoxide",
+      "layer": "anchor",
+      "operator": "mastodon",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": ""
+    },
+    {
+      "offering": "keyoxide",
+      "layer": "anchor",
+      "operator": "reddit",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": ""
+    },
+    {
+      "offering": "keyoxide",
+      "layer": "anchor",
+      "operator": "dns-registrar",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": ""
+    },
+    {
+      "offering": "indieweb",
+      "layer": "record",
+      "operator": "web-host",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Controls the home page that is the identity; it can add rel=me to any profile that links back, e.g. one the attacker controls."
+    },
+    {
+      "offering": "indieweb",
+      "layer": "record",
+      "operator": "dns-registrar",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Controls the domain and can repoint it to attacker content."
+    },
+    {
+      "offering": "indieweb",
+      "layer": "proof",
+      "operator": "mastodon",
+      "forge": "yes",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Home instance sets verified_at in its own database and can show a checkmark to its users without a real backlink. Remote instances re-verify independently."
+    },
+    {
+      "offering": "indieweb",
+      "layer": "proof",
+      "operator": "github",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "Can add or remove the rel=me link on a profile, but the domain must link back."
+    },
+    {
+      "offering": "indieweb",
+      "layer": "anchor",
+      "operator": "github",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": ""
+    },
+    {
+      "offering": "indieweb",
+      "layer": "anchor",
+      "operator": "mastodon",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": ""
+    },
+    {
+      "offering": "indieweb",
+      "layer": "anchor",
+      "operator": "email-provider",
+      "forge": "no",
+      "censor": "yes",
+      "disclose": "yes",
+      "note": "IndieLogin email code: the provider can read and intercept codes (that is login, not forging the public link)."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Keybase Book: Server security",
+      "url": "https://book.keybase.io/docs/server",
+      "date": "2026-05"
+    },
+    {
+      "title": "Keybase is now writing to the Stellar blockchain",
+      "url": "https://book.keybase.io/docs/server/stellar",
+      "date": "2020-01"
+    },
+    {
+      "title": "Keybase Book: account",
+      "url": "https://book.keybase.io/account",
+      "date": "2026-05"
+    },
+    {
+      "title": "keybase/client issue #27225 Twitter/X and Reddit proofs no longer working",
+      "url": "https://github.com/keybase/client/issues/27225",
+      "date": "2024-07-09"
+    },
+    {
+      "title": "Keybase loves Mastodon (proof integration)",
+      "url": "https://keybase.io/blog/keybase-proofs-for-mastodon-and-everyone",
+      "date": "2019-04-15"
+    },
+    {
+      "title": "keybase/client releases (GitHub API)",
+      "url": "https://github.com/keybase/client/releases",
+      "date": "2026-06-03"
+    },
+    {
+      "title": "keybase/client go/libkb/expire_times.go",
+      "url": "https://github.com/keybase/client/blob/master/go/libkb/expire_times.go",
+      "date": "2026-09-30"
+    },
+    {
+      "title": "keybase/client go/libkb/merkle_client.go (pvl_hash, proof_services_hash)",
+      "url": "https://github.com/keybase/client/blob/master/go/libkb/merkle_client.go",
+      "date": "2026-09-30"
+    },
+    {
+      "title": "Stellar Horizon: Keybase root account transactions",
+      "url": "https://horizon.stellar.org/accounts/GA72FQOMHYUCNEMZN7GY6OBWQTQEXYL43WPYCY2FE3T452USNQ7KSV6E/transactions?order=desc&limit=2",
+      "date": "2026-10-01"
+    },
+    {
+      "title": "Zoom acquires Keybase",
+      "url": "https://www.zoom.com/en/blog/zoom-acquires-keybase-and-announces-goal-of-developing-the-most-broadly-used-enterprise-end-to-end-encryption-offering/",
+      "date": "2020-05-07"
+    },
+    {
+      "title": "Ariadne Identity Specification core v0",
+      "url": "https://ariadne.id/core/0/",
+      "date": "2022-11-22"
+    },
+    {
+      "title": "Ariadne Signature Profile v0",
+      "url": "https://ariadne.id/related/ariadne-signature-profile-0/",
+      "date": "2023-09-13"
+    },
+    {
+      "title": "Keyoxide docs: service providers",
+      "url": "https://docs.keyoxide.org/service-providers/",
+      "date": "2024-12-04"
+    },
+    {
+      "title": "doipjs twitter.js",
+      "url": "https://codeberg.org/keyoxide/doipjs/src/branch/main/src/serviceProviders/twitter.js",
+      "date": "2025-03-04"
+    },
+    {
+      "title": "doipjs openpgp.js",
+      "url": "https://codeberg.org/keyoxide/doipjs/src/branch/main/src/openpgp.js",
+      "date": "2025-03-04"
+    },
+    {
+      "title": "keyoxide-web repo",
+      "url": "https://codeberg.org/keyoxide/keyoxide-web",
+      "date": "2025-09-24"
+    },
+    {
+      "title": "doipjs repo",
+      "url": "https://codeberg.org/keyoxide/doipjs",
+      "date": "2025-03-04"
+    },
+    {
+      "title": "Keyoxide docs: OpenPGP with GnuPG",
+      "url": "https://docs.keyoxide.org/guides/openpgp-gnupg/",
+      "date": "2024-12"
+    },
+    {
+      "title": "keyoxide-web issue #22 notations from all UIDs",
+      "url": "https://codeberg.org/keyoxide/keyoxide-web/issues/22",
+      "date": "2021"
+    },
+    {
+      "title": "keys.openpgp.org about",
+      "url": "https://keys.openpgp.org/about",
+      "date": "2025"
+    },
+    {
+      "title": "keys.openpgp.org privacy policy",
+      "url": "https://keys.openpgp.org/about/privacy/",
+      "date": "2025"
+    },
+    {
+      "title": "Keyoxide blog: In testing, Ariadne Signature Profiles",
+      "url": "https://blog.keyoxide.org/ariadne-signature-profiles/",
+      "date": "2023-06"
+    },
+    {
+      "title": "microformats wiki rel-me",
+      "url": "https://microformats.org/wiki/rel-me",
+      "date": "2023-08-11"
+    },
+    {
+      "title": "IndieAuth Living Standard",
+      "url": "https://indieauth.spec.indieweb.org/",
+      "date": "2024-07-11"
+    },
+    {
+      "title": "IndieAuth W3C Working Group Note",
+      "url": "https://www.w3.org/TR/indieauth/",
+      "date": "2018-01-23"
+    },
+    {
+      "title": "indieweb/indieauth repo",
+      "url": "https://github.com/indieweb/indieauth",
+      "date": "2026-09-20"
+    },
+    {
+      "title": "Mastodon docs: profile link verification",
+      "url": "https://docs.joinmastodon.org/user/profile/",
+      "date": "2026"
+    },
+    {
+      "title": "Mastodon VerifyLinkService",
+      "url": "https://github.com/mastodon/mastodon/blob/main/app/services/verify_link_service.rb",
+      "date": "2026-09-30"
+    },
+    {
+      "title": "Mastodon Account::Field",
+      "url": "https://github.com/mastodon/mastodon/blob/main/app/models/account/field.rb",
+      "date": "2026-09-30"
+    },
+    {
+      "title": "Mastodon ActivityPub::ProcessAccountService",
+      "url": "https://github.com/mastodon/mastodon/blob/main/app/services/activitypub/process_account_service.rb",
+      "date": "2026-09-30"
+    },
+    {
+      "title": "Mastodon releases",
+      "url": "https://github.com/mastodon/mastodon/releases",
+      "date": "2026-09-15"
+    },
+    {
+      "title": "IndieLogin.com setup",
+      "url": "https://indielogin.com/setup",
+      "date": "2026-09"
+    }
+  ]
+}

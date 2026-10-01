@@ -1,0 +1,91 @@
+offering,layer,operator,forge,censor,disclose,note
+atproto-handle,record,plc-bsky,no,yes,yes,"Cannot forge signed operations, but can reject or remove valid ones. Holds request logs. The operation log itself is public."
+atproto-handle,record,plc-org,no,yes,yes,Same powers once it takes over. The transfer was not complete as of 2026-09-28.
+atproto-handle,record,bluesky-pds,yes,yes,yes,"By default holds the rotation keys and can sign PLC operations that change keys or alsoKnownAs, taking over the DID that the domain points at. Users can add a higher-priority key of their own to override within 72h."
+atproto-handle,proof,dns-registrar,yes,yes,yes,"Can repoint _atproto TXT to an attacker DID whose doc claims the handle, and the verifier will accept it."
+atproto-handle,proof,web-host,yes,yes,yes,"For the well-known method, the host can serve a different DID."
+atproto-handle,proof,bluesky-pds,yes,yes,yes,"Only for *.bsky.social handles, where Bluesky controls the subdomain resolution."
+atproto-handle,anchor,dns-registrar,yes,yes,yes,"The registrar controls the domain itself (it can seize, transfer, or suspend it)."
+bsky-verification,record,plc-bsky,no,yes,yes,Issuer and subject DIDs resolve via PLC.
+bsky-verification,record,bluesky-pds,yes,yes,yes,Hosts the bsky.app root-issuer repo and most subjects' repos. It can write verification records with the issuer's key.
+bsky-verification,proof,bluesky,yes,yes,yes,The AppView decides who is a trusted verifier and computes isValid. Bluesky is also the root issuer and can verify anyone or void any verifier.
+bsky-verification,proof,bsky-trusted-verifiers,yes,yes,yes,"Each trusted verifier can, alone, issue a recognized check for any account and delete it at will."
+bsky-verification,anchor,bluesky,yes,yes,yes,"There is no external anchor account. The attested real-world identity is judged off-protocol by Bluesky moderation, which reviews all verifications."
+keybase,record,keybase,no,yes,yes,"Sigchain links are signed by user keys, so the server cannot forge proofs; forks are detectable via the Merkle/Stellar log. It can withhold or delete accounts, reset them, and holds account, IP and device metadata."
+keybase,record,stellar,no,no,no,Only root hashes are posted; public chain.
+keybase,proof,github,no,yes,yes,Gist holds the signed proof text; GitHub cannot sign as the user but can delete it.
+keybase,proof,x,no,yes,yes,Tweet holds proof; new proofs currently undetectable.
+keybase,proof,reddit,no,yes,yes,Proof post in subreddit; new proofs currently undetectable.
+keybase,proof,hn,no,yes,yes,Proof in HN profile 'about' field.
+keybase,proof,dns-registrar,no,yes,yes,DNS TXT proof.
+keybase,proof,web-host,no,yes,yes,keybase.txt on the website.
+keybase,anchor,github,yes,yes,yes,Override forge no → yes. Can suspend the account or reassign the handle.
+keybase,anchor,x,yes,yes,yes,Override forge no → yes.
+keybase,anchor,reddit,yes,yes,yes,Override forge no → yes.
+keybase,anchor,hn,yes,yes,yes,Override forge no → yes.
+keybase,anchor,mastodon,yes,yes,yes,Override forge no → yes. Partner instances (proof integration) host the proof and a check API.
+keybase,anchor,dns-registrar,yes,yes,yes,Override forge no → yes.
+keyoxide,record,keys-openpgp-org,no,yes,yes,Cannot forge self-signed notations. Strips unverified UIDs (and so their claims) and holds verified email and request logs.
+keyoxide,record,web-host,no,yes,yes,"WKD host can withhold or substitute a key, but anchor proofs name the original fingerprint."
+keyoxide,record,keyoxide-aspe,no,yes,yes,ASP profiles are JWS signed by the user key; the server can delete or withhold.
+keyoxide,proof,github,no,yes,yes,Proof (fingerprint) in a gist or profile; the key-side claim is still needed.
+keyoxide,proof,mastodon,no,yes,yes,Fingerprint in profile field or bio.
+keyoxide,proof,dns-registrar,no,yes,yes,DNS TXT with openpgp4fpr.
+keyoxide,proof,x,no,yes,yes,Hashed proof tweet fetched via oEmbed.
+keyoxide,anchor,github,yes,yes,yes,Override forge no → yes.
+keyoxide,anchor,mastodon,yes,yes,yes,Override forge no → yes.
+keyoxide,anchor,reddit,yes,yes,yes,Override forge no → yes.
+keyoxide,anchor,dns-registrar,yes,yes,yes,Override forge no → yes.
+indieweb,record,web-host,yes,yes,yes,"Controls the home page that is the identity; it can add rel=me to any profile that links back, e.g. one the attacker controls."
+indieweb,record,dns-registrar,yes,yes,yes,Controls the domain and can repoint it to attacker content.
+indieweb,proof,mastodon,yes,yes,yes,Home instance sets verified_at in its own database and can show a checkmark to its users without a real backlink. Remote instances re-verify independently.
+indieweb,proof,github,no,yes,yes,"Can add or remove the rel=me link on a profile, but the domain must link back."
+indieweb,anchor,github,yes,yes,yes,Override forge no → yes.
+indieweb,anchor,mastodon,yes,yes,yes,Override forge no → yes.
+indieweb,anchor,email-provider,yes,yes,yes,"Override forge no → yes. IndieLogin email code: the provider can read and intercept codes (that is login, not forging the public link)."
+sigstore,proof,fulcio,yes,yes,yes,Fulcio can issue a cert for any identity to any key; detectable only through CT monitoring. It sees OIDC tokens and request metadata.
+sigstore,record,rekor,no,yes,yes,"Rekor cannot mint certs, but can refuse entries (clients then fail to produce a bundle). Entries are public; the operator also sees request metadata."
+sigstore,anchor,github,yes,yes,yes,"As IdP it can mint an OIDC token for any account, or suspend the account."
+sigstore,anchor,google,yes,yes,yes,"Same as github, for Google-account emails."
+sigstore,anchor,microsoft,yes,yes,yes,"Same as github, for Microsoft-account emails."
+passport,proof,human-passport,yes,yes,yes,"The IAM issuer key signs every stamp and could sign one for any address. Per its policy it collects IP/device metadata, though OAuth data is discarded."
+passport,record,human-passport,yes,yes,yes,Stamps are stored and served by Passport's scorer API; the operator can also ban or revoke stamps.
+passport,record,optimism,no,no,no,"Optional onchain EAS copies: the chain cannot forge the attester's signature. Censorship would need sequencer collusion beyond forced inclusion, and all data is public anyway."
+passport,anchor,github,yes,yes,yes,"Platform can complete OAuth as any account, or close the account or API, stopping renewals."
+passport,anchor,x,yes,yes,yes,Same as github.
+passport,anchor,google,yes,yes,yes,Same as github.
+dif-wellknown,record,web-host,yes,yes,yes,Applies when the DID is did:web (Microsoft's default): the host controls the DID document and can sign a fresh DLC itself. For other DID methods the record operator is that method's registry.
+dif-wellknown,proof,web-host,no,yes,yes,"Hosts did-configuration.json and can delete it, but cannot sign a DLC without the DID key (unless the DID is did:web on the same host). Sees verifier fetches."
+dif-wellknown,anchor,dns-registrar,yes,yes,yes,"Override forge no → yes. Can redirect or seize the domain, which breaks the link, but cannot forge the DID signature unless the DID is did:web on that domain."
+did-web,record,web-host,yes,yes,yes,"Controls did.json outright, so it can swap keys; sees every resolution."
+did-web,anchor,dns-registrar,yes,yes,yes,"Can repoint the domain and obtain a TLS cert, then serve any DID document; holds registrant data."
+did-web,anchor,webpki-ca,no,no,no,"Mis-issuance alone is not enough: forgery also needs a network/DNS position, since the CA does not serve the document."
+nip39,record,nostr-relays,no,yes,yes,"Events are Schnorr-signed, so relays cannot forge them. Any single relay can drop the kind 10011, but the user can publish to others. Relays see client IPs and query patterns."
+nip39,proof,github,yes,yes,yes,GitHub could plant a gist in user X's account naming an attacker-controlled npub. It cannot make the victim's key sign anything. Proof and anchor are the same operator.
+nip39,anchor,github,yes,yes,yes,Same as the proof layer: GitHub controls the account and can bind it to a key it controls.
+nip39,proof,x,yes,yes,yes,Tweet-based proof. Same analysis as github. Verification needs X's API or scraping.
+nip39,anchor,x,yes,yes,yes,Controls the account.
+nip39,proof,mastodon,yes,yes,yes,The instance admin controls posts and accounts on that instance.
+nip39,anchor,mastodon,yes,yes,yes,Instance admin.
+nip39,proof,telegram,yes,yes,yes,The proof is a public channel message.
+nip39,anchor,telegram,yes,yes,yes,Controls the account.
+nip39,proof,bluesky,yes,yes,yes,"The proof is a Bluesky post fetched through the AppView. Forge is 'yes' if the user's PDS is Bluesky-hosted. A self-hosted PDS would reduce this, which is not analysed here."
+nip39,anchor,bluesky,yes,yes,yes,Handle and account on Bluesky-hosted infrastructure.
+nip39,proof,discord,yes,yes,yes,"Messages are readable only by server members, so most verifiers cannot check them at all (PR #2486)."
+nip39,anchor,discord,yes,yes,yes,Controls the account.
+nip05,record,nostr-relays,no,yes,yes,"The kind 0 is signed, so relays cannot forge it. Each relay can drop it, and they see IPs and queries."
+nip05,proof,web-host,yes,yes,yes,"Whoever serves nostr.json can map the name to a key it controls; a hosted provider can reassign names. It cannot make the victim's key claim anything. It sees every verifier's lookup (IP, name queried)."
+nip05,anchor,dns-registrar,yes,yes,yes,"Can redirect the domain to a host that serves a different key, or seize or suspend the domain. Holds registrant data."
+farcaster,record,optimism,no,yes,yes,The sequencer can delay or censor IdRegistry/KeyRegistry txs but cannot forge custody signatures. It sees tx submission metadata.
+farcaster,record,farcaster-hubs,no,yes,yes,Validators can refuse to include messages but cannot forge ed25519-signed messages. Nodes see client request metadata.
+farcaster,proof,farcaster-app,yes,yes,yes,The app holds an app signer for each user's fid and asserts the X handle without cryptographic proof (FIP-19). It holds OAuth tokens and account data.
+farcaster,proof,farcaster-hubs,no,yes,yes,Stores and orders the UserData/Verification messages.
+farcaster,anchor,x,yes,yes,yes,"X can let another person pass OAuth for a handle or reassign it. It can also refuse OAuth, which blocks new links."
+farcaster,anchor,github,yes,yes,yes,"Same as X, if the GitHub attestation is deployed (unconfirmed)."
+pkarr,record,mainline-dht,no,no,yes,"No single operator. Individual nodes can drop records, and a targeted eclipse/Sybil attack could censor a key. Nodes see requester IPs."
+pkarr,record,pkarr-relays,no,yes,yes,"Relays verify signatures, so they cannot forge, but they can refuse or serve stale packets. They log client IPs. Optional for native clients."
+storacha-mailto,record,storacha,yes,yes,yes,Storacha stashes the account's delegations (access/claim). It can mint a zero-byte-signature did:mailto delegation plus its own ucan/attest.
+storacha-mailto,proof,storacha,yes,yes,yes,Storacha signs the ucan/attest that carries all the cryptographic weight; it can refuse to attest and now no longer can (service decommissioned).
+storacha-mailto,anchor,email-provider,yes,yes,yes,Mailbox control means it can click the confirmation link; it can drop the email; it holds mail logs.
+storacha-mailto,anchor,postmark,yes,yes,yes,The sender sees the confirmation URL in transit; it could follow it or drop the mail. Based on a 2023 planning note.
+recap,record,ethereum,no,no,no,"Only for ERC-1271 contract wallets; the chain holds public state, and EOAs need no operator."

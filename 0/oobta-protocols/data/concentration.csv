@@ -1,0 +1,35 @@
+operator,name,kind,jurisdiction,offerings,can_forge_in,layers
+dns-registrar,DNS registrar / authoritative DNS host for the handle domain,dns,other,7,7,anchor+proof+record
+github,GitHub,platform,US,7,7,anchor+proof
+web-host,Web host for the user's domain (.well-known files),platform,other,7,5,proof+record
+x,X (Twitter),platform,US,5,4,anchor+proof
+mastodon,Mastodon instances,platform,other,4,4,anchor+proof
+bluesky,Bluesky Social PBC AppView / Bluesky app,platform,US,2,2,anchor+proof
+bluesky-pds,Bluesky Social PBC PDS hosting (bsky.social / *.bsky.network),platform,US,2,2,proof+record
+email-provider,Email provider,platform,other,2,2,anchor
+google,Google (OIDC),platform,US,2,2,anchor
+reddit,Reddit,platform,US,2,2,anchor+proof
+nostr-relays,Nostr relays (independent operators),relay-set,none,2,0,record
+optimism,OP Mainnet (and other EVM chains hosting EAS stamps),chain,US,2,0,record
+plc-bsky,PLC directory (plc.directory) as operated by Bluesky Social PBC,registry,US,2,0,record
+bsky-trusted-verifiers,"Bluesky Trusted Verifier organizations (e.g. NYT, FT, The Athletic)",issuer,other,1,1,proof
+discord,Discord Inc.,platform,US,1,1,anchor+proof
+farcaster-app,"Farcaster app (formerly Warpcast), owned by Neynar since 2026-01",issuer,US,1,1,proof
+fulcio,"Sigstore Fulcio public-good CA (OpenSSF, on GCP)",ca,US,1,1,proof
+hn,Hacker News (Y Combinator),platform,US,1,1,anchor+proof
+human-passport,Human Passport (Holonym Foundation / human.tech),issuer,US,1,1,proof+record
+microsoft,Microsoft (OIDC),platform,US,1,1,anchor
+postmark,Postmark (transactional email sender used by web3.storage/Storacha for confirmation links),platform,US,1,1,anchor
+storacha,"Storacha Network (formerly web3.storage / DAG House, Protocol Labs spin-out)",issuer,US,1,1,proof+record
+telegram,Telegram,platform,other,1,1,anchor+proof
+ethereum,Ethereum chain (for ERC-1271 contract-wallet verification),chain,none,1,0,record
+farcaster-hubs,Snapchain validators (replaced Farcaster Hubs in 2025),relay-set,none,1,0,proof+record
+keybase,Keybase (Zoom Video Communications),registry,US,1,0,record
+keyoxide-aspe,Keyoxide ASPE server (keyoxide.org),registry,other,1,0,record
+keys-openpgp-org,keys.openpgp.org,keyserver,other,1,0,record
+mainline-dht,BitTorrent Mainline DHT,dht,none,1,0,record
+pkarr-relays,"Pkarr HTTP relays (pkarr.pubky.app, pkarr.pubky.org, relay.pkarr.org)",relay-set,other,1,0,record
+plc-org,Public Ledger of Credentials Organization (Swiss Association),registry,CH,1,0,record
+rekor,"Sigstore Rekor public-good transparency log (OpenSSF, on GCP)",log,US,1,0,record
+stellar,Stellar public network (Keybase Merkle root memos),chain,none,1,0,record
+webpki-ca,WebPKI TLS certificate authority,ca,other,1,0,anchor

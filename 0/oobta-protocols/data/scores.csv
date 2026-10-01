@@ -1,0 +1,9 @@
+lens,label,groups,category_utility,permutation_p,held_out_cu,held_out_p,misfits,stability_range,surprise
+prediction,Claude's prediction (stand-in),5,1.077,0.001,1.077,0.001,5,0.176,
+family,Proof family,4,1.150,0.001,0.812,0.021,3,0.164,0.13
+verify-trust,Trusted at verify time,4,1.523,0.000,1.142,0.000,4,0.138,0.31
+pki,PKI vocabulary,4,1.100,0.002,0.869,0.026,8,0.138,0.31
+anchor-role,Anchor's role,5,1.179,0.000,0.821,0.017,8,0.220,0.25
+lifecycle,How a link dies,4,1.112,0.002,0.870,0.021,3,0.217,0.38
+effort-tier,Effort tier,3,1.014,0.003,0.694,0.101,1,0.168,0.13
+trust-surface,Who can forge,3,0.881,0.026,0.881,0.026,11,0.192,0.56

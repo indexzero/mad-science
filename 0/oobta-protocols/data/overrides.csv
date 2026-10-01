@@ -1,0 +1,3 @@
+offering,fact,value,reason
+indieweb,lifecycle.survives_key_rotation,na,"IndieWeb rel=me and IndieAuth use no key. The agent recorded yes and asked for N/A."
+indieweb,lifecycle.key_recovery,na,"IndieWeb rel=me and IndieAuth use no key. The agent recorded no and asked for N/A."

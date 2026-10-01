@@ -1,0 +1,9 @@
+id,label,categories
+prediction,Claude's prediction (stand-in),bidirectional|issuer|delegation|hybrid|misfit
+family,Proof family,bidirectional|issuer|delegation|hybrid|misfit
+verify-trust,Trusted at verify time,nobody|anchor|issuer|registry|hybrid|misfit
+pki,PKI vocabulary,self-issued|third-party|hybrid|misfit
+anchor-role,Anchor's role,passive|cooperative|dns|hybrid|misfit
+lifecycle,How a link dies,deleted|revoked|expires|hybrid|misfit
+effort-tier,Effort tier,attach|migrate|hybrid|misfit
+trust-surface,Who can forge,none|anchor|third-party|hybrid|misfit
