@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ariadne Identity</title>
+    <link rel="stylesheet" href="/style.css?hash=3JTbIIf3hXMJEi1vQfUWr4DT2dI5Ptg1n5lqhN+slY4=">
+</head>
+<body>
+    
+    <div class="container">
+        
+        <header class="small-screen">
+            
+<h1>Version 0</h1>
+
+        </header>
+        
+        <main>
+            
+
+<p class="subtitle">Ariadne Identity Core Specification</p>
+<h1>Version 0</h1>
+
+<div class="spec">
+    <h1 id="ariadne-identity-core-specification">Ariadne Identity Core Specification</h1>
+<p>Author: Yarmo Mackenbach &lt;yarmo@keyoxide.org&gt;<br />
+Version: 0<br />
+Published: 2022-11-16<br />
+Last updated: 2022-11-22</p>
+<h2 id="status">Status</h2>
+<p>This version of the specification is a draft. It is not recommended to base implementations on this version.</p>
+<h2 id="copyright-notice">Copyright notice</h2>
+<p>Copyright (c) 2022 Yarmo Mackenbach. All rights reserved.</p>
+<h2 id="1-introduction">1. Introduction</h2>
+<p>The Ariadne Identity Specification (AIS) describes a protocol to prove online identity in a decentralized manner using bidirectional linking and secured by cryptography.</p>
+<p>The protocol roughly works as follows:</p>
+<ul>
+<li>fetch a cryptographically secured document containing identity claims</li>
+<li>parse the claims and deduce potential locations of identity proof</li>
+<li>fetch public data from these locations and search for proofs of identity</li>
+</ul>
+<h2 id="1-1-example">1.1. Example</h2>
+<p>Let's take a hypothetical OpenPGP key containing a single notation:</p>
+<ul>
+<li>proof@ariadne.id=https://domain.tld</li>
+</ul>
+<p>Our hypothetical OpenPGP key has the following fingerprint:</p>
+<ul>
+<li>21110C4A12F24046C460B2995241BA9B7233E2DD</li>
+</ul>
+<p>We fetch the OpenPGP key from a keyserver and read the notations it contains. We find a single one. Since it has the proof key and the ariadne.id namespace, we interpret the notation's value as an identity claim. We parse the value https://domain.tld and assume it attempts to claim a website. We fetch the website and parse the HTML data looking for specific meta tags. If we find a correct meta tag of which the value contains the OpenPGP key's fingerprint, we have established bidirectional linking and can mark the identity claim as verified.</p>
+<h2 id="1-2-supported-cryptographic-standards-and-tools">1.2. Supported cryptographic standards and tools</h2>
+<p>The AIS currently supports OpenPGP cryptographic keys and minisign cryptographic keys.</p>
+<p>The identifier of an OpenPGP cryptographic key is its fingerprint. It's URI representation is:</p>
+<ul>
+<li>openpgp4fpr:FINGERPRINT</li>
+</ul>
+<p>The identifier of a minisign cryptographic key is its public key. It's URI representation is:</p>
+<ul>
+<li>minisignpub:PUBLICKEY</li>
+</ul>
+<h2 id="2-identity-claims">2. Identity Claims</h2>
+<p>Identity Claims are links stored inside cryptographically secured documents that point to digital assets that one can uniquely hold.</p>
+<p>An Identity Claim is always an URI and may be an URL.</p>
+<p>The non-exhaustive list of digital assets an Identity Claim may point to are:</p>
+<ul>
+<li>a domain name;</li>
+<li>an account registered with a third party service provider.</li>
+</ul>
+<p>Identity Claims must contain all the necessary information to deduce potential locations of public data containing proofs of identity.</p>
+<p>Examples of Identity Claims are:</p>
+<ul>
+<li>https://domain.tld</li>
+<li>https://domain.tld/user</li>
+<li>irc://domain.tld/nickname</li>
+</ul>
+<h2 id="3-identity-profiles">3. Identity Profiles</h2>
+<p>A collection of identity claims constitute an Identity Profile. To ensure the integrity of a Profile, Identity Claims must always be stored together in a single documment and that document must be cryptographically signed for authenticity and uniqueness.</p>
+<p>Ariadne Identity Profiles can be stored in one of two ways:</p>
+<ul>
+<li>as notations in an OpenPGP cryptographic key</li>
+<li>as a cryptographically signed document</li>
+</ul>
+<h3 id="3-1-openpgp-profiles">3.1. OpenPGP profiles</h3>
+<p>OpenPGP cryptographic public keys can be exported and propagated containing arbitrary bits of information known as notations. A notation is a key-value pair with an optional namespace for the key.</p>
+<p>Ariadne Identity Claims stored as notations must be as follows:</p>
+<p>proof@ariadne.id=CLAIM</p>
+<p>where:</p>
+<ul>
+<li>proof is the key, signifies what follows is an Identity Claim</li>
+<li>@ariadne.id is the namespace</li>
+<li>CLAIM is the actual Claim</li>
+</ul>
+<p>Examples of Identity Claim notations are:</p>
+<ul>
+<li>proof@ariadne.id=https://domain.tld</li>
+<li>proof@ariadne.id=https://domain.tld/user</li>
+<li>proof@ariadne.id=irc://domain.tld/nickname</li>
+</ul>
+<h3 id="3-2-signature-profiles">3.2. Signature profiles</h3>
+<p>Plaintext documents can be cryptographically signed by a variety of cryptographic standards and tools. These plaintext documents can contain lines with specific keywords that when parsed, form an Ariadne Identity Profile.</p>
+<p>The public keys of the cryptographic keys that signed the profile must either be publicly available through keyserver or other key diffusion protocols, or embedded in the document if they are small enough.</p>
+<p>Lines starting with proof= must be treated as Identity Claims. Examples are:</p>
+<ul>
+<li>proof=https://domain.tld</li>
+<li>proof=https://domain.tld/user</li>
+<li>proof=irc://domain.tld/nickname</li>
+</ul>
+<p>Lines starting with key= must be treated as public cryptographic keys. Keys should start with the protocol or tool they, followed by a pipe symbol and then the public key itself. Examples are:</p>
+<ul>
+<li>key=minisignpub:RWQV3WT6S7EM63OEQfwnDBpj7QN/O3Ki05VHLpKwX9QFEejqD7Id09Vp</li>
+</ul>
+<p>Other lines will be ignored and may be used to clarify the intent of the signature profile.</p>
+<h2 id="4-identity-proofs">4. Identity Proofs</h2>
+<p>Identity Proofs are links that point to a cryptographic key. Presence of an identity proof inside data fetched from a location deduced from an identity claim verifies said claim.</p>
+<p>An identity proof may be:</p>
+<ul>
+<li>an URI representation of a cryptographic key's identifier</li>
+<li>a cryptographic hash of a URI representation of a cryptographic key's identifier</li>
+<li>an URL pointing to a web representation of an Ariadne Identity Profile</li>
+</ul>
+<p>An example set of Identity Proofs for an OpenPGP key with fingerprint ACB9C3FDB63C9DCAF14AD027811C5FDF6E20CC0E could be:</p>
+<ul>
+<li>URI: openpgp4fpr:ACB9C3FDB63C9DCAF14AD027811C5FDF6E20CC0E</li>
+<li>argon2 hash: $argon2id$v=19$m=64,t=512,p=2$bgvN8ojYGE27FiHVSt12mA$Wi8M62eZeign70OwaDqrxQ</li>
+<li>bcrypt hash: $2a$11$ZetL6mhWEC05DgFTQrz0k.8yWjYxYwI/ozEsr/C51B14URhdj2KIq</li>
+<li>URL: https://keyoxide.org/ACB9C3FDB63C9DCAF14AD027811C5FDF6E20CC0E</li>
+<li>Vanity URL: https://domain.tld/myid</li>
+</ul>
+<p>Identity proofs may be stored inside plaintext data or JSON data, depending on the service provider.</p>
+<h2 id="4-1-cryptographic-hash">4.1. Cryptographic hash</h2>
+<p>To prevent Identity Proofs from tracing back to their Identity Profile, the URI representation of the key's identifier can be hashed.</p>
+<p>Cryptographic hashing must be performed using either the argon2 [<a href="https://www.rfc-editor.org/rfc/rfc9106">RFC9106</a>] or the bcrypt method.</p>
+<h2 id="4-2-ariadne-identity-profile-url">4.2. Ariadne Identity Profile URL</h2>
+<p>Ariadne Identity Profile URL should be fetched through a HEAD HTTP request and the response headers scanned for the following header:</p>
+<ul>
+<li>ariadne-identity-proof: KEY_IDENTIFIER</li>
+</ul>
+<p>where KEY_IDENTIFIER is the URI representation of an OpenPGP key's fingerprint, or the URI representation of a public key for other standards and tools.</p>
+<h2 id="4-3-vanity-url">4.3. Vanity URL</h2>
+<p>An Ariadne Identity Profile URL may be a vanity URL that redirects to the actual Ariadne Identity Profile URL. A vanity URL may not take more than a single redirect to arrive at the Ariadne Identity Profile URL.</p>
+<h2 id="5-identity-verification-process">5. Identity verification process</h2>
+<p>The verification process for an Identity Claim roughly works as follows:</p>
+<ul>
+<li>parse the claim and deduce potential locations of identity proof</li>
+<li>fetch public data from these locations and search for proofs of identity</li>
+</ul>
+<p>To parse an Identity Claim, it is matched against a set of known service providers definitions and tested against each match until one verifies the claim.</p>
+<p>For each matched service provider, the identity claim will be converted into a set of instructions to fetch the potential proof of identity. As an example, take the claim https://domain.tld/user. For different service providers, this could be converted into the potential locations to fetch:</p>
+<ul>
+<li>https://domain.tld/user</li>
+<li>https://domain.tld/user.json</li>
+<li>https://api.domain.tld/profile/user</li>
+</ul>
+<p>Each of these locations should be fetched with appropriate HTTP headers and methods as specified in the service provider definition. The data returned for each location will be parsed and analyzed as specified in the service provider definition.</p>
+<p>If the returned data is plaintext, search the entire document for proofs of identity. If the returned data is JSON, the service provider definition will specify the path to the desired key or keys.</p>
+<p>If the returned data contains a proof of identity in any of the forms described in section 4, the Identity Claim is marked as verified.</p>
+<h3 id="5-1-proxy-servers">5.1. Proxy servers</h3>
+<p>Not all identity claims are verifiable through web interfaces due to a variety of reasons:</p>
+<ul>
+<li>cross-origin resource sharing restrictions</li>
+<li>access tokens that shouldn't appear in the web interface's source code</li>
+<li>data locations not accessible through browsers-side code (for example, DNS records)</li>
+</ul>
+<p>In these cases, an AIS program may fetch the necessary data through a proxy server. It is recommended to prefer direct requests over proxied requests. Interfaces should inform the user when a proxy server was solicited.</p>
+<h2 id="6-service-provider-definitions">6. Service provider definitions</h2>
+<p>Since there is no universal way to verify an Identity Claim, the AIS is based on a predefined list of supported service providers. This list is publicly available on https://ariadne.id/arc</p>
+<h2 id="7-references">7. References</h2>
+<p>[RFC9106] https://www.rfc-editor.org/rfc/rfc9106</p>
+
+</div>
+
+
+
+            <footer>
+                <p>
+                    Source code at <a href="https://codeberg.org/ariadne/ariadne-identity-specification">codeberg.org/ariadne/ariadne-identity-specification</a>
+                    <br>
+                    Ariadne Identity Specification licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0 License</a>.
+                </p>
+            </footer>
+        </main>
+
+        <aside>
+            <header class="large-screen">
+                <h1>
+                    <a href="/">
+                        Ariadne Identity
+                    </a>
+                </h1>
+            </header>
+            <nav>
+                
+                <a  href="&#x2F;">Introduction</a>
+                
+
+                    
+    
+                    <details open>
+                        <summary>
+                            Core Specification
+                            <span class="flex"></span>
+                            <img src="/chevron-up.svg" class="collapse" alt="Collapse">
+                            <img src="/chevron-down.svg" class="expand" alt="Expand">
+                        </summary>
+    
+                        <a  href="&#x2F;core&#x2F;">Overview</a>
+                        
+                            <a class="active" href="https://ariadne.id/core/0/">Version 0</a>
+                        
+                    </details>
+                
+
+                    
+    
+                    <details >
+                        <summary>
+                            Related Specifications
+                            <span class="flex"></span>
+                            <img src="/chevron-up.svg" class="collapse" alt="Collapse">
+                            <img src="/chevron-down.svg" class="expand" alt="Expand">
+                        </summary>
+    
+                        <a  href="&#x2F;related&#x2F;">Overview</a>
+                        
+                            <a  href="https://ariadne.id/related/ariadne-alias-specification-1/">Ariadne Alias Specification v1</a>
+                        
+                            <a  href="https://ariadne.id/related/ariadne-signature-profile-0/">Ariadne Signature Profile v0</a>
+                        
+                            <a  href="https://ariadne.id/related/web-signature-directory-0/">Web Signature Directory v0</a>
+                        
+                    </details>
+                
+
+                    
+    
+                    <details >
+                        <summary>
+                            ARCs
+                            <span class="flex"></span>
+                            <img src="/chevron-up.svg" class="collapse" alt="Collapse">
+                            <img src="/chevron-down.svg" class="expand" alt="Expand">
+                        </summary>
+    
+                        <a  href="&#x2F;arc&#x2F;">Overview</a>
+                        
+                            <a  href="https://ariadne.id/arc/0001/">ARC-0001 - ActivityPub service provider definition</a>
+                        
+                    </details>
+                
+            </nav>
+            
+        </aside>
+
+    </div>
+
+</body>
+</html>

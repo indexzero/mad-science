@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROPOSED DID Methods Working Group Charter</title>
+    <link rel="stylesheet" type="text/css" href="https://www.w3.org/2026/01/charter-style.css">
+  </head>
+  <body>
+    <header id="header">
+      <aside>
+        <ul id="navbar">
+          <li><a href="#background">Background</a></li>
+          <li><a href="#scope">Scope</a></li>
+          <li><a href="#deliverables">Deliverables</a></li>
+    		  <li><a href="#success-criteria">Success Criteria</a></li>
+          <li><a href="#coordination">Coordination</a></li>
+          <li><a href="#participation">Participation</a></li>
+          <li><a href="#communication">Communication</a></li>
+          <li><a href="#decisions">Decision Policy</a></li>
+          <li><a href="#patentpolicy">Patent Policy</a></li>
+          <li><a href="#licensing">Licensing</a></li>
+          <li><a href="#about">About this Charter</a></li>
+        </ul>
+      </aside>
+      <p>
+        <a href="https://www.w3.org/"><img alt="W3C" height="120" src="https://www.w3.org/assets/logos/w3c-2025/svg/w3c.svg" width="120"></a>
+      </p>
+    </header>
+
+
+    <main>
+      <h1 id="title">PROPOSED DID Methods Working Group Charter</h1>
+      <!-- delete PROPOSED after AC review completed -->
+
+      <p class="mission">
+The <strong>mission</strong> of the DID Methods Working Group is to
+standardize DID Methods that use Web technologies.
+      </p>
+      <!-- the link to the group is ALWAYS that available from https://www.w3.org/groups/wg or https://www.w3.org/groups/ig because each group page can then point to a different homepage, but not the other way around. -->
+
+      <div class="noprint">
+        <p class="join">
+<a href="https://www.w3.org/groups/wg/didm/join/">Join the DID Methods Working
+Group</a>
+        </p>
+      </div>
+
+      <!-- delete the GH link after AC review completed -->
+      <p style="padding: 0.5ex; border: 1px solid green">
+This draft charter is available on
+<a href="https://github.com/w3c/did-methods-wg-charter/">GitHub</a>. Feel free to raise
+<a href="https://github.com/w3c/did-methods-wg-charter/issues">issues</a>.
+      </p>
+
+      <div id="details">
+        <table class="summary-table">
+          <tr id="Status">
+            <th>
+              Charter Status
+            </th>
+            <td>
+See the <a href="https://www.w3.org/groups/wg/didm/charters/">group
+status page</A> and <a href="#history">detailed change history</a>.
+            </td>
+          </tr>
+          <tr id="Duration">
+            <th>
+              Start date
+            </th>
+            <td>
+              <i class=todo>TBD</i>
+            </td>
+          </tr>
+          <tr id="CharterEnd">
+            <th>
+              End date
+            </th>
+            <td>
+              <i class=todo>START+24M</i>
+            </td>
+          </tr>
+          <tr>
+            <th>
+              Chairs
+            </th>
+            <td>
+              <i>Juan Caballero (Decentralized Identity Foundation)</i>
+              <br>
+              <i>Denken Chen (Ministry of Digital Affairs, Taiwan)</i>
+            </td>
+          </tr>
+          <tr>
+            <th>
+              Team Contacts
+            </th>
+            <td>
+              <a href="mailto:atsushi@w3.org">Atsushi Shimono</a> <i class="todo">(0.1 <abbr title="Full-Time Equivalent">FTE</abbr>)</i>
+            </td>
+          </tr>
+          <tr>
+            <th>
+              Meeting Schedule
+            </th>
+            <td>
+              <strong>Teleconferences:</strong> weekly
+              <br>
+              <strong>Face-to-face:</strong> we will meet during the W3C's annual Technical Plenary week; additional face-to-face meetings may be scheduled by consent of the participants, usually no more than 3 per year.
+              <br>
+              See also this <a href='https://www.w3.org/groups/wg/didm/calendar/'>group calendar</a>
+            </td>
+          </tr>
+        </table>
+
+      </div>
+
+      <div id="background" class="background">
+        <h2>Motivation and Background</h2>
+        <p>
+A <a href="https://www.w3.org/TR/did-core/#methods">DID Method specification</a>
+defines the precise operations by which
+<a href="https://www.w3.org/TR/did-core/#abstract">Decentralized Identifiers</a>
+(DIDs) and
+<a href="https://www.w3.org/TR/did-core/#core-properties">DID documents</a> are
+created, resolved, updated, and deactivated. Since the publication of the
+<a href="https://www.w3.org/TR/2022/REC-did-core-20220719/">DID Core v1.0
+specification</a>, many DID Methods have been created and deployed.
+As national governments and large corporations continue to adopt this
+technology, it is beneficial for those organizations to have standardized,
+production-grade DID Methods to deploy. While DID Methods can be standardized
+in any standards-development organization, there are a few that utilize the
+<a href="https://www.w3.org/TR/webarch/">architecture of the Web</a>, and Web technologies, and would benefit
+standardization at W3C.
+        </p>
+      </div>
+
+      <section id="scope" class="scope">
+        <h2>Scope</h2>
+        <p>
+The scope of the initial DID Methods Working Group will be to standardize at
+least one ephemeral DID Method, one Web-based DID Method, and one fully
+decentralized DID Method based on Web technologies
+and adhering to <a href="https://tag.w3.org/principles/">Web Design Principles</a>.
+        </p>
+
+        <section id="section-out-of-scope">
+          <h3 id="out-of-scope">Out of Scope</h3>
+            <p>
+The following features are out of scope, and will not be addressed by this
+Working Group.
+            </p>
+
+            <ul class="out-of-scope">
+              <li>
+DID Methods not following <a href="https://www.w3.org/TR/webarch/">Web Architecture</a> or <a href="https://tag.w3.org/principles/">Web Design Principles</a>.
+              </li>
+            </ul>
+        </section>
+
+      </section>
+
+      <section id="deliverables">
+        <h2>
+          Deliverables
+        </h2>
+
+        <p><i class="todo">Updated document status is available on the <a href="https://www.w3.org/groups/wg/didm/publications/">group publication status page</a>.</i></p>
+
+        <p>
+<i>Draft state</i> indicates the state of the deliverable at the time of the
+charter approval. <i>Expected completion</i> indicates when the deliverable is
+projected to become a Recommendation, or otherwise reach a stable state.
+        </p>
+
+        <section id="normative">
+          <h3>
+            Normative Specifications
+          </h3>
+          <p>
+The Working Group will deliver one or more W3C normative specifications for each of the following categories of DID methods:
+          </p>
+
+          <dl>
+            <dt id="ephemeral-did-method" class="spec">
+An Ephemeral DID Method
+            </dt>
+            <dd>
+              <p>
+This specification defines a mechanism to create and manage DID
+Documents entirely based on the identifier, such as those based on public cryptographic key information.
+Such a mechanism typically does not support key rotation or deactivation, which makes it more suitable for short-lived DIDs and DID documents.
+              </p>
+              <p class="draft-status"><b>Draft state:</b> No draft</p>
+              <p class="milestone">
+<b>Expected completion:</b> <i class=todo>START+12M</i>
+              </p>
+            </dd>
+
+            <dt id="web-did-method" class="spec">
+A Web-based DID Method
+            </dt>
+            <dd>
+              <p>
+This specification defines a mechanism to create and manage DID Documents using
+web services.
+              </p>
+
+              <p class="draft-status"><b>Draft state:</b> No draft</p>
+              <p class="milestone">
+<b>Expected completion:</b> <i class=todo>START+12M</i>
+              </p>
+            </dd>
+            <dt id="full-did-method" class="spec">
+A Decentralized Web-based DID Method
+            </dt>
+            <dd>
+              <p>
+This specification defines a set of mechanisms to create and manage the full
+lifecycle for DID Documents (create, resolve, update, deactivate) using Web technology, 
+but which also defines additional multi-authority or "decentralizing" mechanisms 
+(which may include non-web protocols, witnessing, and/or public-commitment mechanisms)
+which allow the lifecycle mechanisms to be used and relied upon independently of Web-based 
+trust infrastructure and single points of failure.
+              </p>
+
+              <p class="draft-status"><b>Draft state:</b> No draft</p>
+              <p class="milestone">
+<b>Expected completion:</b> <i class=todo>START+18M</i>
+              </p>
+            </dd>
+          </dl>
+
+          <p>
+          The working group will consider the following proposed DID methods and other specifications as input documents:</p>
+
+          <ul>
+                <li><code>did:key</code> (<a href="https://w3c-ccg.github.io/did-key-spec/">draft specification</a>, <a href="https://github.com/decentralized-identity/did-methods/blob/main/method-proposals/PROPOSAL-did-key.md">standardization proposal</a>)</li>
+                <li><code>did:web</code> (<a href="https://w3c-ccg.github.io/did-method-web/">draft specification</a>, <a href="https://github.com/decentralized-identity/did-methods/blob/main/method-proposals/PROPOSAL-did-web.md">standardization proposal</a>)</li>
+                <li><code>did:webplus</code> (<a href="https://github.com/LedgerDomain/did-webplus">draft specification</a>, <a href="https://github.com/decentralized-identity/did-methods/blob/main/method-proposals/PROPOSAL-did-webplus.md">standardization proposal</a>)</li>
+                <li><code>did:webs</code> (<a href="https://trustoverip.github.io/tswg-did-method-webs-specification/">draft specification</a>, <a href="https://github.com/decentralized-identity/did-methods/blob/main/method-proposals/PROPOSAL-did-webs.md">standardization proposal</a>)</li>
+                <li><code>did:webvh</code> (<a href="https://identity.foundation/didwebvh/v1.0/">draft specification</a>, <a href="https://github.com/decentralized-identity/did-methods/blob/main/method-proposals/PROPOSAL-did-webvh.md">standardization proposal</a>)</li>
+                <li><code>did:scid</code> (<a href="https://lf-toip.atlassian.net/wiki/spaces/HOME/pages/88572360/DID+SCID+Method+Specification">draft specification</a>, <a href="https://github.com/decentralized-identity/did-methods/blob/main/method-proposals/PROPOSAL-did-scid.md">standardization proposal</a>)</li>
+                <li><code>did:peer</code> (<a href="https://identity.foundation/peer-did-method-spec/">draft specification</a>, <a href="https://github.com/decentralized-identity/did-methods/blob/main/method-proposals/PROPOSAL-did-peer.md">standardization proposal</a>)</li>
+                <li><code>did:plc</code> (<a href="https://github.com/did-method-plc/did-method-plc/blob/main/website/spec/v0.1/did-plc.md#how-it-works">draft specification</a>)
+                <li><code>did:cel</code> (<a href="https://w3c-ccg.github.io/did-cel-spec/">draft specification</a>)
+          </ul>
+        </section>
+
+        <section id="incubation">
+          <!-- If no incubation or not a Working Group, delete the section. -->
+          <h3>
+            Tentative Deliverables
+          </h3>
+          <p>
+None.
+          </p>
+        </section>
+
+        <section id="ig-other-deliverables">
+          <h3>
+            Other Deliverables
+          </h3>
+          <p>
+            Other non-normative documents may be created such as:
+          </p>
+          <ul>
+            <li>Use case and requirement documents;</li>
+            <li>Test suite and implementation report for the specification;</li>
+            <li>Primer or Best Practice documents to support web developers when designing applications.</li>
+          </ul>
+        </section>
+
+        <section id="timeline">
+          <h3>Timeline</h3>
+            <ul>
+              <li>Month 1: First teleconference.</li>
+              <li>Month 3: FPWD for all Normative Deliverables.</li>
+              <li>Month 9: First face-to-face meeting.</li>
+              <li>Month 12: Candidate Recommendation for all Normative Deliverables.</li>
+              <li>Month 18: Recommendation for all Normative Deliverables.</li>
+            </ul>
+        </section>
+      </section>
+
+	<section id="success-criteria">
+	  <h2>Success Criteria</h2>
+
+    <!-- Testing and interop -->
+<p>In order to advance beyond
+<a href="https://www.w3.org/policies/process/#RecsCR" title="Candidate Recommendation">Candidate Recommendation</a>, each normative specification is expected to have
+<a href="https://www.w3.org/policies/process/#implementation-experience">at
+least two independent interoperable implementations</a> of every feature defined
+in the specification, where interoperability can be verified by passing open
+test suites.
+    </p>
+    <p>
+There should be testing plans for each specification, starting from the earliest
+drafts.
+    </p>
+    <p>
+To promote interoperability, all changes made to specifications in Candidate
+Recommendation or to features that have deployed implementations should have
+<a href='https://www.w3.org/policies/testing/'>tests</a> through the
+Working Group managed test suite.
+    </p>
+
+    <!-- Horizontal review -->
+
+    <p>Each specification should contain separate sections detailing all known security and
+      privacy implications for implementers, Web authors, and users.</p>
+
+    <p>
+More specifically, each DID method specified by the Working Group will include a Threat Model (possibly as a separate document), which will contain a diagram, threats/attacks, responses to these threats/attacks, and any other relevant information (e.g., assumptions, implementation requirements, imported threats e.g., from <a href="https://datatracker.ietf.org/doc/html/rfc3552">RFC 3552</a>, as required by <a href="https://www.w3.org/TR/did/">DID core</a>.
+    </p>
+
+    <!-- W3C Statements and Web Platform Design Principles -->
+    <p>This group is expected to be guided by the following documents:</p>
+    <ul>
+      <li><a href="https://www.w3.org/TR/ethical-web-principles/">Ethical Web Principles</a>,</li>
+      <li><a href="https://www.w3.org/TR/privacy-principles/">Privacy Principles</a>,</li>
+      <li><a href="https://www.w3.org/TR/design-principles/">Web Platform Design Principles</a>.</li>
+    </ul>
+
+  </section>
+
+      <section id="coordination">
+        <h2>Coordination</h2>
+        <p>
+For all specifications, this Working Group will seek
+<a href="https://www.w3.org/Guide/documentreview/#how_to_get_horizontal_review">
+horizontal review</a> for accessibility, internationalization, privacy, and
+security with the relevant Working and Interest Groups, and with the
+<a href="https://www.w3.org/groups/other/tag/" title="Technical Architecture
+Group">TAG</a>. Invitation for review must be issued during each major
+standards-track document transition, including
+<a href="https://www.w3.org/policies/process/#RecsWD" title="First Public
+Working Draft">FPWD</a>. The Working Group is encouraged to engage
+collaboratively with the horizontal review groups throughout development of each
+specification.  The Working Group is advised to seek a review at least 3 months
+before first entering
+<a href="https://www.w3.org/policies/process/#RecsCR" title="Candidate
+Recommendation">CR</a> and is encouraged to proactively notify the horizontal
+review groups when major changes occur in a specification following a review.
+        </p>
+
+        <p>Additional technical coordination with the following Groups will be made, per the <a href="https://www.w3.org/policies/process/#WGCharter">W3C Process Document</a>:</p>
+
+        <section>
+          <h3 id="w3c-coordination">W3C Groups</h3>
+          <dl>
+            <dt>
+<a href="https://www.w3.org/groups/wg/did/">
+Decentralized Identifier Working Group</a>
+            </dt>
+            <dd>
+To ensure alignment with the DID Core, DID Resolution, and other relevant
+Working Group specifications.
+            </dd>
+            <dt>
+<a href="https://www.w3.org/groups/wg/vc/">
+Verifiable Credential Working Group</a>
+            </dt>
+            <dd>
+To ensure alignment with the Verifiable Credential, Data Integrity, and
+other relevant Working Group specifications.
+            </dd>
+            <dt>
+<a href="https://www.w3.org/groups/fedid/">
+Federated Identity Working Group</a>
+            </dt>
+            <dd>
+To explore the possibility of claiming a particular federated identity with one of the specified methods.
+            </dd>
+            <dt>
+<a href="https://www.w3.org/groups/webauthn/">
+Web Authentication Working Group</a>
+            </dt>
+            <dd>
+To ensure that Web Authentication primitives, such as public keys, can be expressed in DID Documents.
+            </dd>
+            <dt>
+<a href="https://www.w3.org/community/credentials/">
+Credentials Community Group</a>
+            </dt>
+            <dd>
+To ensure alignment with emerging technologies and features being incubated.
+            </dd>
+          </dl>
+        </section>
+
+        <section>
+          <h3 id="external-coordination">External Organizations</h3>
+          <dl>
+            <dt>
+<a href="https://identity.foundation/">
+Decentralized Identity Foundation</a>
+            </dt>
+            <dd>
+To ensure alignment with other DID Method standardization efforts.
+            </dd>
+            <dt>
+<a href="https://trustoverip.org/">
+Trust Over IP Foundation</a>
+            </dt>
+            <dd>
+To ensure alignment with KERI-based DID Method standardization.
+            </dd>
+            <dt>
+<a href="https://www.1edtech.org/">
+1EdTech Consortium</a>
+            </dt>
+            <dd>
+To ensure alignment with education technology standards utilizing DID Methods.
+            </dd>
+          </dl>
+        </section>
+      </section>
+
+
+
+      <section class="participation">
+        <h2 id="participation">
+          Participation
+        </h2>
+        <p>
+To be successful, this Working Group is expected to have 6 or more active
+participants for its duration, including representatives from the key
+implementors of this specification, and active Editors and Test Leads for each
+specification. The Chairs, specification Editors, and Test Leads are expected to
+contribute half of a working day per week towards the Working Group. There is no
+minimum requirement for other Participants.
+        </p>
+        <p>
+The group encourages questions, comments and issues on its public mailing lists and document repositories, as described in <a href='#communication'>Communication</a>. The group also welcomes non-participants to make technical contributions for ongoing work, provided they agree to the terms of the <a href="https://www.w3.org/policies/patent-policy/">W3C Patent Policy</a>.
+        </p>
+        <p>
+The Chairs should periodically look through the non-W3C-Member contributors to the Working Group and consider whether each one should be invited to participate as an <a href="https://www.w3.org/invited-experts/">Invited Expert</a>. If a non-W3C-Member contributor would like to participate in meetings, they are encouraged to <a href="https://www.w3.org/groups/[type]/[shortname]/instructions/">apply to be an Invited Expert</a>.
+        </p>
+        <p>
+Participants in the group are required (by the
+<a href="https://www.w3.org/policies/process/#ParticipationCriteria">
+W3C Process</a>) to follow the W3C
+<a href="https://www.w3.org/policies/code-of-conduct/">Code of Conduct</a>.
+        </p>
+      </section>
+
+
+
+      <section id="communication">
+        <h2>
+          Communication
+        </h2>
+        <p id="public">
+Technical discussions for this Working Group are conducted in
+<a href="https://www.w3.org/policies/process/#confidentiality-levels">public</a>:
+the meeting minutes from teleconference and face-to-face meetings will be
+archived for public review, and technical discussions and issue tracking will be
+conducted in a manner that can be both read and written to by the general
+public. Working Drafts and Editor's Drafts of specifications will be developed
+in public repositories and may permit direct public contribution requests. The
+meetings themselves are not open to public participation, however.
+        </p>
+        <p>
+Information about the group (including details about deliverables, issues,
+actions, status, participants, and meetings) will be available from the
+<a href="https://www.w3.org/groups/wg/didm/">Working Group home page.</a>
+        </p>
+        <p>
+Most Working Group teleconferences will focus on discussion of particular
+specifications, and will be conducted on an as-needed basis.
+        </p>
+        <p>
+This group primarily conducts its technical work on the public mailing list
+<a id="dmwg" href="mailto:public-didm-wgw3.org">public-didm-wg@w3.org</a>
+(<a href="https://lists.w3.org/Archives/Public/public-didm-wg/">archive</a>) or on
+each specification's Github repository. The public is invited to review, discuss
+and contribute to this work.
+        </p>
+        <p>
+The group may use a Member-confidential mailing list for administrative purposes
+and, at the discretion of the Chairs and members of the group, for member-only
+discussions in special cases when a participant requests such a discussion.
+        </p>
+      </section>
+
+
+
+      <section id="decisions">
+        <h2>
+          Decision Policy
+        </h2>
+        <p>
+This group will seek to make decisions through consensus and due process, per
+the <a href="https://www.w3.org/policies/process/#Consensus">W3C Process
+Document (section 5.2.1, Consensus)</a>. Typically, an editor or other
+participant makes an initial proposal, which is then refined in discussion with
+members of the group and other reviewers, and consensus emerges with little
+formal voting being required.</p>
+        <p>
+However, if a decision is necessary for timely progress and consensus is not
+achieved after careful consideration of the range of views presented, the Chairs
+may call for a group vote and record a decision along with any objections.
+        </p>
+        <p>
+When several work items (DID methods, features) need to be prioritized, the Working Group will use ranked voting.
+This does not preclude the need to have consensus (or a chair decision) for each of the work items being prioritized.
+        </p>
+        <p>
+To afford asynchronous decisions and organizational deliberation, any resolution
+(including publication decisions) taken in a face-to-face meeting or
+teleconference will be considered provisional.
+
+A call for consensus (CfC) will be issued for all resolutions (for example, via
+email, GitHub issue or web-based survey), with a response period of one week one
+week to 10 working days, depending on the chair's evaluation of the group
+consensus on the issue.
+
+If no objections are raised by the end of the response period, the resolution
+will be considered to have consensus as a resolution of the Working Group.
+        </p>
+        <p>
+All decisions made by the group should be considered resolved unless and until
+new information becomes available or unless reopened at the discretion of the
+Chairs.
+        </p>
+        <p>
+This charter is written in accordance with the
+<a href="https://www.w3.org/policies/process/#Votes">
+W3C Process Document (Section 5.2.3, Deciding by Vote)</a> and includes no
+voting procedures beyond what the Process Document requires.
+        </p>
+      </section>
+
+
+
+      <section id="patentpolicy">
+
+        <h2>Patent Policy</h2>
+        <p>
+This Working Group operates under the <a href="https://www.w3.org/policies/patent-policy/">W3C Patent Policy</a> (Version of 15 May 2025). To promote the widest adoption of Web standards, W3C seeks to issue Web specifications that can be implemented, according to this policy, on a Royalty-Free basis.
+
+For more information about disclosure obligations for this group, please see the <a href="https://www.w3.org/groups/wg/[shortname]/ipr/">licensing information</a>.
+        </p>
+      </section>
+
+
+
+      <section id="licensing">
+        <h2>Licensing</h2>
+        <p>
+This Working Group will use the
+<a href="https://www.w3.org/copyright/software-license/">
+W3C Software and Document license</a> for all its deliverables.
+        </p>
+      </section>
+
+
+
+      <section id="about">
+        <h2>
+          About this Charter
+        </h2>
+        <p>
+          This charter has been created according to <a href="https://www.w3.org/policies/process/#GAGeneral">section 3.4</a> of the <a href="https://www.w3.org/policies/process/">Process Document</a>. In the event of a conflict between this document or the provisions of any charter and the W3C Process, the W3C Process shall take precedence.
+        </p>
+
+        <section id="history">
+          <h3>
+            Charter History
+          </h3>
+
+          <p>
+The following table lists details of all changes from the initial charter, per
+the <a href="https://www.w3.org/policies/process/#CharterReview">
+W3C Process Document (section 4.3, Advisory Committee Review of a Charter)</a>:
+          </p>
+
+          <table class="history">
+            <tbody>
+              <tr>
+                <th>
+                  Charter Period
+                </th>
+                <th>
+                  Start Date
+                </th>
+                <th>
+                  End Date
+                </th>
+                <th>
+                  Changes
+                </th>
+              </tr>
+              <tr>
+                <th>
+                  <a class="todo" href="">Initial Charter</a>
+                </th>
+                <td><i class=todo>start date</i></td>
+                <td><i class=todo>start date + 2Y</i></td>
+                <td>None</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="changelog">
+          <h3>Change log</h3>
+
+          <!-- Use this section for changes _after_ the charter was approved by the Director. -->
+          <p>Changes to this document are documented in this section.</p>
+          <!--
+          <dl id='changes'>
+            <dt>YYYY-MM-DD</dt>
+            <dd>[changes]]</dd>
+          </dl>
+          -->
+        </section>
+      </section>
+    </main>
+
+    <hr>
+
+    <footer>
+      <address>
+        <a href="mailto:atsushi@w3.org">Atsushi Shimono</a>
+      </address>
+
+<p class="copyright">Copyright © 2026 <a href="https://www.w3.org/">World Wide Web Consortium</a>.<br>
+  <abbr title="World Wide Web Consortium">W3C</abbr><sup>®</sup>
+  <a href="https://www.w3.org/policies/#disclaimers">liability</a>,
+  <a href="https://www.w3.org/policies/#trademarks">trademark</a> and
+      <a rel="license" href="https://www.w3.org/copyright/software-license/" title="W3C Software and Document Notice and License">permissive document license</a> rules apply.</p>
+
+      <hr>
+      <p><span class='todo'><a href="https://github.com/w3c/did-methods-wg-charter/">Yes, it's on GitHub!</a>.</span></p>
+    </footer>
+
+  </body>
+</html>

@@ -1,0 +1,101 @@
+<!doctype html><html><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><title>Rekor v2 GA - Cheaper to run, simpler to maintain - Sigstore Blog</title><link rel=apple-touch-icon sizes=180x180 href=../apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=../favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=../favicon-16x16.png><link rel=manifest href=../site.webmanifest><meta name=theme-color content="#ffffff"><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content><meta name=author content><meta name=keywords content><link rel=canonical href=https://blog.sigstore.dev/rekor-v2-ga/><link rel=stylesheet type=text/css href=https://blog.sigstore.dev//css/combined-min.css><link rel=stylesheet type=text/css href=https://blog.sigstore.dev//tipuesearch/tipuesearch.css></head><body><div class=site-wrap><header class="site-header px2 px-responsive"><div class="mt2 wrap"><div class=measure><a href=https://blog.sigstore.dev/ class=site-title><img alt=Logo height=70 src=../images/sigstore.png width=215></a><nav class="site-nav right"><a href=https://blog.sigstore.dev/about/>About</a></nav><div class=clearfix></div></div></div></header><div class="post p2 p-responsive wrap" role=main><div class=measure><div class="post-header mb2"><h1 class=py2>Rekor v2 GA - Cheaper to run, simpler to maintain</h1><span class=post-meta>Oct 10, 2025 by Hayden Blauzvern, Google</span><br></div><article class=post-content><p>We are very excited to announce the General Availability of Rekor v2!</p><p><a href=https://github.com/sigstore/rekor-tiles>Rekor v2</a> is a redesigned and modernized
+<a href=https://github.com/sigstore/rekor>Rekor</a>, Sigstore&rsquo;s signature transparency log,
+transitioning its backend to a
+<a href=https://github.com/transparency-dev/tessera>tile-backed transparency log implementation</a> to simplify
+maintenance and lower operational costs. Learn more about Rekor v2 in our
+<a href=https://blog.sigstore.dev/rekor-v2-alpha/>previous blog post announcing Alpha</a>.</p><p>We have added support for Rekor v2 upload and verification to
+<a href=https://github.com/sigstore/cosign/releases/tag/v2.6.0>Cosign v2.6.0</a>, along with the
+<a href=https://github.com/sigstore/sigstore-go>Go</a>, <a href=https://github.com/sigstore/sigstore-python>Python</a>,
+and <a href=https://github.com/sigstore/sigstore-java>Java</a> clients.
+We have also released a new version of the
+<a href=https://github.com/sigstore/sigstore-conformance>conformance test suite</a> for client
+developers to test support for Rekor v2.</p><p>We&rsquo;ve begun to roll out the 2025 Rekor v2 log public key via TUF so that upgraded clients
+will automatically verify Rekor v2 entries. However, users signing artifacts will not
+automatically switch to Rekor v2 yet. We will not distribute the Rekor v2 URL via TUF
+until users have had adequate time to upgrade their verification clients. We will
+publish a blog post in a couple of months when we distribute the new log URL.</p><p>If you would like to start using Rekor v2 today, you&rsquo;ll need to provide a
+<a href=https://github.com/sigstore/protobuf-specs/blob/8b671553427e6415ad4777683c45c1b0f25b6ee8/protos/sigstore_trustroot.proto#L185>SigningConfig</a>
+that includes the 2025 Rekor v2 URL. Make a copy of the
+<a href=https://github.com/sigstore/root-signing/blob/main/targets/signing_config.v0.2.json>TUF-distributed production SigningConfig</a>,
+and change <code>rekorTlogUrls</code> to the following:</p><pre tabindex=0><code>  &#34;rekorTlogUrls&#34;: [
+    {
+      &#34;url&#34;: &#34;https://log2025-1.rekor.sigstore.dev&#34;,
+      &#34;majorApiVersion&#34;: 2,
+      &#34;validFor&#34;: {
+        &#34;start&#34;: &#34;2025-10-06T00:00:00Z&#34;
+      },
+      &#34;operator&#34;: &#34;sigstore.dev&#34;
+    },
+    {
+      &#34;url&#34;: &#34;https://rekor.sigstore.dev&#34;,
+      &#34;majorApiVersion&#34;: 1,
+      &#34;validFor&#34;: {
+        &#34;start&#34;: &#34;2021-01-12T11:53:27.000Z&#34;
+      },
+      &#34;operator&#34;: &#34;sigstore.dev&#34;
+    }
+  ],
+</code></pre><p>Save this file named <code>rekor_v2_signing_config.json</code>.</p><p><strong>Note</strong>: We will eventually turn down this 2025 Rekor v2 instance when we deploy a 2026 instance. We strongly
+advise against hardcoding this URL into any pipelines that cannot be easily updated.</p><p>Upgrade to the latest Cosign version v3.0.1+ or v2.6.0+:</p><pre tabindex=0><code># Grab the latest TUF metadata
+cosign initialize
+
+# Sign an artifact, producing a bundle. The Rekor v2 URL is provided in the signing config. The trusted root to verify the signature will be fetched via TUF. 
+cosign sign-blob --signing-config rekor_v2_signing_config.json --bundle sigstore.json README.md
+
+# Inspect the Rekor v2 response and the uploaded entry
+cat sigstore.json| jq -r &#34;.verificationMaterial.tlogEntries[0]&#34;
+cat sigstore.json| jq -r &#34;.verificationMaterial.tlogEntries[0].canonicalizedBody&#34; | base64 -d | jq .
+
+# Verify the bundle. Replace $EMAIL and $ISSUER with your own identity. The trusted root to verify the signature will be fetched via TUF. 
+cosign verify-blob --bundle sigstore.json --certificate-identity $EMAIL --certificate-oidc-issuer $ISSUER --use-signed-timestamps README.md
+</code></pre><p>The <a href=https://github.com/sigstore/protobuf-specs/blob/main/protos/sigstore_bundle.proto>bundles</a>
+Cosign produces are verifiable by the latest Go, Java and Python clients as well. Support for JavaScript and Ruby will follow.</p><p>If you have any questions or feedback, please reach out on <a href=https://www.sigstore.dev/community>Slack</a> on the
+<code>#rekor</code> or <code>#clients</code> channels, and as you upgrade clients, please report any issues on
+<a href=https://github.com/sigstore/rekor-tiles/issues>GitHub</a>.</p><h2 id=faq>FAQ</h2><h3 id=whats-happening-with-rekor-v1>What&rsquo;s happening with Rekor v1?</h3><p>Rekor v1 will continue to run in parallel with Rekor v2. Clients using the publicly distributed SigningConfig and TrustedRoot files
+will automatically and seamlessly transition to using Rekor v2 and verifying entries.</p><p>We will eventually freeze Rekor v1, disallowing new entry uploads. This will be announced one year in advance as per our deprecation
+guidelines. Regardless, we strongly encourage users to upgrade to the latest clients as soon as possible.</p><h3 id=whats-the-new-url-for-the-log>What&rsquo;s the new URL for the log?</h3><p>Previously, Rekor was accessible via a single URL <code>rekor.sigstore.dev</code>. This URL abstracted
+log shards, where a new tree is created to upload entries. This added complexity for log operation.</p><p>Going forward, each log shard will have a unique URL, e.g. <code>logYEAR-rev.rekor.sigstore.dev</code>, which matches
+how Certificate Transparency handles log deployments.
+Log shard URLs will be distributed via Sigstore&rsquo;s TUF repository. You can find the latest URL
+by inspecting the <a href=https://github.com/sigstore/root-signing/blob/main/targets/signing_config.v0.2.json>SigningConfig</a>.</p><p>If you&rsquo;re building a client, you MUST NOT hardcode this URL. We will periodically rotate the log instance, and while
+we&rsquo;ll publicly communicate when we spin up a new log, we will also freeze the previous log instance shortly afterwards.</p><h3 id=how-do-i-upload-entries-to-the-public-instance>How do I upload entries to the public instance?</h3><p>The easiest way is to use an updated Sigstore client or SDK.</p><p>If you want to experiment with the API, we&rsquo;ve provided an
+<a href=https://github.com/sigstore/rekor-tiles/blob/main/CLIENTS.md#rekor-v2-the-bash-way>example</a>. Note
+that Rekor v2 exposes only a single endpoint, <code>/api/v2/log/entries</code>.</p><h3 id=how-do-i-read-entries-from-the-public-instance>How do I read entries from the public instance?</h3><p>If you&rsquo;re monitoring the log, the easiest way is to use <a href=https://github.com/sigstore/rekor-monitor>rekor-monitor</a>.</p><p>Read requests are served by a standardized <a href=https://github.com/C2SP/C2SP/blob/main/tlog-tiles.md#merkle-tree>read API</a>
+that serves tiles and entries. Note that these APIs are significantly different than Rekor v1, namely
+there are no Get-By-Log-Index or Get-By-Leaf-Hash APIs. The Sigstore clients handle the logic to fetch the set of tiles
+needed to compute an inclusion proof given a log index.</p><p>Unless you&rsquo;re monitoring the log for entries, we discourage using the read API for computing inclusion proofs. The log
+will return inclusion proofs on upload and these should be persisted alongside artifacts and their signatures.</p><h3 id=what-are-the-benefits-of-rekor-v2-over-v1-as-a-user>What are the benefits of Rekor v2 over v1 as a user?</h3><p>Rekor v2 is more easily scalable so the public instance will support a higher QPS.</p><p>Rekor v2 also will provide stronger security guarantees that the log remains append-only
+by integrating <a href=https://blog.transparency.dev/can-i-get-a-witness-network>witnessing</a> directly into Rekor.
+This will be implemented soon - reach out if you have more questions on this topic.</p><h3 id=what-are-the-benefits-of-rekor-v2-over-v1-as-a-private-operator>What are the benefits of Rekor v2 over v1 as a private operator?</h3><p>You will see both a reduction in storage costs from the <a href=https://transparency.dev/articles/tile-based-logs/>tile-based backend</a>
+and infrastructure cost as you can turn down Trillian log server and log signer instances. You will also see a reduction
+in egress costs for any read requests since they&rsquo;re fully cacheable and can be served by a CDN.</p><h3 id=whats-been-removed-between-v1-and-v2>What&rsquo;s been removed between v1 and v2?</h3><p>The log no longer returns signed timestamps with proofs. Sigstore clients will fetch
+a signed timestamp from a dedicated service. We&rsquo;ve deployed a public instance timestamp authority,
+and users can configure their signing workflows to use other public or private timestamp authorities.</p><p>The search index has been removed, since this was a best-effort service. This will be
+implemented as a dedicated service backed by a
+<a href=https://github.com/transparency-dev/incubator/tree/main/vindex>verifiable index</a>
+to simplify monitoring. Reach out if you need specific indexes besides signing identity.</p><p>While this was already deprecated in v1, there is no attestation storage in v2. Users should persist
+attestations alongside artifacts. Many package registries now support Sigstore-signed attestations.</p><p>Due to a lack of usage and to simplify the API, many of the entry types have been removed. The
+artifact <code>hashedrekord</code> entry type and the attestation <code>dsse</code> entry type are the two supported
+types in Rekor v2. <code>intoto</code>, <code>rekord</code>, <code>helm</code>, <code>tuf</code>, <code>rfc3161</code>, <code>jar</code>, <code>rpm</code>, <code>cose</code> and <code>alpine</code>
+have been removed.</p><h3 id=is-there-any-reason-to-not-use-rekor-v2>Is there any reason to not use Rekor v2?</h3><p>Nope! The transition should be seamless and invisible to users.</p><p>The only transition concern to be aware of is if you are producing signatures with an updated clients and verifying signatures
+with an older client. In that case, make sure to update your verification pipeline before transitioning your signing pipeline.</p><h3 id=why-does-rekor-v2-take-a-few-seconds-to-return-a-response>Why does Rekor v2 take a few seconds to return a response?</h3><p>Rekor v2 batches requests, which enables the higher QPS and witnessing. We strongly believe this tradeoff
+of waiting a few seconds for log integration for stronger security guarantees and reliability outweighs
+the latency increase. When signing multiple artifacts, clients can parallelize generating signatures
+to minimize the latency increase.</p><h3 id=how-do-i-monitor-rekor-v2-entries>How do I monitor Rekor v2 entries?</h3><p><a href=https://github.com/sigstore/rekor-monitor>rekor-monitor</a> has been upgraded to support Rekor v2. Thank you
+to the OpenSSF for funding this work and Trail of Bits for implementation!</p><h3 id=what-should-private-operators-do>What should private operators do?</h3><p>If you use GCP, begin transitioning over to Rekor v2 to reduce infrastructure costs and simplify maintenance.</p><p>We recommended using the
+<a href=https://github.com/sigstore/protobuf-specs/blob/d4937b379b0c462b5ebe0be7c196e1b653027bb1/protos/sigstore_trustroot.proto#L185>SigningConfig</a>
+to distribute service URLs for signing. You can specify both a Rekor v1 and v2 service URL for a seamless transition.
+We also recommend using a
+<a href=https://github.com/sigstore/protobuf-specs/blob/d4937b379b0c462b5ebe0be7c196e1b653027bb1/protos/sigstore_trustroot.proto#L155>TrustedRoot</a>
+to distribute the log&rsquo;s public key for verification.</p><p>If you do not use GCP, we are actively working on adding support for other cloud providers. We depend on <a href=https://github.com/transparency-dev/tessera>Tessera&rsquo;s storage backends</a>,
+which currently support <a href=https://github.com/transparency-dev/tessera/tree/main/storage/gcp>GCP</a>,
+<a href=https://github.com/transparency-dev/tessera/tree/main/storage/aws>AWS</a>, <a href=https://github.com/transparency-dev/tessera/tree/main/storage/mysql>MySQL</a>,
+and a <a href=https://github.com/transparency-dev/tessera/tree/main/storage/mysql>POSIX filesystem</a>.</p><h3 id=where-can-i-learn-more-about-the-technical-details>Where can I learn more about the technical details?</h3><p>Join the <a href=https://groups.google.com/g/sigstore-dev>sigstore-dev Google group</a> to access the design documents.</p><ul><li><a href="https://docs.google.com/document/d/1Mi9OhzrucIyt-UCLk_FxO2_xSQZW9ow9U3Lv0ZB_PpM/edit?resourcekey=0-4rPbZPyCS7QDj26Hk0UyvA&tab=t.0#heading=h.bjitqo6lwsmn">PRD</a></li><li><a href="https://docs.google.com/document/d/1ZYlt_VFB-lxbZCcTZHN-6KVDox3h7-ePp85pNpOUF1U/edit?resourcekey=0-V3WqDB22nOJfI4lTs59RVQ&tab=t.0#heading=h.xzptrog8pyxf">Design doc</a></li><li><a href=https://github.com/sigstore/rekor-tiles>Repo</a></li></ul><p>To learn more about the client changes, read our
+<a href=https://github.com/sigstore/rekor-tiles/blob/main/CLIENTS.md>client documentation</a>.</p><h3 id=is-a-hot-dog-a-sandwich>Is a hot dog a sandwich?</h3><p>No.</p></article><p class=post-meta>Tags:&nbsp;
+<a href=https://blog.sigstore.dev/tags/sigstore>sigstore</a>
+,&nbsp;
+<a href=https://blog.sigstore.dev/tags/rekor>rekor</a>
+,&nbsp;
+<a href=https://blog.sigstore.dev/tags/transparency>transparency</a></p><script src=https://giscus.app/client.js data-repo=sigstore/sigstore-blog data-repo-id=R_kgDOIuGwqg data-category=Announcements data-category-id=DIC_kwDOIuGwqs4CTpPf data-mapping=pathname data-strict=0 data-reactions-enabled=1 data-emit-metadata=0 data-input-position=top data-theme=preferred_color_scheme data-lang=en data-loading=lazy crossorigin=anonymous async></script></div></div></div><footer class=footer><div class="p2 wrap"><div class="measure mt1 center"><nav class="social-icons icons"><a class="fa fa-rss rss" href=../index.xml></a>
+<a class="fa fa-twitter twitter" href=https://twitter.com/projectsigstore></a></nav><small>Copyright &#169; 2026<br>Powered by <a href=http://gohugo.io/ target=_blank>Hugo</a> & <a href=https://github.com/azmelanar/hugo-theme-pixyll target=_blank>Pixyll</a></small></div></div></footer><script src=../js/highlight.pack.js></script>
+<script>hljs.initHighlightingOnLoad()</script><script data-goatcounter=https://ovbfwhmermxjt4.goatcounter.com/count async src=https://gc.zgo.at/count.js></script></body></html>

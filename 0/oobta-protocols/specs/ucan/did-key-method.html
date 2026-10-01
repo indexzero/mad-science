@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>The did:key Method v0.9</title>
+    <meta http-equiv='Content-Type' content='text/html;charset=utf-8'/>
+    <!--
+      === NOTA BENE ===
+      For the three scripts below, if your spec resides on dev.w3 you can check them
+      out in the same tree and use relative links so that they'll work offline,
+     -->
+    <script src='https://www.w3.org/Tools/respec/respec-w3c' class='remove'></script>
+    <script src="https://cdn.jsdelivr.net/gh/digitalbazaar/respec-vc@3.4.2/dist/main.js" class="remove"></script>
+    <script type="text/javascript" class="remove">
+      var respecConfig = {
+        // specification status (e.g., WD, LCWD, NOTE, etc.). If in doubt use ED.
+        specStatus: "CG-DRAFT",
+
+        // the specification's short name, as in http://www.w3.org/TR/short-name/
+        shortName: "did-key",
+
+        // subtitle for the spec
+        subtitle: "A DID Method for Static Cryptographic Keys",
+
+        // if you wish the publication date to be other than today, set this
+        //publishDate: "",
+        //crEnd: "",
+        //prEnd: "",
+        //implementationReportURI: "",
+
+        // if there is a previously published draft, uncomment this and set its YYYY-MM-DD date
+        // and its maturity status
+        // previousPublishDate:  "1977-03-15",
+        // previousMaturity:  "WD",
+
+        // extend the bibliography entries
+        localBiblio: {
+          'THORMARKER': {
+            title: 'On using the same key pair for Ed25519 and an X25519 based KEM',
+            href: 'https://eprint.iacr.org/2021/509.pdf',
+            authors: ['Erik Thormarker'],
+            status: 'Internet-Draft',
+            publisher: 'Cryptology ePrint Archive'
+          },
+          'OSCORE': {
+            title: 'Group OSCORE - Secure Group Communication for CoAP',
+            href: 'https://datatracker.ietf.org/doc/html/draft-ietf-core-oscore-groupcomm',
+            authors: ['M. Tiloca', 'G. Selander', 'F. Palombini', 'J. Mattsson', 'J. Park'],
+            status: 'Internet-Draft',
+            publisher: 'Internet Engineering Task Force (IETF)'
+          }
+        },
+        doJsonLd: true,
+
+        github: "https://github.com/w3c-ccg/did-key-spec",
+        includePermalinks: false,
+
+        // if there a publicly available Editor's Draft, this is the link
+        edDraftURI: "https://w3c-ccg.github.io/did-key-spec/",
+
+        // if this is a LCWD, uncomment and set the end of its review period
+        // lcEnd: "2009-08-05",
+
+        // editors, add as many as you like
+        // only "name" is required
+        editors: [
+          { name: "TBD"}
+        ],
+        // authors, add as many as you like.
+        // This is optional, uncomment if you have authors as well as editors.
+        // only "name" is required. Same format as editors.
+        authors:
+        [
+          { name: "Dave Longley", url: "https://digitalbazaar.com/",
+            company: "Digital Bazaar", companyURL: "https://digitalbazaar.com/"},
+          { name: "Dmitri Zagidulin", url: "https://www.linkedin.com/in/dzagidulin/",
+            company: "Digital Bazaar", companyURL: "https://digitalbazaar.com/"},
+          { name: "Manu Sporny", url: "https://digitalbazaar.com/",
+            company: "Digital Bazaar", companyURL: "https://digitalbazaar.com/" }
+        ],
+        group: 'credentials',
+
+        // URI of the patent status for this WG, for Rec-track documents
+        // !!!! IMPORTANT !!!!
+        // This is important for Rec-track documents, do not copy a patent URI from a random
+        // document unless you know what you're doing. If in doubt ask your friendly neighborhood
+        // Team Contact.
+        wgPatentURI:  "https://www.w3.org/2004/01/pp-impl/98922/status",
+        maxTocLevel: 2,
+        inlineCSS: true,
+        postProcess: [window.respecVc.createVcExamples],
+        xref: ["web-platform", "cid", "did", "vc-data-model"],
+        lint: {
+          "informative-dfn": false
+        },
+        otherLinks: [{
+          key: "Related Documents",
+          data: [{
+            value: "Controlled Identifiers v1.0",
+            href: "https://www.w3.org/TR/cid/"
+          }, {
+            value: "Decentralized Identifiers v1.0",
+            href: "https://www.w3.org/TR/did/"
+          }, {
+            value: "DID Use Cases and Requirements",
+            href: "https://www.w3.org/TR/did-use-cases/"
+          }, {
+            value: "DID Core Implementation Report",
+            href: "https://w3c.github.io/did-test-suite/"
+          }]
+        }]
+      };
+    </script>
+    <style>
+pre .highlight {
+  font-weight: bold;
+  color: Green;
+}
+pre .subject {
+  font-weight: bold;
+  color: RoyalBlue;
+}
+pre .property {
+  font-weight: bold;
+  color: DarkGoldenrod;
+}
+pre .comment {
+  font-weight: bold;
+  color: SteelBlue;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.color-text {
+  font-weight: bold;
+  text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+}
+ol.algorithm { counter-reset:numsection; list-style-type: none; }
+ol.algorithm li { margin: 0.5em 0; }
+ol.algorithm li:before { font-weight: bold; counter-increment: numsection; content: counters(numsection, ".") ") "; }
+    </style>
+  </head>
+  <body>
+    <section id='abstract'>
+      <p>
+[=Decentralized Identifiers=] (DIDs) are a type of identifier for verifiable,
+decentralized digital identity. These identifiers are designed to enable the
+[=controller=] of a DID to prove control over the identifier in a way that is
+independent of any centralized registry, identity provider, or certificate authority.
+These sorts of identifiers often utilize a heavy-weight registry, such as ones
+utilizing Decentralized Ledger Technologies (DLT), to create, read, update,
+and deactivate DIDs. This specification describes a non-registry based [=DID
+Method=] based on expanding a cryptographic public key into a [=DID Document=]. This
+approach provides the simplest possible implementation of a DID Method that
+is able to achieve many, but not all, of the benefits of utilizing DIDs.
+      </p>
+    </section>
+
+    <section id='sotd'>
+
+      <p>
+Portions of the work on this specification have been funded by the
+United States Department of Homeland Security's Science and Technology
+Directorate under contract HSHQDC-17-C-00019. The content of this specification
+does not necessarily reflect the position or the policy of the U.S. Government
+and no official endorsement should be inferred.
+      </p>
+
+    </section>
+
+    <section class="informative">
+      <h2>Introduction</h2>
+
+      <p>
+[=Decentralized Identifiers=] (DIDs) are a type of identifier for verifiable,
+decentralized digital identity. These identifiers are designed to enable the
+[=controller=] of a DID to prove control over it and to be implemented
+independently of any centralized registry, identity provider, or certificate
+authority. These sorts of identifiers often utilize a heavy-weight registry,
+such as ones utilizing Decentralized Ledger Technologies (DLT), to create, read,
+update, and deactivate DIDs.
+      </p>
+
+      <p>
+While DLT-based DID Methods have great decentralization characteristics, and
+some of the more centralized DID Methods provide strong system control
+guarantees, the general approaches tend to be expensive to setup and operate.
+Some use cases requiring DIDs do not need the guarantees provided by these
+heavy-weight systems. The `did:key` method offers a lightweight alternative that
+provides several distinct advantages in specific scenarios: immediate
+availability without network dependencies, deterministic resolution requiring no
+registry lookups, zero infrastructure costs, complete offline operation
+capability, and maximum simplicity in implementation. These characteristics make
+`did:key` particularly well-suited for ephemeral interactions, development and
+testing environments, bootstrap scenarios, and situations where the overhead of
+registry operations is not justified by the duration or value of the
+interaction.
+      </p>
+
+      <p>
+The choice to use `did:key` over a registry-based DID method is primarily driven
+by the temporal nature and risk profile of the intended use case. Registry-based
+methods excel when persistent identity, key rotation, recovery mechanisms, or
+deactivation capabilities are required—such as for long-term business
+relationships, credential issuance by established organizations, or scenarios
+involving high-value transactions. In contrast, `did:key` is optimal for
+short-lived sessions where the identifier will be used for days to weeks,
+peer-to-peer communications that do not require persistent identity, temporary
+credential presentations, or situations where the keys are protected by hardware
+security modules and can be rotated at the application layer. The deterministic
+nature of `did:key` also makes it valuable for testing and development, as the
+same key material always produces the same identifier without requiring access
+to external registries or networks.
+      </p>
+
+      <p class="advisement">
+Use of `did:key` for long-lived use cases is only recommended when accompanied
+with high confidence in hardware isolation.
+      </p>
+
+      <p>
+The rest of this document outlines the syntax for the `did:key` identifier, the
+operations supported by the `did:key` method, and some security and privacy
+considerations that implementers might want to be aware of when implementing.
+      </p>
+
+      <section id="conformance"></section>
+
+    </section>
+
+    <section class="normative">
+      <h2>did:key Identifier Syntax</h2>
+
+      <p>
+The format for the `did:key` method conforms to the [[[DID]]] specification and
+is simple. It consists of the `did:key` prefix, followed by a <a
+data-cite="CID#Multibase">Multibase</a> base58-btc or base64-url encoded value
+that is a concatenation of the <a data-cite="CID#Multikey">Multikey</a>
+identifier for the public key type and the raw bytes associated with the public
+key format.
+      </p>
+
+      <p>
+The ABNF for the key format is described below:
+      </p>
+
+      <pre>
+did-key-format := did:key:&lt;mb-value>
+mb-value       := (z[a-km-zA-HJ-NP-Z1-9]+|u[A-Za-z0-9_-]+)
+      </pre>
+
+      <p>
+Alternatively, the encoding rules can also be thought of as the application
+of a series of transformation functions on the raw public key bytes:
+      </p>
+
+      <tt>
+did-key-base58-btc-format := did:key:MULTIBASE(base58-btc, MULTICODEC(public-key-type, raw-public-key-bytes))
+      </tt>
+      <br/>
+      <tt>
+did-key-base64-url-format := did:key:MULTIBASE(base64url, MULTICODEC(public-key-type, raw-public-key-bytes))
+     </tt>
+
+      <p>
+A simple example of a valid Ed25519 `did:key` DID is:
+      </p>
+
+      <pre class="example" title="A simple Ed25519 did:key value">
+did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK
+      </pre>
+
+    </section>
+
+    <section class="normative">
+      <h2>Operations</h2>
+
+      <p>
+The following section outlines the DID operations for the `did:key`
+method. Implementers might note that this DID Method is purely generative,
+requiring no look ups in a registry. Since `did:key` values are not
+stored in any registry, they cannot be updated or deactivated.
+      </p>
+
+      <section class="normative">
+        <h3>Create</h3>
+
+        <p>
+Creating a `did:key` value consists of creating a cryptographic key pair and
+encoding the public key using the format provided in  Section
+[[[#did-key-identifier-syntax]]]. The creation of a DID Document is also
+performed by taking the public key value and expanding it into DID Document. An
+example is given below that expands the ed25519 `did:key`
+`did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK` into its
+associated DID Document:
+        </p>
+
+        <pre class="example" title="An example of a did:key DID Document"
+        style="font-size: 0.65em;">
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1.1"
+  ],
+  "id": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+  "verificationMethod": [{
+    "id": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+    "type": "Multikey",
+    "controller": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+    "publicKeyMultibase": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+  }],
+  "authentication": [
+    "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+  ],
+  "assertionMethod": [
+    "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+  ],
+  "capabilityDelegation": [
+    "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+  ],
+  "capabilityInvocation": [
+    "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+  ],
+  "keyAgreement": [{
+    "id": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#z6LSj72tK8brWgZja8NLRwPigth2T9QRiG1uH9oKZuKjdh9p",
+    "type": "Multikey",
+    "controller": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+    "publicKeyMultibase": "z6LSj72tK8brWgZja8NLRwPigth2T9QRiG1uH9oKZuKjdh9p"
+  }]
+}
+        </pre>
+
+        <section class="normative">
+          <h4>Document Creation Algorithm</h4>
+
+          <p>
+The following algorithm can be used for expanding a did:key identifier to a DID
+Document. An <em>identifier</em> and <em>options</em> are the required inputs.
+Implementations are expected to set a reasonable default for the
+<em>options.publicKeyFormat</em> value such as `JsonWebKey` or `Multikey`.
+The <em>options.enableExperimentalPublicKeyTypes</em> value SHOULD be set to
+`false`. The <em>options.defaultContext</em> value SHOULD be set to an array
+where the first element is the string value `https://www.w3.org/ns/did/v1`.
+Defaults might be overridden by the caller of this algorithm. A <em>document</em>
+is the resulting output.
+          </p>
+
+          <ol class="algorithm">
+            <li>
+Initialize <em>document</em> to an empty object.
+            </li>
+            <li>
+Using a colon (`:`) as the delimiter, split the <em>identifier</em> into its
+components: a <em>scheme</em>, a <em>method</em>, a <em>version</em>, and a
+<em>multibaseValue</em>. If there are only three components set the
+<em>version</em> to the string value `1` and use the last value as the
+<em>multibaseValue</em>.
+            </li>
+            <li>
+Check the validity of the input <em>identifier</em>. The <em>scheme</em> MUST be
+the value `did`. The <em>method</em> MUST be the value `key`. The
+<em>version</em> MUST be convertible to a positive integer value. The
+<em>multibaseValue</em> MUST be a string and begin with the letter `z`. If any
+of these requirements fail, an `invalidDid` error MUST be raised.
+            </li>
+            <li>
+Initialize the <em>signatureVerificationMethod</em> to the result of passing
+<em>identifier</em>, <em>multibaseValue</em>, and <em>options</em> to
+<a href="#signature-method-creation-algorithm"></a>.
+            </li>
+            <li>
+Set <em>document.id</em> to <em>identifier</em>. If <em>document.id</em> is not
+a valid DID, an `invalidDid` error MUST be raised.
+            </li>
+            <li>
+Initialize the `verificationMethod` property in <em>document</em> to an array
+where the first value is the <em>signatureVerificationMethod</em>.
+            </li>
+            <li>
+Initialize the `authentication`, `assertionMethod`, `capabilityInvocation`,
+and the `capabilityDelegation` properties in <em>document</em> to an array
+where the first item is the value of the `id` property in
+<em>signatureVerificationMethod</em>.
+            </li>
+            <li>
+If <em>options.enableEncryptionKeyDerivation</em> is set to `true`:
+              <ol class="algorithm">
+                <li>
+Initialize the <em>encryptionVerificationMethod</em> to the result of passing
+<em>identifier</em>, <em>multibaseValue</em>, and <em>options</em> to
+<a href="#encryption-method-creation-algorithm"></a>.
+                </li>
+                <li>
+Add the <em>encryptionVerificationMethod</em> value to the `verificationMethod`
+array.
+                </li>
+                <li>
+Initialize the `keyAgreement` property in <em>document</em> to an array where
+the first item is the value of the `id` property in
+<em>encryptionVerificationMethod</em>.
+                </li>
+              </ol>
+            </li>
+            <li>
+Initialize the `@context` property in <em>document</em> to the result of
+passing <em>document</em> and <em>options</em> to the
+<a href="#context-creation-algorithm"></a>.
+            </li>
+            <li>
+Return <em>document</em>.
+            </li>
+          </ol>
+          <p>
+Any alternative algorithm can be used that produces an equivalent result to the
+output from the algorithm above.
+          </p>
+        </section>
+
+        <section class="normative">
+          <h4>Signature Method Creation Algorithm</h4>
+
+          <p>
+The following algorithm can be used for decoding a multibase-encoded multicodec
+value into a verification method that is suitable for verifying digital
+signatures. An <em>identifier</em>, <em>multibaseValue</em>, and
+<em>options</em> are the required inputs. A <em>verificationMethod</em> is
+the resulting output.
+          </p>
+
+          <ol class="algorithm">
+            <li>
+Initialize <em>verificationMethod</em> to an empty object.
+            </li>
+            <li>
+Set <em>multicodecValue</em> and <em>rawPublicKeyBytes</em> to the result
+of passing <em>multibaseValue</em> and <em>options</em> to
+<a href="#decode-public-key-algorithm"></a>.
+            </li>
+            <li>
+Ensure the proper key length of <em>rawPublicKeyBytes</em> based on the
+<em>multicodecValue</em> table provided below:
+              <table class="simple">
+                <thead>
+                  <th>Multicodec hexadecimal value</th>
+                  <th>public key byte length</th>
+                  <th>Description</th>
+                </thead>
+
+                <tbody>
+                  <tr>
+                    <td>`0xe7`</td>
+                    <td>33 bytes</td>
+                    <td>secp256k1-pub - Secp256k1 public key (compressed)</td>
+                  </tr>
+                  <tr>
+                    <td>`0xec`</td>
+                    <td>32 bytes</td>
+                    <td>x25519-pub - Curve25519 public key</td>
+                  </tr>
+                  <tr>
+                    <td>`0xed`</td>
+                    <td>32 bytes</td>
+                    <td>ed25519-pub - Ed25519 public key</td>
+                  </tr>
+                  <tr>
+                    <td>`0x1200`</td>
+                    <td>33 bytes</td>
+                    <td>p256-pub - P-256 public key (compressed)</td>
+                  </tr>
+                  <tr>
+                    <td>`0x1201`</td>
+                    <td>49 bytes</td>
+                    <td>p384-pub - P-384 public key (compressed)</td>
+                  </tr>
+                </tbody>
+              </table>
+If the byte length of <em>rawPublicKeyBytes</em> does not match the expected
+public key length for the associated <em>multicodecValue</em>, an
+`invalidPublicKeyLength` error MUST be raised.
+            </li>
+            <li>
+Ensure the <em>rawPublicKeyBytes</em> are a proper encoding of the public key
+type as specified by the <em>multicodecValue</em>. This validation is often
+done by a cryptographic library when importing the public key by, for example,
+ensuring that an Elliptic Curve public key is a specific coordinate that exists
+on the elliptic curve. If an invalid public key value is detected, an
+`invalidPublicKey` error MUST be raised.
+
+<div class="issue" title="Request for feedback on implementability">
+It is not clear if this particular check is implementable across all public
+key types. The group is accepting feedback on the implementability of this
+particular feature.
+</div>
+            </li>
+            <li>
+Set the <em>verificationMethod.id</em> value by concatenating
+<em>identifier</em>, a hash character (`#`), and the <em>multicodecValue</em>.
+If <em>verificationMethod.id</em> is not a valid DID URL, an `invalidDidUrl`
+error MUST be raised.
+            </li>
+            <li>
+Set the <em>publicKeyFormat</em> value to the <em>options.publicKeyFormat</em>
+value.
+            </li>
+            <li>
+If <em>publicKeyFormat</em> is not known to the implementation, an
+`unsupportedPublicKeyType` error MUST be raised.
+            </li>
+            <li>
+If <em>options.enableExperimentalPublicKeyTypes</em> is set to `false` and
+<em>publicKeyFormat</em> is not `Multikey`, `JsonWebKey`, or
+`Ed25519VerificationKey2020`, an `invalidPublicKeyType` error MUST be raised.
+            </li>
+            <li>
+Set <em>verificationMethod.type</em> to the <em>publicKeyFormat</em> value.
+            </li>
+            <li>
+Set <em>verificationMethod.controller</em> to the <em>identifier</em> value.
+If <em>verificationMethod.controller</em> is not a valid DID, an `invalidDid`
+error MUST be raised.
+            </li>
+            <li>
+If <em>publicKeyFormat</em> is `Multikey` or `Ed25519VerificationKey2020`,
+set the <em>verificationMethod.publicKeyMultibase</em> value to
+<em>multibaseValue</em>.
+            <li>
+If <em>publicKeyFormat</em> is `JsonWebKey`, set the
+<em>verificationMethod.publicKeyJwk</em> value to the result of
+passing <em>multicodecValue</em> and <em>rawPublicKeyBytes</em> to
+<a href="#encode-jwk-algorithm"></a>.
+            </li>
+            <li>
+Return <em>verificationMethod</em>.
+            </li>
+          </ol>
+
+        </section>
+
+        <section class="normative">
+          <h4>Decode Public Key Algorithm</h4>
+
+          <p>
+The following algorithm can be used for expanding a multibase-encoded
+multicodec value to decoded public key components. A <em>multibaseValue</em>
+and <em>options</em> are the required inputs. A <em>decodedPublicKey</em> is
+the output.
+          </p>
+
+          <ol class="algorithm">
+            <li>
+Set <em>decodedPublicKey</em> to an empty object.
+            </li>
+            <li>
+Decode <em>multibaseValue</em> using the base58-btc multibase alphabet and set
+<em>multicodecValue</em> to the multicodec header for the decoded value.
+Implementers are cautioned to ensure that the <em>multicodecValue</em>
+is set to the result after performing varint decoding.
+            </li>
+            <li>
+Set the <em>rawPublicKeyBytes</em> to the bytes remaining after the
+multicodec header.
+            </li>
+            <li>
+Return <em>multicodecValue</em> and <em>rawPublicKeyBytes</em> as the
+<em>decodedPublicKey</em>.
+            </li>
+          </ol>
+        </section>
+
+        <section class="normative">
+          <h4>Encode JWK Algorithm</h4>
+
+          <p>
+There are 2 categories of JWK expressions for multicodec encoded public keys.
+          </p>
+
+          <p>
+Standard JWK representations can be found under the IANA registry for
+<a href="https://www.iana.org/assignments/jose/jose.xhtml">
+  JSON Object Signing and Encryption (JOSE)
+</a>.
+          </p>
+          <div class="note">
+           See also the associated RFCs:
+           <ul>
+            <li>
+              <a href="https://www.rfc-editor.org/rfc/rfc7517">RFC7515: JSON Web Key (JWK)</a>
+            </li>
+            <li>
+              <a href="https://www.rfc-editor.org/rfc/rfc8037">RFC8037:
+                CFRG Elliptic Curve Diffie-Hellman (ECDH) and Signatures
+                in JSON Object Signing and Encryption (JOSE)</a>
+            </li>
+           </ul>
+          </div>
+
+          <p>
+In cases where a key type has not been formally standardized yet a
+specification describing the key encoding is provided.
+          </p>
+
+          <p class="advisement">
+BLS12-381 is the only instance of such a key type in the current method specification.
+See this document tracking its proposed standardization at IETF. See
+<a href="https://datatracker.ietf.org/doc/draft-looker-cose-bls-key-representations/">
+  draft-looker-cose-bls-key-representations</a>.
+          </p>
+
+          <p>
+Implementations MUST conform to the normative requirements of the RFCs and specifications above.
+          </p>
+
+           <p>
+The following algorithm can be used to encode a multicodec value to a
+JSON Web Key. A <em>multicodecValue</em>, <em>rawPublicKeyBytes</em>
+are the required inputs. An <em>encodedJWK</em> is the output.
+          </p>
+
+          <ol class="algorithm">
+            <li>
+Obtain the associated `kty`, `crv`, `n`,`e`
+values for the JWK representation of the key type identified by <em>multicodecValue</em>.
+            </li>
+            <li>
+              If `y` is required member of the public key,
+              perform elliptic curve expansion by applying
+<a href="https://tools.ietf.org/id/draft-jivsov-ecc-compact-05.html">decompression algorithm specified here.</a>
+to obtain `y` and `x`.
+Otherwise simply encode `x` according to the associated RFCs.
+            </li>
+            <li>
+Encode the final JWK object by including the members required for the given key type identified by <em>multicodecValue</em>,
+according to the requirements defined by the relevant RFC.
+            </li>
+            <li>
+Ensure that `d` is NOT present.
+            </li>
+          </ol>
+
+          <p class="issue" data-number="54">
+Address BLS12-381 Encoding.
+          </p>
+        </section>
+
+        <section class="normative">
+          <h4>Encryption Method Creation Algorithm</h4>
+
+          <p>
+The following algorithm can be used for decoding a multibase-encoded multicodec
+value into a verification method that is suitable for verifying that
+encrypted information will be received by the intended recipient. An
+<em>identifier</em>, <em>multibaseValue</em>, and
+<em>options</em> are the required inputs. A <em>verificationMethod</em> is
+the resulting output.
+          </p>
+
+          <ol class="algorithm">
+            <li>
+Initialize <em>verificationMethod</em> to an empty object.
+            </li>
+            <li>
+Set <em>multicodecValue</em> and <em>rawPublicKeyBytes</em> to the result
+of passing <em>multibaseValue</em> and <em>options</em> to
+<a href="#derive-encryption-key-algorithm"></a>.
+            </li>
+            <li>
+Ensure the proper key length of <em>rawPublicKeyBytes</em> based on the
+<em>multicodecValue</em> table provided below:
+              <table class="simple">
+                <thead>
+                  <th>Multicodec hexadecimal value</th>
+                  <th>public key byte length</th>
+                  <th>Description</th>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>`0xec`</td>
+                    <td>32 bytes</td>
+                    <td>x25519-pub - Curve25519 public key</td>
+                  </tr>
+                </tbody>
+              </table>
+If the byte length of <em>rawPublicKeyBytes</em> does not match the expected
+public key length for the associated <em>multicodecValue</em>, an
+`invalidPublicKeyLength` error MUST be raised.
+            </li>
+            <li>
+Create the <em>multibaseValue</em> by concatenating the letter 'z' and the
+base58-btc encoding of the concatenation of the <em>multicodecValue</em> and
+the <em>rawPublicKeyBytes</em>.
+            </li>
+            <li>
+Set the <em>verificationMethod.id</em> value by concatenating
+<em>identifier</em>, a hash character (`#`), and the <em>multibaseValue</em>.
+If <em>verificationMethod.id</em> is not a valid DID URL, an `invalidDidUrl`
+error MUST be raised.
+            </li>
+            <li>
+Set the <em>publicKeyFormat</em> value to the <em>options.publicKeyFormat</em>
+value.
+            </li>
+            <li>
+If <em>publicKeyFormat</em> is not known to the implementation, an
+`unsupportedPublicKeyType` error MUST be raised.
+            </li>
+            <li>
+If <em>options.enableExperimentalPublicKeyTypes</em> is set to `false` and
+<em>publicKeyFormat</em> is not `Multikey`, `JsonWebKey`, or
+`X25519KeyAgreementKey2020`, an `invalidPublicKeyType` error MUST be raised.
+            </li>
+            <li>
+Set <em>verificationMethod.type</em> to the <em>publicKeyFormat</em> value.
+            </li>
+            <li>
+Set <em>verificationMethod.controller</em> to <em>identifier</em>. If
+<em>verificationMethod.controller</em> is not a valid DID, an
+`invalidDid` error MUST be raised.
+            </li>
+            <li>
+If <em>publicKeyFormat</em> is `Multikey` or `X25519KeyAgreementKey2020`,
+set the <em>verificationMethod.publicKeyMultibase</em> value to
+<em>multibaseValue</em>.
+            <li>
+If <em>publicKeyFormat</em> is `JsonWebKey`, set the
+<em>verificationMethod.publicKeyJwk</em> value to the result of
+passing <em>multicodecValue</em> and <em>rawPublicKeyBytes</em> to
+<a href="#encode-jwk-algorithm"></a>.
+            </li>
+            <li>
+Return <em>verificationMethod</em>.
+            </li>
+          </ol>
+
+        </section>
+
+        <section class="normative">
+          <h4>Derive Encryption Key Algorithm</h4>
+
+          <p>
+The following algorithm can be used to transform a multibase-encoded multicodec
+value to public encryption key components that are suitable for encrypting
+messages to a receiver. A mathematical proof elaborating on the safety of
+performing this operation is available in [[THORMARKER]]. A
+<em>multibaseValue</em> and <em>options</em> are the required inputs. A
+<em>publicEncryptionKey</em> is the output.
+          </p>
+
+          <ol class="algorithm">
+            <li>
+Set <em>publicEncryptionKey</em> to an empty object.
+            </li>
+            <li>
+Decode <em>multibaseValue</em> using the base58-btc multibase alphabet and set
+<em>multicodecValue</em> to the multicodec header for the decoded value.
+Implementers are cautioned to ensure that the <em>multicodecValue</em>
+is set to the result after performing varint decoding.
+            </li>
+            <li>
+Set the <em>rawPublicKeyBytes</em> to the bytes remaining after the
+multicodec header.
+            </li>
+            <li>
+If the <em>multicodecValue</em> is `0xed`, derive a public X25519 encryption
+key by using the <em>rawPublicKeyBytes</em> and the
+algorithm defined in [[OSCORE]] for Curve25519 in
+Section 2.4.2: ECDH with Montgomery Coordinates and set
+<em>generatedPublicEncryptionKeyBytes</em> to the result.
+            </li>
+            <li>
+Set <em>multicodecValue</em> in <em>publicEncryptionKey</em> to `0xec`.
+            </li>
+            <li>
+Set <em>rawPublicKeyBytes</em> in <em>publicEncryptionKey</em> to
+<em>generatedPublicEncryptionKeyBytes</em>.
+            </li>
+            <li>
+Return <em>publicEncryptionKey</em>.
+            </li>
+          </ol>
+        </section>
+
+        <section class="normative">
+          <h4>Context Creation Algorithm</h4>
+
+          <p>
+The following algorithm is used to generate the array for the `@context`
+property in the DID Document. A <em>document</em> and <em>options</em> are the
+required inputs. A <em>contextArray</em> is the output.
+          </p>
+
+          <ol class="algorithm">
+            <li>
+Set <em>contextArray</em> to an array that is initialized to
+<em>options.defaultContext</em>.
+            </li>
+            <li>
+For every object in every verification relationship listed in <em>document</em>,
+add a string value to the <em>contextArray</em> based on the object `type`
+value, if it doesn't already exist, according to the following table:
+              <table class="simple">
+                <thead>
+                  <th>`type` value</th>
+                  <th>Context URL</th>
+                </thead>
+
+                <tbody>
+                  <tr>
+                    <td>`Ed25519VerificationKey2020`</td>
+                    <td>
+https://www.w3.org/ns/did/v1.1
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>`X25519KeyAgreementKey2020`</td>
+                    <td>
+https://www.w3.org/ns/did/v1.1
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>`JsonWebKey`</td>
+                    <td>
+https://www.w3.org/ns/did/v1.1
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>`Multikey`</td>
+                    <td>
+https://www.w3.org/ns/did/v1.1
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </li>
+            <li>
+Return <em>contextArray</em>.
+            </li>
+          </ol>
+        </section>
+
+      </section>
+
+      <section class="normative">
+        <h3>Read</h3>
+
+        <p>
+Reading a `did:key` value is a matter of deterministically expanding  the
+value to a DID Document. This process is described in Section <a
+href="#create"></a>.
+        </p>
+      </section>
+
+      <section class="normative">
+        <h3>Update</h3>
+
+        <p>
+This DID Method does not support updating the DID Document.
+        </p>
+      </section>
+
+      <section class="normative">
+        <h3>Deactivate</h3>
+
+        <p>
+This DID Method does not support deactivating the DID Document.
+        </p>
+      </section>
+
+    </section>
+
+    <section class="informative">
+      <h2>Privacy Considerations</h2>
+
+      <p>
+This section contains a variety of privacy considerations that people using
+the `did:key` Method are advised to consider before deploying this
+technology in a production setting. Readers are urged to read the
+<a data-cite="?CID#privacy-considerations">Privacy Considerations</a> section
+of the [[[CID]]] specification, as well as the
+<a data-cite="?DID#privacy-considerations">Privacy Considerations</a> section
+of the [[[DID]]] specification, before reading this section.
+      </p>
+
+      <section class="informative">
+        <h3>Identifier Correlation Risks</h3>
+
+        <p>
+The `did:key` method encodes the public key directly in the identifier itself,
+creating a deterministic relationship between the key material and the DID.
+This means that any two systems that receive the same `did:key` identifier can
+immediately recognize it as referring to the same subject, enabling correlation
+across different contexts and verifiers. Unlike registry-based DID methods
+where the identifier can be an opaque value, `did:key` identifiers are
+intrinsically tied to the cryptographic key, making the identifier both globally
+unique and globally correlatable.
+        </p>
+
+        <p>
+This correlation risk is particularly acute in scenarios where a subject might
+wish to present different personas or maintain separation between different
+interactions. If the same `did:key` is reused across multiple verifiers,
+service providers, or interactions, those parties can collude or independently
+determine that they are interacting with the same subject, potentially building
+comprehensive profiles of the subject's activities without their knowledge or consent.
+        </p>
+      </section>
+
+      <section class="informative">
+        <h3>No Key Rotation</h3>
+
+        <p>
+The `did:key` method does not support key rotation because the identifier is
+derived directly from the public key material itself. Any change to the
+cryptographic key would result in an entirely different DID, effectively
+creating a new identity rather than updating an existing one. This limitation
+has significant privacy implications, as there is no mechanism to recover
+privacy after a correlation event or to refresh the identifier while maintaining
+continuity of the underlying digital identity.
+        </p>
+
+        <p>
+In long-lived relationships or scenarios where privacy requirements evolve over
+time, the inability to rotate keys without changing identifiers forces a choice
+between maintaining identifier continuity and improving privacy posture. This
+makes `did:key` particularly unsuitable for use cases where subjects might need
+to respond to correlation attacks, regulatory requirements for periodic key
+updates, or evolving privacy threat models over the lifetime of the identifier.
+        </p>
+      </section>
+
+      <section class="informative">
+        <h3>Direct Public Key Exposure</h3>
+
+        <p>
+Every `did:key` identifier directly exposes the complete public key material
+as part of the identifier string itself. This is fundamentally different from
+registry-based DID methods where the identifier is a reference that must be
+resolved to obtain the public key. With `did:key`, anyone who observes the
+identifier in any context—whether in a credential, a transaction log, a
+communication header, or any other location—immediately gains access to the
+full cryptographic public key without any additional resolution step.
+        </p>
+
+        <p>
+This constant exposure of public key material increases the attack surface for
+cryptanalysis and makes it impossible to implement selective disclosure of
+verification methods. It also means that any storage or transmission of the
+identifier itself, regardless of context, constitutes storage and transmission
+of cryptographic material, which might have implications for systems with strict
+data handling requirements or key management policies.
+        </p>
+      </section>
+
+      <section class="informative">
+        <h3>Pairwise DID Limitations</h3>
+
+        <p>
+While the `did:key` method can technically be used to create pairwise DIDs by
+generating a new cryptographic key pair for each relationship, this approach
+significantly increases the operational burden on the subject. Each new
+pairwise relationship requires generating, storing, and managing an additional
+private key, along with the associated backup and recovery procedures. For
+subjects engaged in numerous relationships, this can quickly become
+unmanageable and increase the risk of key loss.
+        </p>
+
+        <p>
+Additionally, unlike registry-based methods where a single key can be used to
+control multiple pairwise DIDs through controller relationships, `did:key`
+requires actual generation of new key material for each pairwise identifier.
+This makes it difficult to implement recovery mechanisms or delegate key
+management to trusted services, as each `did:key` represents an independent
+cryptographic identity with no hierarchical or delegated relationship to other
+identifiers controlled by the same subject.
+        </p>
+      </section>
+
+    </section>
+
+    <section class="informative">
+      <h2>Security Considerations</h2>
+
+      <p>
+This section contains a variety of security considerations that people using
+the `did:key` Method are advised to consider before deploying this
+technology in a production setting. Readers are urged to read the
+<a data-cite="?CID#security-considerations">Security Considerations</a> section
+of the [[[CID]]] specification, as well as the
+<a data-cite="?DID#security-considerations">Security Considerations</a> section
+of the [[[DID]]] specification, before reading this section.
+      </p>
+
+      <section class="informative">
+        <h3>Key Rotation Not Supported</h3>
+
+        <p>
+The `did:key` method is a purely generative method, which means that
+updates are not supported. This creates a security concern
+for any long-lived use of the identifier, as there is no mechanism to rotate
+cryptographic keys in response to potential compromise, suspected exposure,
+or as part of routine security hygiene practices. If a private key associated
+with a `did:key` is compromised through theft, social engineering, malware,
+side-channel attacks, or any other means, the attacker gains permanent control
+over that identity with no possibility for the legitimate controller to regain
+exclusive control by rotating to new key material.
+        </p>
+
+        <p>
+This limitation is of concern because best practices in cryptographic
+key management typically mandate periodic key rotation even in the absence of
+known compromise, as a defense-in-depth measure against undetected breaches.
+Modern security frameworks often require key rotation on regular schedules or
+after personnel changes, system migrations, or security incidents. The `did:key`
+method's inability to support these practices means that any use beyond
+short-lived, ephemeral interactions carries inherent and unmitigable risk of
+permanent compromise. To mitigate this concern, long-term use of `did:key`
+is expected to be via hardware security modules with the `did:key` value
+itself being rotated in whatever process it is used in on an acceptable
+cadence.
+        </p>
+      </section>
+
+      <section class="informative">
+        <h3>Deactivation Not Supported</h3>
+
+        <p>
+The `did:key` method provides no mechanism for deactivating or revoking an
+identifier once it has been created and distributed. In the event of key
+compromise, loss of control, or the need to terminate an identity for security
+reasons, there is no way to signal to verifiers that the `did:key` is not to be
+trusted or accepted other than via a high-level mechanism such as the revocation
+of a [=verifiable credential=] that is associated with the `did:key` identifier.
+        </p>
+
+        <p>
+In contrast to did:key, registry-based DID methods can publish a deactivation
+status or remove the [=DID Document=] entirely, providing a clear signal to all
+verifiers that the identifier is no longer valid. Without deactivation
+support, security incident response for `did:key` is limited to out-of-band
+communication. This makes `did:key` not ideal in scenarios involving high-value
+transactions, legally binding agreements, or situations where unauthorized use
+of the identity could cause significant harm to the controller or relying
+parties.
+        </p>
+      </section>
+
+      <section class="informative">
+        <h3>Key Derivation Lacks Proof</h3>
+
+        <p>
+Some implementations might utilize a key derivation function when converting
+from an Ed25519 public key to a Curve25519 ECDH key for use in the
+`keyAgreement` verification method. While this conversion is supported by the
+specification and is believed to be cryptographically sound based on the
+mathematical relationship between the Edwards curve (Ed25519) and the Montgomery
+curve (Curve25519) representations of Curve25519, there is no complete
+mathematical proof that this derivation preserves the full security properties
+of the original key in all contexts. This introduces a potential security risk,
+as subtle vulnerabilities in the conversion process could potentially be
+exploited to weaken the encryption key agreement without compromising the
+signature key.
+        </p>
+
+        <p>
+The security concern is compounded by the fact that the same underlying key
+material is being used for two different cryptographic purposes—digital
+signatures and key agreement—which violates the cryptographic principle of key
+separation. While research such as [[THORMARKER]] provides analysis supporting
+the safety of this practice for Ed25519/X25519 specifically, implementers are
+relying on carefully constructed mathematical relationships rather than formally
+proven security guarantees. Organizations with strict security requirements
+might prefer to use separate key pairs for signature and encryption operations,
+which would require generating and managing multiple `did:key` identifiers
+rather than relying on key derivation.
+        </p>
+      </section>
+
+      <section class="informative">
+        <h3>Long Term Usage is Discouraged</h3>
+
+        <p>
+Since there is no support for update and deactivate for the `did:key`
+method, it is not possible to recover from a security compromise, making
+long-term use inherently risky. The security posture of a `did:key` can only
+degrade over time as the private key is exposed to an increasing number of
+potential attack vectors—including storage vulnerabilities, backup procedures,
+key usage in multiple contexts, potential cryptographic weaknesses discovered
+in the future, and the general accumulation of attack surface over extended
+periods. Any long-lived `did:key` essentially becomes a single point of
+failure where compromise at any point during its lifetime results in permanent
+and irrecoverable security breach.
+        </p>
+
+        <p>
+For this reason, using a `did:key` for interactions that last weeks to months is
+strongly discouraged unless it is coupled with a hardware security module of
+some kind. Use beyond short-lived contexts is to be carefully evaluated against
+specific threat models. The method is most appropriate for scenarios such as
+ephemeral peer-to-peer connections, short-lived authentication sessions,
+temporary delegation of capabilities, or situations where the identifier will be
+used only a small number of times with a limited set of verifiers. For any use
+case requiring persistent identity over extended periods, involving high-value
+assets, containing sensitive data, or subject to regulatory compliance
+requirements, implementers might instead consider registry-based DID methods
+that support key rotation, recovery mechanisms, and deactivation capabilities.
+        </p>
+      </section>
+
+    </section>
+
+  </section>
+
+  <section class="appendix informative">
+    <h2>Test Vectors</h2>
+
+    <p>We provide only the `verificationMethod` section of the DID Document in these examples.</p>
+
+    <section class="informative">
+      <h3>Ed25519</h3>
+
+      <pre class="example">
+        did:key:z6Mkf5rGMoatrSj1f4CyvuHBeXJELe9RPdzo2PKGNCKVtZxP
+      </pre>
+
+      <pre class="example nohighlight did-key"
+        title="An did:key DID Document expressing an Ed25519 public key useful with the EdDSA"
+        data-did='did:key:z6Mkf5rGMoatrSj1f4CyvuHBeXJELe9RPdzo2PKGNCKVtZxP'>
+      </pre>
+
+    </section>
+
+    <section class="informative">
+      <h3>Ed25519 with X25519</h3>
+
+      <p>
+It is possible to derive an X25519 key from an Ed25519 one. An X25519 key is
+useful when perform such functions as key agreement between two systems.
+      </p>
+
+      <pre class="example" title="An did:key DID Document expressing an Ed25519 public key and an X25519 public key useful with the EdDSA and key agreement protocols">
+{
+"@context": [
+  "https://www.w3.org/ns/did/v1.1"
+],
+"id": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+"verificationMethod": [{
+  "id": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+  "type": "Multikey",
+  "controller": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+  "publicKeyMultibase": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+}],
+"authentication": [
+  "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+],
+"assertionMethod": [
+  "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+],
+"capabilityDelegation": [
+  "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+],
+"capabilityInvocation": [
+  "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+],
+"keyAgreement": [{
+  "id": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#z6LSj72tK8brWgZja8NLRwPigth2T9QRiG1uH9oKZuKjdh9p",
+  "type": "Multikey",
+  "controller": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+  "publicKeyMultibase": "z6LSj72tK8brWgZja8NLRwPigth2T9QRiG1uH9oKZuKjdh9p"
+}]
+}
+      </pre>
+
+    </section>
+
+    <section class="informative">
+      <h3>Secp256k1</h3>
+        <p>These DID always start with `zQ3s`.</p>
+      <pre class="example">
+        did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme
+        did:key:zQ3shtxV1FrJfhqE1dvxYRcCknWNjHc3c5X1y3ZSoPDi2aur2
+        did:key:zQ3shZc2QzApp2oymGvQbzP8eKheVshBHbU4ZYjeXqwSKEn6N
+      </pre>
+    </section>
+
+    <section class="informative">
+      <h3>BLS 12-381</h3>
+
+      <pre class="example">
+did:key:zUC7EK3ZakmukHhuncwkbySmomv3FmrkmS36E4Ks5rsb6VQSRpoCrx6Hb8e2Nk6UvJFSdyw9NK1scFXJp21gNNYFjVWNgaqyGnkyhtagagCpQb5B7tagJu3HDbjQ8h5ypoHjwBb
+      </pre>
+
+      <p>An example DID Document for a BLS12-381 key is shown below.</p>
+
+      <pre class="example nohighlight did-key"
+        title="An did:key DID Document expressing a BLS12-381 G2 group public key useful with the BBSDSA"
+        data-did='did:key:zUC7EK3ZakmukHhuncwkbySmomv3FmrkmS36E4Ks5rsb6VQSRpoCrx6Hb8e2Nk6UvJFSdyw9NK1scFXJp21gNNYFjVWNgaqyGnkyhtagagCpQb5B7tagJu3HDbjQ8h5ypoHjwBb'>
+      </pre>
+
+    </section>
+
+    <section class="informative">
+      <h3>P-256</h3>
+
+      <pre class="example">
+did:key:zDnaerx9CtbPJ1q36T5Ln5wYt3MQYeGRG5ehnPAmxcf5mDZpv
+      </pre>
+
+      <p>An example DID Document for a P-256 key is shown below.</p>
+
+      <pre class="example nohighlight did-key"
+        title="An did:key DID Document expressing a P-256 public key useful with the ECDSA"
+        data-did='did:key:zDnaerx9CtbPJ1q36T5Ln5wYt3MQYeGRG5ehnPAmxcf5mDZpv'>
+      </pre>
+
+    </section>
+
+    <section class="informative">
+      <h3>P-384</h3>
+
+      <pre class="example">
+        did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54
+      </pre>
+
+      <p>An example DID Document for a P-384 key is shown below.</p>
+
+      <pre class="example nohighlight did-key"
+        title="An did:key DID Document expressing a P-384 public key useful with the ECDSA"
+        data-did='did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54'>
+      </pre>
+
+    </section>
+
+  </section>
+
+  <section class="appendix informative">
+    <h2>Acknowledgements</h2>
+
+    <p>
+The Working Group would like to thank the following individuals for reviewing
+and providing feedback on the specification (in alphabetical order):
+    </p>
+
+    <p>
+TBD...
+    </p>
+  </section>
+  </body>
+</html>

@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ariadne Identity</title>
+    <link rel="stylesheet" href="/style.css?hash=3JTbIIf3hXMJEi1vQfUWr4DT2dI5Ptg1n5lqhN+slY4=">
+</head>
+<body>
+    
+    <div class="container">
+        
+        <header class="small-screen">
+            
+<h1>Ariadne Signature Profile v0</h1>
+
+        </header>
+        
+        <main>
+            
+
+<p class="subtitle">Ariadne Identity Related Specifications</p>
+<h1>Ariadne Signature Profile v0</h1>
+
+
+<div>
+    <details>
+        <summary>
+            Table of contents
+        </summary>
+
+        <ul>
+
+        
+            <li>
+                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#ariadne-signature-profile-specification">Ariadne Signature Profile Specification</a>
+
+                
+                    <ul>
+
+                        
+                            <li>
+                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#abstract">Abstract</a>
+
+                                
+
+                            </li>
+                        
+                            <li>
+                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#status">Status</a>
+
+                                
+
+                            </li>
+                        
+                            <li>
+                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#1-introduction">1. Introduction</a>
+
+                                
+                                    <ul>
+
+                                        
+                                            <li>
+                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#1-1-notational-conventions">1.1. Notational Conventions</a>
+
+                                                
+                                            </li>
+                                        
+
+                                    </ul>
+                                
+
+                            </li>
+                        
+                            <li>
+                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#2-ariadne-signature-profiles">2. Ariadne Signature Profiles</a>
+
+                                
+                                    <ul>
+
+                                        
+                                            <li>
+                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#2-1-profile-jws">2.1. Profile JWS</a>
+
+                                                
+                                                    <ul>
+                                                        
+                                                        
+                                                            <li>
+                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#2-1-1-profile-jws-header">2.1.1. Profile JWS header</a>
+
+                                                                
+
+                                                            </li>
+                                                        
+                                                            <li>
+                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#2-1-2-profile-jws-payload">2.1.2. Profile JWS payload</a>
+
+                                                                
+                                                                    <ul>
+                                                                        
+                                                                        
+                                                                            <li>
+                                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#2-1-2-1-version">2.1.2.1. version</a>
+
+                                                                                
+
+                                                                            </li>
+                                                                        
+                                                                            <li>
+                                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#2-1-2-2-type">2.1.2.2. type</a>
+
+                                                                                
+
+                                                                            </li>
+                                                                        
+                                                                            <li>
+                                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#2-1-2-3-name">2.1.2.3. name</a>
+
+                                                                                
+
+                                                                            </li>
+                                                                        
+                                                                            <li>
+                                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#2-1-2-4-claims">2.1.2.4. claims</a>
+
+                                                                                
+
+                                                                            </li>
+                                                                        
+                                                                            <li>
+                                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#2-1-2-5-description">2.1.2.5. description</a>
+
+                                                                                
+
+                                                                            </li>
+                                                                        
+                                                                            <li>
+                                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#2-1-2-6-avatar-url">2.1.2.6. avatar_url</a>
+
+                                                                                
+
+                                                                            </li>
+                                                                        
+                                                                            <li>
+                                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#2-1-2-7-email">2.1.2.7. email</a>
+
+                                                                                
+
+                                                                            </li>
+                                                                        
+                                                                            <li>
+                                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#2-1-2-8-color">2.1.2.8. color</a>
+
+                                                                                
+
+                                                                            </li>
+                                                                        
+                                                                            <li>
+                                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#2-1-2-9-exp">2.1.2.9. exp</a>
+
+                                                                                
+
+                                                                            </li>
+                                                                        
+
+                                                                    </ul>
+                                                                
+
+                                                            </li>
+                                                        
+
+                                                    </ul>
+                                                
+                                            </li>
+                                        
+                                            <li>
+                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#2-2-asp-fingerprint">2.2. ASP fingerprint</a>
+
+                                                
+                                            </li>
+                                        
+
+                                    </ul>
+                                
+
+                            </li>
+                        
+                            <li>
+                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-ariadne-signature-profile-exchange-protocol">3. Ariadne Signature Profile Exchange Protocol</a>
+
+                                
+                                    <ul>
+
+                                        
+                                            <li>
+                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-1-aspe-uri">3.1. ASPE URI</a>
+
+                                                
+                                            </li>
+                                        
+                                            <li>
+                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-2-request-jws">3.2. Request JWS</a>
+
+                                                
+                                                    <ul>
+                                                        
+                                                        
+                                                            <li>
+                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-2-1-request-jws-header">3.2.1. Request JWS header</a>
+
+                                                                
+
+                                                            </li>
+                                                        
+                                                            <li>
+                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-2-2-request-jws-payload">3.2.2. Request JWS payload</a>
+
+                                                                
+                                                                    <ul>
+                                                                        
+                                                                        
+                                                                            <li>
+                                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-2-2-1-version">3.2.2.1. version</a>
+
+                                                                                
+
+                                                                            </li>
+                                                                        
+                                                                            <li>
+                                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-2-2-2-type">3.2.2.2. type</a>
+
+                                                                                
+
+                                                                            </li>
+                                                                        
+                                                                            <li>
+                                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-2-2-3-action">3.2.2.3. action</a>
+
+                                                                                
+
+                                                                            </li>
+                                                                        
+                                                                            <li>
+                                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-2-2-4-iat">3.2.2.4. iat</a>
+
+                                                                                
+
+                                                                            </li>
+                                                                        
+                                                                            <li>
+                                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-2-2-5-profile-jws">3.2.2.5. profile_jws</a>
+
+                                                                                
+
+                                                                            </li>
+                                                                        
+
+                                                                    </ul>
+                                                                
+
+                                                            </li>
+                                                        
+
+                                                    </ul>
+                                                
+                                            </li>
+                                        
+                                            <li>
+                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-3-client-server">3.3. Client-Server</a>
+
+                                                
+                                                    <ul>
+                                                        
+                                                        
+                                                            <li>
+                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-3-1-uploading-a-new-profile">3.3.1. Uploading a new profile</a>
+
+                                                                
+
+                                                            </li>
+                                                        
+                                                            <li>
+                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-3-2-updating-an-existing-profile">3.3.2. Updating an existing profile</a>
+
+                                                                
+
+                                                            </li>
+                                                        
+                                                            <li>
+                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-3-3-deleting-an-existing-profile">3.3.3. Deleting an existing profile</a>
+
+                                                                
+
+                                                            </li>
+                                                        
+
+                                                    </ul>
+                                                
+                                            </li>
+                                        
+                                            <li>
+                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-4-server-client">3.4. Server-client</a>
+
+                                                
+                                                    <ul>
+                                                        
+                                                        
+                                                            <li>
+                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-4-1-fetching-a-profile">3.4.1. Fetching a profile</a>
+
+                                                                
+
+                                                            </li>
+                                                        
+
+                                                    </ul>
+                                                
+                                            </li>
+                                        
+                                            <li>
+                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-5-api-endpoints">3.5. API endpoints</a>
+
+                                                
+                                                    <ul>
+                                                        
+                                                        
+                                                            <li>
+                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-5-1-post">3.5.1. &#x2F;post</a>
+
+                                                                
+
+                                                            </li>
+                                                        
+                                                            <li>
+                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-5-2-id-id">3.5.2. &#x2F;id&#x2F;:id</a>
+
+                                                                
+
+                                                            </li>
+                                                        
+                                                            <li>
+                                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#3-5-3-version">3.5.3. &#x2F;version</a>
+
+                                                                
+
+                                                            </li>
+                                                        
+
+                                                    </ul>
+                                                
+                                            </li>
+                                        
+
+                                    </ul>
+                                
+
+                            </li>
+                        
+                            <li>
+                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#4-security-considerations">4. Security considerations</a>
+
+                                
+                                    <ul>
+
+                                        
+                                            <li>
+                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#4-1-server-implementations">4.1. Server implementations</a>
+
+                                                
+                                            </li>
+                                        
+                                            <li>
+                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#4-2-secret-key-encryption-for-clients">4.2. Secret key encryption for clients</a>
+
+                                                
+                                            </li>
+                                        
+
+                                    </ul>
+                                
+
+                            </li>
+                        
+                            <li>
+                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#references">References</a>
+
+                                
+
+                            </li>
+                        
+                            <li>
+                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#appendix-a-examples">Appendix A. Examples</a>
+
+                                
+                                    <ul>
+
+                                        
+                                            <li>
+                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#a-1-creating-a-new-profile">A.1. Creating a new profile</a>
+
+                                                
+                                            </li>
+                                        
+                                            <li>
+                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#a-2-updating-a-profile">A.2. Updating a profile</a>
+
+                                                
+                                            </li>
+                                        
+                                            <li>
+                                                <a href="https://ariadne.id/related/ariadne-signature-profile-0/#a-3-deleting-a-profile">A.3. Deleting a profile</a>
+
+                                                
+                                            </li>
+                                        
+
+                                    </ul>
+                                
+
+                            </li>
+                        
+
+                    </ul>
+                
+                
+            </li>
+        
+
+        </ul>
+
+    </details>
+</div>
+
+
+<div class="spec">
+    <h1 id="ariadne-signature-profile-specification">Ariadne Signature Profile Specification</h1>
+<p>Authors:<br />
+  Yarmo Mackenbach &lt;yarmo@keyoxide.org&gt; (<a href="https://yarmo.eu/">https://yarmo.eu/</a>)<br />
+Contributors:<br />
+  André Jaenisch (<a href="https://jaenis.ch/">https://jaenis.ch/</a>)<br />
+  Dario Vladović &lt;d.vladimyr@gmail.com&gt;<br />
+Version: 0<br />
+Published: 2023-06-08<br />
+Last updated: 2023-09-13</p>
+<h2 id="abstract">Abstract</h2>
+<p>This specification describes a method to create simple Ariadne Identity Profiles using basic cryptography. It also describes a method to exchange such profiles between clients and servers using HTTP and JWS.</p>
+<h2 id="status">Status</h2>
+<p>This version of the specification is active.</p>
+<h2 id="1-introduction">1. Introduction</h2>
+<p>Ariadne Identity Profiles are a technique to claim and prove online identities. The process is roughly as follows:</p>
+<ul>
+<li>Alice creates a cryptographically-secured document (CSD), usually a key or a signature,</li>
+<li>Alice links her CSD to an online account she has created on a website, usually through a URL,</li>
+<li>Alice links her online account to her CSD, usually by mentioning the CSD's identifier or fingerprint,</li>
+<li>Bob receives Alice's CSD and opens it,</li>
+<li>Bob sees the URL to her online account and visits it,</li>
+<li>Bob sees the identifier of her CSD mentioned by the online account,</li>
+<li>Bob concludes that the same person created the CSD and the online account.</li>
+</ul>
+<p>Alice has tied her online account on a website to her CSD, and vice versa. This is called bidirectional linking and forms the basis of online identity verification. Once Alice links two or more accounts to her CSD and back, she has created an online identity or persona.</p>
+<p>Since the creation of Keyoxide — the platform that did not invent this method but rather formalized it and make it more broadly accessible — in 2020, the only method to create an Ariadne Identity Profile was using OpenPGP. The principal benefit was the existing ecosystem of OpenPGP-compatible libraries and key exchange protocols. This made it trivial to automate Bob's half of the process — receive a CSD, read it, verify the identities.</p>
+<p>However, there was and still is a lack of programming libraries able to write OpenPGP keys including the lesser-known functionality of notations. This has made it near-impossible to create beginner-friendly tools to help with Alice's half of the process — create a CSD, fill it with identity claims and send it to dedicated servers. Until now, Keyoxide/Ariadne Identity Profiles are manually created and maintained almost exclusively through the use of the gpg command line tool.</p>
+<p>This specification describes an alternative method to create Ariadne Identity Profiles without needing OpenPGP at all, exclusively relying on basic cryptographic standards for which there are libraries in nearly every programming language. The goal of this alternative method is to open the world of online identity verification to a much broader audience through the creation of user-friendly tools and interfaces.</p>
+<p>This version of the specification will be concise and likely too simplistic at times. Revisions will fix that at later stages. This version exists to map out how the process should work and see what parts create issues or bottlenecks. This version of the specification will not follow most usual notational conventions except for the ones specified below.</p>
+<p>This version of the specification will also be strict and allow only certain configurations and choices to limit the surface for error. Future versions may relax those restrictions where such freedom is deemed beneficial.</p>
+<p>Contributions to this document are always appreciated.</p>
+<h3 id="1-1-notational-conventions">1.1. Notational Conventions</h3>
+<p>The key words &quot;MUST&quot;, &quot;MUST NOT&quot;, &quot;REQUIRED&quot;, &quot;SHALL&quot;, &quot;SHALL NOT&quot;, &quot;SHOULD&quot;, &quot;SHOULD NOT&quot;, &quot;RECOMMENDED&quot;, &quot;MAY&quot;, and &quot;OPTIONAL&quot; in this document are to be interpreted as described in [<a href="https://www.rfc-editor.org/rfc/rfc2119">RFC2119</a>].</p>
+<h2 id="2-ariadne-signature-profiles">2. Ariadne Signature Profiles</h2>
+<p>Ariadne Signature Profiles (ASP) are Ariadne Identity Profiles (AIP) stored as a cryptographic signature.</p>
+<p>An AIP is the description of an online identity and MUST contain a list of identity claims — links to online accounts and other &quot;virtual property&quot; that can be verified.</p>
+<p>AIPs MUST also contain a name, be it real or fake.</p>
+<p>AIPs MAY also contain a description or a biography, an avatar and/or other personal information such as a birthday. Always be sensible with personally-identifiable information as this may de-anonymize a profile despite using a fake name.</p>
+<p>Like passports and other proofs of identification in the real world, AIPs must have a unique quality to prevent impersonation — if we could all simply claim each other's accounts, there would be no such thing as &quot;identity&quot;. AIPs rely on cryptography for this uniqueness. After all, cryptographic keys are uniquely generated (under normal conditions) and impractical to reverse-engineer. As long as the person who creates a cryptographic key manages to keep the private key secret, this person holds something that is unique in this world.</p>
+<p>An ASP MUST be signed by a cryptographic key to be a valid profile. The resulting signature protects the integrity of the profile — prevent bad actors from changing elements of the profile — and provides a source of authenticity — prevent bad actors from claiming other people's accounts.</p>
+<p>ASPs uses JSON Web Signatures or JWS (<a href="https://www.rfc-editor.org/rfc/rfc7515">[JWS]</a>) as the means to encode, secure and transport the profile.</p>
+<p>ASPs MUST use one of the following combinations of signature algorithm and curve:</p>
+<ul>
+<li>algorithm: &quot;EdDSA&quot;, curve: &quot;Ed25519&quot;  (<a href="https://www.rfc-editor.org/rfc/rfc8037">[RFC8037]</a>)</li>
+<li>algorithm: &quot;ES256&quot;, curve: &quot;P-256&quot;</li>
+</ul>
+<p>ASPs MUST include the public key inside the JWS in JWK <a href="https://www.rfc-editor.org/rfc/rfc7517">[JWK]</a> format.</p>
+<h3 id="2-1-profile-jws">2.1. Profile JWS</h3>
+<p>To create an ASP, a JWS must be generated.</p>
+<p>The JWS MUST be serialized using Compact Serialization as defined in section 3.1 of <a href="https://www.rfc-editor.org/rfc/rfc7515">[RFC7515]</a>.</p>
+<h4 id="2-1-1-profile-jws-header">2.1.1. Profile JWS header</h4>
+<p>The &quot;typ&quot; header MUST be set to &quot;JWT&quot;.</p>
+<p>The &quot;alg&quot; header MUST be set to any of the algorithms defined in 2. (see <a href="https://www.iana.org/assignments/jose/jose.xhtml">[IANA-JOSE]</a>).</p>
+<p>The &quot;jwk&quot; header MUST be set to the profile's public key in JWK format.</p>
+<p>The &quot;kid&quot; header MUST be set to the profile's key's fingerprint, see 2.2. </p>
+<h4 id="2-1-2-profile-jws-payload">2.1.2. Profile JWS payload</h4>
+<p>The JWS payload MUST be JSON-formatted.</p>
+<p>The JWS payload MUST contain the following claims:</p>
+<ul>
+<li>&quot;http://ariadne.id/version&quot;: see 2.1.2.1.</li>
+<li>&quot;http://ariadne.id/type&quot;: see 2.1.2.2.</li>
+<li>&quot;http://ariadne.id/name&quot;: see 2.1.2.3.</li>
+<li>&quot;http://ariadne.id/claims&quot;: see 2.1.2.4.</li>
+</ul>
+<p>The JWS payload MAY contain the following claims:</p>
+<ul>
+<li>&quot;http://ariadne.id/description&quot;: see 2.1.2.5.</li>
+<li>&quot;http://ariadne.id/avatar_url&quot;: see 2.1.2.6.</li>
+<li>&quot;http://ariadne.id/email&quot;: see 2.1.2.7.</li>
+<li>&quot;http://ariadne.id/color&quot;: see 2.1.2.8.</li>
+<li>&quot;exp&quot;: see 2.1.2.9.</li>
+</ul>
+<p>The JWS payload MAY also contain other claims not defined in this document.</p>
+<h5 id="2-1-2-1-version">2.1.2.1. version</h5>
+<p>The full claim MUST be written as:</p>
+<blockquote>
+<p>http://ariadne.id/version</p>
+</blockquote>
+<p>The associated value MUST be a number.</p>
+<p>This claim tells the client how to interpret the different payload claims.</p>
+<p>To comply with this version of the specification, this property's value MUST be &quot;0&quot;.</p>
+<p>This claim is REQUIRED.</p>
+<h5 id="2-1-2-2-type">2.1.2.2. type</h5>
+<p>The full claim MUST be written as:</p>
+<blockquote>
+<p>http://ariadne.id/type</p>
+</blockquote>
+<p>The associated value MUST be a string.</p>
+<p>This claim tells the client how to process the incoming JWS.</p>
+<p>This claim's value MUST be &quot;profile&quot;.</p>
+<p>This claim is REQUIRED.</p>
+<h5 id="2-1-2-3-name">2.1.2.3. name</h5>
+<p>The full claim MUST be written as:</p>
+<blockquote>
+<p>http://ariadne.id/name</p>
+</blockquote>
+<p>The associated value MUST be a string and can contain any arbitrary sequence of characters.</p>
+<p>This claim gives the profile a human-readable name or other method of identifying the profile. The name can be real or fake.</p>
+<p>This JSON property is REQUIRED.</p>
+<h5 id="2-1-2-4-claims">2.1.2.4. claims</h5>
+<p>The full claim MUST be written as:</p>
+<blockquote>
+<p>http://ariadne.id/claims</p>
+</blockquote>
+<p>The associated value MUST be a JSON array of strings where each element of the array is a URL.</p>
+<p>This claim contains the actual identity claims associated with the profile. Each identity claim is a URI or URL pointing to an online account or other form of &quot;virtual property&quot;. Not all platforms and services are supported and some require very specific claim formatting. A registry on how all identity claims should be formed, parsed and processed is still being worked on. In the meantime, the source code for the <a href="https://codeberg.org/keyoxide/doipjs">[DOIP-JS]</a> and <a href="https://codeberg.org/keyoxide/doip-rs">[DOIP-RS]</a> libraries serve as source of truth.</p>
+<p>This JSON property is REQUIRED.</p>
+<h5 id="2-1-2-5-description">2.1.2.5. description</h5>
+<p>The full claim MUST be written as:</p>
+<blockquote>
+<p>http://ariadne.id/description</p>
+</blockquote>
+<p>The associated value MUST be a string and can contain any arbitrary sequence of characters.</p>
+<p>This claim enables the profile to tell a little bit more about the person who created it or the intended audience of the profile.</p>
+<p>This claim is OPTIONAL.</p>
+<h5 id="2-1-2-6-avatar-url">2.1.2.6. avatar_url</h5>
+<p>The full claim MUST be written as:</p>
+<blockquote>
+<p>http://ariadne.id/avatar_url</p>
+</blockquote>
+<p>The associated value MUST be a URL pointing at a publicly accessible rasterized image or vectorized image.</p>
+<p>This claim tells the client to fetch an image and display it as the profile's avatar.</p>
+<p>Note that this image may be linked to the profile by the provider hosting the image and this could de-anonymize the profile.</p>
+<p>This claim is OPTIONAL.</p>
+<h5 id="2-1-2-7-email">2.1.2.7. email</h5>
+<p>The full claim MUST be written as:</p>
+<blockquote>
+<p>http://ariadne.id/email</p>
+</blockquote>
+<p>The associated value MUST be an email address.</p>
+<p>This claim tells the client that an email address is associated with this profile. The presence of this property constitutes in no way a verified claim for this email address and clients MUST display the email address distinctly from the claims and without markers of verification, including check marks or crosses.</p>
+<p>Clients are RECOMMENDED to hide the email address if one or more identity claims failed verification.</p>
+<p>Clients MAY use the email address to fetch additional information about a profile, including querying for avatars from <a href="https://www.libravatar.org">libravatar.org</a>, querying for OpenPGP keys from servers like <a href="https://keys.openpgp.org">keys.openpgp.org</a> or querying for OpenPGP keys </p>
+<p>Clients MUST NOT use or display additional information obtained through the email address if one or more identity claims failed verification.</p>
+<p>This claim is OPTIONAL.</p>
+<h5 id="2-1-2-8-color">2.1.2.8. color</h5>
+<p>The full claim MUST be written as:</p>
+<blockquote>
+<p>http://ariadne.id/color</p>
+</blockquote>
+<p>The associated value MUST be a string representation of a hex color code formatted as follows:</p>
+<blockquote>
+<p>COLOR_CODE = &quot;#&quot; HEXADECIMAL_CHAR * 6</p>
+</blockquote>
+<p>This claim tells the client what primary color to use for the profile's visual theming. Values for this claim use the sRGB colorspace.</p>
+<p>This claim is OPTIONAL.</p>
+<h5 id="2-1-2-9-exp">2.1.2.9. exp</h5>
+<p>The full claim MUST be written as:</p>
+<blockquote>
+<p>exp</p>
+</blockquote>
+<p>See https://www.rfc-editor.org/rfc/rfc7519#section-4.1.4</p>
+<p>This claim is OPTIONAL.</p>
+<h3 id="2-2-asp-fingerprint">2.2. ASP fingerprint</h3>
+<p>The fingerprint (or thumbprint) for an ASP follows the method defined in <a href="https://www.rfc-editor.org/rfc/rfc7638.html">[RFC7638]</a> for computing JWK thumbprints and is obtained as follows:</p>
+<ul>
+<li>construct a JSON object with the &quot;crv&quot;, &quot;kty&quot;, &quot;x&quot; and &quot;y&quot; (when present) properties in that specific order obtained from the signing key,</li>
+<li>stringify the JSON object,</li>
+<li>hash the string using SHA512,</li>
+<li>take the first 16 bytes of the resulting hash,</li>
+<li>encode them using BASE32 (no padding).</li>
+</ul>
+<p>The resulting string is the fingerprint for the ASP and will be used as proof to verify the identity claims.</p>
+<p>The fingerprint is not case-sensitive and MAY be displayed in lowercase or uppercase. Non-public-facing operations SHOULD use uppercase fingerprints.</p>
+<p>While public keys with the P-256 curve have both public &quot;x&quot; and &quot;y&quot; parameters, public keys with the Ed25519 curbe only have the &quot;x&quot; parameter. See section 6.2 of <a href="https://www.rfc-editor.org/rfc/rfc7518.html">[RFC7518]</a> for more information on the various JWK parameters for Elliptic Curve keys.</p>
+<p>The BASE64 and BASE32 encoding schemes mentioned above are the ones described in section 4 and section 6 respectively of <a href="https://www.rfc-editor.org/rfc/rfc4648">[RFC4648]</a>.</p>
+<h2 id="3-ariadne-signature-profile-exchange-protocol">3. Ariadne Signature Profile Exchange Protocol</h2>
+<p>OpenPGP-based AIPs worked well because the profiles were stored inside public keys and these were distributed using dedicated servers.</p>
+<p>ASPs use EcDSA/EDDSA keys and basic cryptographic signatures, meaning it's not possible to use OpenPGP's vast infrastructure to distribute ASPs. This section describes a simple client-server protocol and a server-client protocol to facilitate the distribution of ASPs.</p>
+<p>Both &quot;client-server&quot; and &quot;server-client&quot; interactions are initiated by clients, the name simply reflects the direction of travel of the profiles.</p>
+<p>Servers compatible with the ASPE protocol MUST accept and handle HTTP OPTIONS requests. If a server chooses to implement &quot;client-server&quot; interactions, they MUST accept and handle HTTP POST requests. If a server chooses to implement &quot;server-client&quot; interactions, they MUST accept and handle HTTP GET requests and SHOULD accept and handle HTTP HEAD requests. Servers MUST reject all other HTTP methods and return a 405 METHOD NOT ALLOWED response.</p>
+<h3 id="3-1-aspe-uri">3.1. ASPE URI</h3>
+<p>Every ASP uploaded to an ASPE-compatible server and publicly accessible from an ASPE-compatible server MUST be identifiable by an ASPE URI.</p>
+<p>ASPE URIs are constructed as follows:</p>
+<blockquote>
+<p>URI = &quot;aspe&quot; &quot;:&quot; domain &quot;:&quot; identifier</p>
+</blockquote>
+<p>The domain is the domain name of the ASPE-compatible server. The construction of the domain name follows specification from section 2.3.1 of <a href="https://www.rfc-editor.org/rfc/rfc1035">[RFC1035]</a>.</p>
+<p>The identifier MUST be the profile's key's fingerprint, see 2.2.</p>
+<h3 id="3-2-request-jws">3.2. Request JWS</h3>
+<p>A JWS must be generated for some of these interactions. The cryptographic key that signs this &quot;request JWS&quot; (described in this section) must be the same as the key used to sign the &quot;profile JWS&quot; (described in 2.1.).</p>
+<p>The JWS MUST be serialized using Compact Serialization as defined in section 3.1 of <a href="https://www.rfc-editor.org/rfc/rfc7515">[RFC7515]</a>.</p>
+<h4 id="3-2-1-request-jws-header">3.2.1. Request JWS header</h4>
+<p>The &quot;typ&quot; header MUST be set to &quot;JWT&quot;.</p>
+<p>The &quot;alg&quot; header MUST be set to the profile's key's algorithm as defined in 2.</p>
+<p>The &quot;jwk&quot; header MUST be set to the profile's public key in JWK format.</p>
+<p>The &quot;kid&quot; header MUST be set to the profile's key's fingerprint, see 2.2.</p>
+<h4 id="3-2-2-request-jws-payload">3.2.2. Request JWS payload</h4>
+<p>The JWS payload MUST be JSON-formatted.</p>
+<p>The JWS payload MUST contain the following claims:</p>
+<ul>
+<li>&quot;http://ariadne.id/version&quot;: see 3.2.2.1.</li>
+<li>&quot;http://ariadne.id/type&quot;: see 3.2.2.2.</li>
+<li>&quot;http://ariadne.id/action&quot;: see 3.2.2.3.</li>
+<li>&quot;iat&quot;: see 3.2.2.4.</li>
+</ul>
+<p>Depending on the &quot;action&quot; of the JWS, its payload MAY contain the following claims:</p>
+<ul>
+<li>&quot;http://ariadne.id/profile_jws&quot;: see 3.2.2.5.</li>
+<li>&quot;http://ariadne.id/aspe_uri&quot;: see 3.2.2.6.</li>
+</ul>
+<h5 id="3-2-2-1-version">3.2.2.1. version</h5>
+<p>The full claim MUST be written as:</p>
+<blockquote>
+<p>http://ariadne.id/version</p>
+</blockquote>
+<p>The associated value MUST be a number.</p>
+<p>This claim tells the server how to interpret the different payload claims.</p>
+<p>To comply with this version of the specification, this property's value MUST be &quot;0&quot;.</p>
+<p>This claim is REQUIRED.</p>
+<h5 id="3-2-2-2-type">3.2.2.2. type</h5>
+<p>The full claim MUST be written as:</p>
+<blockquote>
+<p>http://ariadne.id/type</p>
+</blockquote>
+<p>The associated value MUST be a string.</p>
+<p>This claim tells the server how to process the incoming JWS.</p>
+<p>This claim's value MUST be &quot;request&quot;.</p>
+<p>This claim is REQUIRED.</p>
+<h5 id="3-2-2-3-action">3.2.2.3. action</h5>
+<p>The full claim MUST be written as:</p>
+<blockquote>
+<p>http://ariadne.id/action</p>
+</blockquote>
+<p>The associated value MUST be a string.</p>
+<p>This claim tells the server what the user is asking it to do.</p>
+<p>This claim's value MUST be any of the following values:</p>
+<ul>
+<li>&quot;create&quot;: upload a new ASP to the server. The payload property &quot;http://ariadne.id/profile_jws&quot; becomes REQUIRED.</li>
+<li>&quot;update&quot;: upload a new ASP to replace an existing ASP on the server. The payload properties &quot;http://ariadne.id/profile_jws&quot; and &quot;http://ariadne.id/aspe_uri&quot; become REQUIRED.</li>
+<li>&quot;delete&quot;: delete an existing ASP on the server. The payload property &quot;http://ariadne.id/aspe_uri&quot; becomes REQUIRED.</li>
+</ul>
+<p>This claim is REQUIRED.</p>
+<h5 id="3-2-2-4-iat">3.2.2.4. iat</h5>
+<p>The full claim MUST be written as:</p>
+<blockquote>
+<p>iat</p>
+</blockquote>
+<p>See https://www.rfc-editor.org/rfc/rfc7519#section-4.1.6</p>
+<p>The server MUST reject requests with iat values that are too old as a security measure against replay attacks. The server MUST reject requests with iat values that are too far ahead in the future to be considered a reasonable mistake. What constitutes reasonable limits for iat values is subjective and must strike a balance between being restrictive enough for security and permissive enough to account for poor connectivity and suboptimal network infrastructure that clients may have to deal with.</p>
+<p>It is RECOMMENDED to allow iat values that are at most 60 minutes old, as well as iat values that are at most 60 minutes ahead in the future. Implementations MAY adjust these values.</p>
+<p>This claim is REQUIRED.</p>
+<h5 id="3-2-2-5-profile-jws">3.2.2.5. profile_jws</h5>
+<p>The full claim MUST be written as:</p>
+<blockquote>
+<p>http://ariadne.id/profile_jws</p>
+</blockquote>
+<p>The associated value MUST be a Compact-Serialized profile JWS.</p>
+<p>This claim provides the server with a new profile JWS to store in its database.</p>
+<p>This claim is OPTIONAL.</p>
+<h3 id="3-3-client-server">3.3. Client-Server</h3>
+<p>Client-server interactions include all the interactions initiated by people creating and maintaining their own profile. Client-server interactions are HTTP POST requests made to an HTTP endpoint, the URL to which is constructed as follows:</p>
+<blockquote>
+<p>POST URL = &quot;https://&quot; domain &quot;/.well-known/aspe/post/&quot;</p>
+</blockquote>
+<p>The domain is the domain of the ASPE-compatible server.</p>
+<p>The HTTP POST requests have a JWS as body. Note that this &quot;request JWS&quot; is not the &quot;profile JWS&quot; described in 2.1. containing the actual profile, meaning some of the client-server interactions may involve nested JWSs.</p>
+<p>Servers MUST reject request JWSs that were not issued within 60 seconds of the moment of processing — determined by the request JWS's &quot;iat&quot; header — and return a 400 BAD REQUEST response.</p>
+<h4 id="3-3-1-uploading-a-new-profile">3.3.1. Uploading a new profile</h4>
+<p>To upload a new ASP, an HTTP POST request is sent to the POST URL described in 3.3. This request MUST have a Compact-Serialized &quot;request JWS&quot; as body. This request MUST set its &quot;Content-Type&quot; header to &quot;application/asp+jwt; charset=UTF-8&quot;.</p>
+<p>The request JWS MUST have the &quot;http://ariadne.id/action&quot; payload property set to &quot;create&quot;.</p>
+<p>The request JWS MUST include the &quot;http://ariadne.id/profile_jws&quot; payload property and set it to valid Compact-Serialized profile JWS.</p>
+<p>If the JWS was badly constructed, the server MUST ignore the request and return a 400 BAD REQUEST response.</p>
+<p>Upon success, the server MUST return a 201 CREATED response.</p>
+<h4 id="3-3-2-updating-an-existing-profile">3.3.2. Updating an existing profile</h4>
+<p>To upload a new ASP and replace an existing one, an HTTP POST request is sent to the POST URL described in 3.3. This request MUST have a Compact-Serialized &quot;request JWS&quot; as body. This request MUST set its &quot;Content-Type&quot; header to &quot;application/asp+jwt; charset=UTF-8&quot;.</p>
+<p>The request JWS MUST have the &quot;http://ariadne.id/action&quot; payload property set to &quot;update&quot;.</p>
+<p>The request JWS MUST include the &quot;http://ariadne.id/profile_jws&quot; payload property and set it to a valid Compact-Serialized profile JWS.</p>
+<p>The request JWS MUST include the &quot;http://ariadne.id/aspe_uri&quot; payload property and set it to the ASPE URI of the existing ASP that is to be replaced.</p>
+<p>If the request/profile JWS was signed by a different key than the one used for the existing ASP, the server MUST ignore the request and return a 400 BAD REQUEST response.</p>
+<p>If the JWS was badly constructed, the server MUST ignore the request and return a 400 BAD REQUEST response.</p>
+<p>Upon success, the server MUST return a 200 OK response.</p>
+<h4 id="3-3-3-deleting-an-existing-profile">3.3.3. Deleting an existing profile</h4>
+<p>To remove an existing ASP, an HTTP POST request is sent to the POST URL described in 3.3. This request MUST have a Compact-Serialized &quot;request JWS&quot; as body. This request MUST set its &quot;Content-Type&quot; header to &quot;application/asp+jwt; charset=UTF-8&quot;.</p>
+<p>The request JWS MUST have the &quot;http://ariadne.id/action&quot; payload property set to &quot;delete&quot;.</p>
+<p>The request JWS MUST include the &quot;http://ariadne.id/aspe_uri&quot; payload property and set it to the ASPE URI of the existing ASP that is to be deleted.</p>
+<p>If the request JWS was signed by a different key than the one used for the existing ASP, the server MUST ignore the request and return a 400 BAD REQUEST response.</p>
+<p>If the JWS was badly constructed, the server MUST ignore the request and return a 400 BAD REQUEST response.</p>
+<p>Upon success, the server MUST return a 200 OK response.</p>
+<h3 id="3-4-server-client">3.4. Server-client</h3>
+<p>Server-client interactions include all the interactions initiated by people wanting to view and verify other people's profiles. Server-client interactions are HTTP GET requests made to an HTTP endpoint, the URL to which is constructed as follows:</p>
+<blockquote>
+<p>GET URL = &quot;https://&quot; domain &quot;/.well-known/aspe/id/&quot; id</p>
+</blockquote>
+<p>The domain is the domain of the ASPE-compatible server. The id is the unique identifier assigned by the server to each ASP uploaded to it.</p>
+<h4 id="3-4-1-fetching-a-profile">3.4.1. Fetching a profile</h4>
+<p>To fetch an ASP, an HTTP GET request is sent to the GET URL described in 3.3. with the unique identifier assigned to the ASP by the server.</p>
+<p>If no ASP was found using that identifier, the server MUST return a 404 NOT FOUND response.</p>
+<p>If the ASP has expired — determined by the profile JWS's &quot;iat&quot; header — the server MUST return a 404 NOT FOUND response.</p>
+<p>Upon success, the server MUST return a 200 OK response with the Compact-Serialized profile JWS as body. This response MUST have its &quot;Content-Type&quot; header set to &quot;application/asp+jwt; charset=UTF-8&quot;.</p>
+<h3 id="3-5-api-endpoints">3.5. API endpoints</h3>
+<h4 id="3-5-1-post">3.5.1. /post</h4>
+<p>The /.well-known/aspe/post API endpoint enables people to upload and manage their profiles on the server. Supporting this API endpoint is OPTIONAL.</p>
+<p>See 3.3. Client-Server</p>
+<h4 id="3-5-2-id-id">3.5.2. /id/:id</h4>
+<p>The /.well-known/aspe/id/:id API endpoint enables people to obtain profiles stored on the server. Supporting this API endpoint is REQUIRED.</p>
+<p>See 3.4. Server-Client</p>
+<h4 id="3-5-3-version">3.5.3. /version</h4>
+<p>The /.well-known/aspe/version API endpoint informs clients about the software that the server is running. Supporting this API endpoint is REQUIRED.</p>
+<p>This API endpoint MUST only accept and handle HTTP GET, HEAD and OPTIONS requests. Servers MUST reject all other HTTP methods and return a 405 METHOD NOT ALLOWED response.</p>
+<p>If the HTTP request has the Accept header set to &quot;text/html&quot; or &quot;text/plain&quot;, the server MUST respond with a plain text response constructed as follows:</p>
+<blockquote>
+<p>VERSION PLAIN RESPONSE = name &quot;/&quot; version</p>
+</blockquote>
+<p>The name is the canonical name of the server software. The version is the version of the server software.</p>
+<p>If not, the server MUST assume a JSON object is requested and MUST respond with a JSON object constructed with the following properties:</p>
+<ul>
+<li>&quot;name&quot;: the canonical name of the server software (REQUIRED, type: string)</li>
+<li>&quot;version&quot;: the version of the server software (REQUIRED, type: string)</li>
+<li>&quot;repository&quot;: the url of the source code repository of the server software (OPTIONAL, type: string)</li>
+<li>&quot;homepage&quot;: the url of the homepage of the server software (OPTIONAL, type: string)</li>
+</ul>
+<h2 id="4-security-considerations">4. Security considerations</h2>
+<h3 id="4-1-server-implementations">4.1. Server implementations</h3>
+<p>Due to the open nature of both the profile JWS format and the ASPE interface, server implementations compatible with the ASPE interface and able to host ASPs must also implement adequate measures to protect themselves against abuse.</p>
+<p>Server implementations should limit the body size of incoming ASPE requests to a value that is sensible for plaintext documents that are a collection of small strings and URIs. If implemented, servers must reject ASPE requests with a body size larger than this limit and return a 413 CONTENT TOO LARGE response.</p>
+<p>Server implementations should rate limit incoming ASPE requests and this limit may be global or per IP address that requests are coming from. If implemented, servers must reject ASPE requests when the rate limit has been reached and return a 429 TOO MANY REQUESTS response.</p>
+<h3 id="4-2-secret-key-encryption-for-clients">4.2. Secret key encryption for clients</h3>
+<p>Clients that implement the ASPE protocol so they can upload and manage profiles on behalf of a user are most likely to require the user to input their secret key at some point. These clients are also likely to generate those secret keys for their users and subsequently allow the user to store it, or even store it on behalf of the user. Clients are strongly recommended to allow users to encrypt their secret keys with a password before exporting it. If clients store secret keys on the filesystem, they should never do so without encrypting them first using user-provided passwords, unless the filesystem is known by the client to already provide adequate security measures.</p>
+<h2 id="references">References</h2>
+<p>[DOIP-JS] https://codeberg.org/keyoxide/doipjs</p>
+<p>[DOIP-RS] https://codeberg.org/keyoxide/doip-rs </p>
+<p>[IANA-JOSE] https://www.iana.org/assignments/jose/jose.xhtml</p>
+<p>[JWS] https://www.rfc-editor.org/rfc/rfc7515</p>
+<p>[JWK] https://www.rfc-editor.org/rfc/rfc7517</p>
+<p>[RFC1035] https://www.rfc-editor.org/rfc/rfc1035</p>
+<p>[RFC3986] https://www.rfc-editor.org/rfc/rfc3986</p>
+<p>[RFC4648] https://www.rfc-editor.org/rfc/rfc4648</p>
+<p>[RFC7515] https://www.rfc-editor.org/rfc/rfc7515</p>
+<p>[RFC7518] https://www.rfc-editor.org/rfc/rfc7518</p>
+<p>[RFC7638] https://www.rfc-editor.org/rfc/rfc7638</p>
+<p>[RFC8037] https://www.rfc-editor.org/rfc/rfc8037</p>
+<h2 id="appendix-a-examples">Appendix A. Examples</h2>
+<h3 id="a-1-creating-a-new-profile">A.1. Creating a new profile</h3>
+<p>Assuming we have created a new Ed25519 key for which the private key in PEM format is:</p>
+<pre><code>    -----BEGIN PRIVATE KEY-----
+    MC4CAQAwBQYDK2VwBCIEIP3BQro3yMfwuf0HUTP9yz2H9BS4AIozIqEYUFPzwsMx
+    -----END PRIVATE KEY-----
+</code></pre>
+<p>and in BASE64-encoded DER format is:</p>
+<pre><code>    MC4CAQAwBQYDK2VwBCIEIP3BQro3yMfwuf0HUTP9yz2H9BS4AIozIqEYUFPzwsMx
+</code></pre>
+<p>and in JWK format is:</p>
+<pre><code>    {
+        &quot;kty&quot;: &quot;OKP&quot;,
+        &quot;use&quot;: &quot;sig&quot;,
+        &quot;crv&quot;: &quot;Ed25519&quot;,
+        &quot;d&quot;: &quot;_cFCujfIx_C5_QdRM_3LPYf0FLgAijMioRhQU_PCwzE&quot;,
+        &quot;x&quot;: &quot;__poSQwNedopfLKP3ZgM6FXz9LIJszDZh5wKcoQF71U&quot;
+    }
+</code></pre>
+<p>This key would have the following fingerprint:</p>
+<pre><code>    QPRGVPJNWDXH4ESK2RYDTZJLTE
+</code></pre>
+<p>We now need to create a &quot;profile JWS&quot; that contains the profile data and a &quot;request JWS&quot; to upload the profile JWS to an ASPE-compatible server.</p>
+<p>Profile JWS header:</p>
+<pre><code>    {
+        &quot;typ&quot;: &quot;JWT&quot;,
+        &quot;kid&quot;: &quot;QPRGVPJNWDXH4ESK2RYDTZJLTE&quot;,
+        &quot;jwk&quot;: {
+            &quot;kty&quot;: &quot;OKP&quot;,
+            &quot;use&quot;: &quot;sig&quot;,
+            &quot;crv&quot;: &quot;Ed25519&quot;,
+            &quot;x&quot;: &quot;__poSQwNedopfLKP3ZgM6FXz9LIJszDZh5wKcoQF71U&quot;
+        },
+        &quot;alg&quot;: &quot;EdDSA&quot;
+    }
+</code></pre>
+<p>Profile JWS payload:</p>
+<pre><code>    {
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;version&quot;: 0,
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;type&quot;: &quot;profile&quot;,
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;name&quot;: &quot;test&quot;,
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;claims&quot;: [
+            &quot;https:&#x2F;&#x2F;domain.tld&#x2F;user&#x2F;test&quot;,
+            &quot;https:&#x2F;&#x2F;another.tld&#x2F;test&quot;
+        ]
+    }
+</code></pre>
+<p>Compact-serialized profile JWS:</p>
+<blockquote>
+<p>eyJ0eXAiOiJKV1QiLCJraWQiOiJRUFJHVlBKTldEWEg0RVNLMlJZRFRaSkxURSIsImp3ayI6eyJrdHkiOiJPS1AiLCJ1c2UiOiJzaWciLCJjcnYiOiJFZDI1NTE5IiwieCI6Il9fcG9TUXdOZWRvcGZMS1AzWmdNNkZYejlMSUpzekRaaDV3S2NvUUY3MVUifSwiYWxnIjoiRWREU0EifQ.eyJodHRwOi8vYXJpYWRuZS5pZC92ZXJzaW9uIjowLCJodHRwOi8vYXJpYWRuZS5pZC90eXBlIjoicHJvZmlsZSIsImh0dHA6Ly9hcmlhZG5lLmlkL25hbWUiOiJ0ZXN0IiwiaHR0cDovL2FyaWFkbmUuaWQvY2xhaW1zIjpbImh0dHBzOi8vZG9tYWluLnRsZC91c2VyL3Rlc3QiLCJodHRwczovL2Fub3RoZXIudGxkL3Rlc3QiXX0.yiBJbaB2oyprfRzYcmP-iz3C-5PGwV1Yc5iDSLW_2JFKVPKH3BKL2mUHE62VvyH1EiXDfWjpGae7jT1bM8PSAQ</p>
+</blockquote>
+<p>Request JWS header:</p>
+<pre><code>    {
+        &quot;typ&quot;: &quot;JWT&quot;,
+        &quot;kid&quot;: &quot;QPRGVPJNWDXH4ESK2RYDTZJLTE&quot;,
+        &quot;jwk&quot;: {
+            &quot;kty&quot;: &quot;OKP&quot;,
+            &quot;use&quot;: &quot;sig&quot;,
+            &quot;crv&quot;: &quot;Ed25519&quot;,
+            &quot;x&quot;: &quot;__poSQwNedopfLKP3ZgM6FXz9LIJszDZh5wKcoQF71U&quot;
+        },
+        &quot;alg&quot;: &quot;EdDSA&quot;
+    }
+</code></pre>
+<p>Request JWS payload:</p>
+<pre><code>    {
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;version&quot;: 0,
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;type&quot;: &quot;request&quot;,
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;action&quot;: &quot;create&quot;,
+        &quot;iat&quot;: 1688371823,
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;profile_jws&quot;: &quot;eyJ0eXAiOiJKV1QiLCJraWQiOiJRUFJHVlBKTldEWEg0RVNLMlJZRFRaSkxURSIsImp3ayI6eyJrdHkiOiJPS1AiLCJ1c2UiOiJzaWciLCJjcnYiOiJFZDI1NTE5IiwieCI6Il9fcG9TUXdOZWRvcGZMS1AzWmdNNkZYejlMSUpzekRaaDV3S2NvUUY3MVUifSwiYWxnIjoiRWREU0EifQ.eyJodHRwOi8vYXJpYWRuZS5pZC92ZXJzaW9uIjowLCJodHRwOi8vYXJpYWRuZS5pZC90eXBlIjoicHJvZmlsZSIsImh0dHA6Ly9hcmlhZG5lLmlkL25hbWUiOiJ0ZXN0IiwiaHR0cDovL2FyaWFkbmUuaWQvY2xhaW1zIjpbImh0dHBzOi8vZG9tYWluLnRsZC91c2VyL3Rlc3QiLCJodHRwczovL2Fub3RoZXIudGxkL3Rlc3QiXX0.yiBJbaB2oyprfRzYcmP-iz3C-5PGwV1Yc5iDSLW_2JFKVPKH3BKL2mUHE62VvyH1EiXDfWjpGae7jT1bM8PSAQ&quot;
+    }
+</code></pre>
+<p>Compact-serialized request JWS:</p>
+<blockquote>
+<p>eyJ0eXAiOiJKV1QiLCJraWQiOiJRUFJHVlBKTldEWEg0RVNLMlJZRFRaSkxURSIsImp3ayI6eyJrdHkiOiJPS1AiLCJ1c2UiOiJzaWciLCJjcnYiOiJFZDI1NTE5IiwieCI6Il9fcG9TUXdOZWRvcGZMS1AzWmdNNkZYejlMSUpzekRaaDV3S2NvUUY3MVUifSwiYWxnIjoiRWREU0EifQ.eyJodHRwOi8vYXJpYWRuZS5pZC92ZXJzaW9uIjowLCJodHRwOi8vYXJpYWRuZS5pZC90eXBlIjoicmVxdWVzdCIsImh0dHA6Ly9hcmlhZG5lLmlkL2FjdGlvbiI6ImNyZWF0ZSIsImlhdCI6MTY4ODM3MTgyMywiaHR0cDovL2FyaWFkbmUuaWQvcHJvZmlsZV9qd3MiOiJleUowZVhBaU9pSktWMVFpTENKcmFXUWlPaUpSVUZKSFZsQktUbGRFV0VnMFJWTkxNbEpaUkZSYVNreFVSU0lzSW1wM2F5STZleUpyZEhraU9pSlBTMUFpTENKMWMyVWlPaUp6YVdjaUxDSmpjbllpT2lKRlpESTFOVEU1SWl3aWVDSTZJbDlmY0c5VFVYZE9aV1J2Y0daTVMxQXpXbWROTmtaWWVqbE1TVXB6ZWtSYWFEVjNTMk52VVVZM01WVWlmU3dpWVd4bklqb2lSV1JFVTBFaWZRLmV5Sm9kSFJ3T2k4dllYSnBZV1J1WlM1cFpDOTJaWEp6YVc5dUlqb3dMQ0pvZEhSd09pOHZZWEpwWVdSdVpTNXBaQzkwZVhCbElqb2ljSEp2Wm1sc1pTSXNJbWgwZEhBNkx5OWhjbWxoWkc1bExtbGtMMjVoYldVaU9pSjBaWE4wSWl3aWFIUjBjRG92TDJGeWFXRmtibVV1YVdRdlkyeGhhVzF6SWpwYkltaDBkSEJ6T2k4dlpHOXRZV2x1TG5Sc1pDOTFjMlZ5TDNSbGMzUWlMQ0pvZEhSd2N6b3ZMMkZ1YjNSb1pYSXVkR3hrTDNSbGMzUWlYWDAueWlCSmJhQjJveXByZlJ6WWNtUC1pejNDLTVQR3dWMVljNWlEU0xXXzJKRktWUEtIM0JLTDJtVUhFNjJWdnlIMUVpWERmV2pwR2FlN2pUMWJNOFBTQVEifQ.T2BF__Ph7SsM9n9ZsyB9-_nuvJbYZW9OPE1xp18k5rAdyQG36_muuDt-HeQE4gtDhIk6kBEOpaSenH5teXd_Dw</p>
+</blockquote>
+<h3 id="a-2-updating-a-profile">A.2. Updating a profile</h3>
+<p>Assuming we are using the same Ed25519 key as in A.1.</p>
+<p>We now need to create an updated &quot;profile JWS&quot; that contains the profile data and a &quot;request JWS&quot; to upload the profile JWS to an ASPE-compatible server.</p>
+<p>Profile JWS header:</p>
+<pre><code>    {
+        &quot;typ&quot;: &quot;JWT&quot;,
+        &quot;kid&quot;: &quot;QPRGVPJNWDXH4ESK2RYDTZJLTE&quot;,
+        &quot;jwk&quot;: {
+            &quot;kty&quot;: &quot;OKP&quot;,
+            &quot;use&quot;: &quot;sig&quot;,
+            &quot;crv&quot;: &quot;Ed25519&quot;,
+            &quot;x&quot;: &quot;__poSQwNedopfLKP3ZgM6FXz9LIJszDZh5wKcoQF71U&quot;
+        },
+        &quot;alg&quot;: &quot;EdDSA&quot;
+    }
+</code></pre>
+<p>Profile JWS payload:</p>
+<pre><code>    {
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;version&quot;: 0,
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;type&quot;: &quot;profile&quot;,
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;name&quot;: &quot;test&quot;,
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;claims&quot;: [
+            &quot;https:&#x2F;&#x2F;domain.tld&#x2F;user&#x2F;test&quot;,
+            &quot;https:&#x2F;&#x2F;another.tld&#x2F;test&quot;
+        ]
+    }
+</code></pre>
+<p>Compact-serialized profile JWS:</p>
+<blockquote>
+<p>eyJ0eXAiOiJKV1QiLCJraWQiOiJRUFJHVlBKTldEWEg0RVNLMlJZRFRaSkxURSIsImp3ayI6eyJrdHkiOiJPS1AiLCJ1c2UiOiJzaWciLCJjcnYiOiJFZDI1NTE5IiwieCI6Il9fcG9TUXdOZWRvcGZMS1AzWmdNNkZYejlMSUpzekRaaDV3S2NvUUY3MVUifSwiYWxnIjoiRWREU0EifQ.eyJodHRwOi8vYXJpYWRuZS5pZC92ZXJzaW9uIjowLCJodHRwOi8vYXJpYWRuZS5pZC90eXBlIjoicHJvZmlsZSIsImh0dHA6Ly9hcmlhZG5lLmlkL25hbWUiOiJ0ZXN0IiwiaHR0cDovL2FyaWFkbmUuaWQvY2xhaW1zIjpbImh0dHBzOi8vZG9tYWluLnRsZC91c2VyL3Rlc3QiLCJodHRwczovL2Fub3RoZXIudGxkL3Rlc3QiXX0.yiBJbaB2oyprfRzYcmP-iz3C-5PGwV1Yc5iDSLW_2JFKVPKH3BKL2mUHE62VvyH1EiXDfWjpGae7jT1bM8PSAQ</p>
+</blockquote>
+<p>Request JWS header:</p>
+<pre><code>    {
+        &quot;typ&quot;: &quot;JWT&quot;,
+        &quot;kid&quot;: &quot;QPRGVPJNWDXH4ESK2RYDTZJLTE&quot;,
+        &quot;jwk&quot;: {
+            &quot;kty&quot;: &quot;OKP&quot;,
+            &quot;use&quot;: &quot;sig&quot;,
+            &quot;crv&quot;: &quot;Ed25519&quot;,
+            &quot;x&quot;: &quot;__poSQwNedopfLKP3ZgM6FXz9LIJszDZh5wKcoQF71U&quot;
+        },
+        &quot;alg&quot;: &quot;EdDSA&quot;
+    }
+</code></pre>
+<p>Request JWS payload:</p>
+<pre><code>    {
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;version&quot;: 0,
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;type&quot;: &quot;request&quot;,
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;action&quot;: &quot;update&quot;,
+        &quot;iat&quot;: 1688371835,
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;profile_jws&quot;: &quot;eyJ0eXAiOiJKV1QiLCJraWQiOiJRUFJHVlBKTldEWEg0RVNLMlJZRFRaSkxURSIsImp3ayI6eyJrdHkiOiJPS1AiLCJ1c2UiOiJzaWciLCJjcnYiOiJFZDI1NTE5IiwieCI6Il9fcG9TUXdOZWRvcGZMS1AzWmdNNkZYejlMSUpzekRaaDV3S2NvUUY3MVUifSwiYWxnIjoiRWREU0EifQ.eyJodHRwOi8vYXJpYWRuZS5pZC92ZXJzaW9uIjowLCJodHRwOi8vYXJpYWRuZS5pZC90eXBlIjoicHJvZmlsZSIsImh0dHA6Ly9hcmlhZG5lLmlkL25hbWUiOiJ0ZXN0IiwiaHR0cDovL2FyaWFkbmUuaWQvY2xhaW1zIjpbImh0dHBzOi8vZG9tYWluLnRsZC91c2VyL3Rlc3QiLCJodHRwczovL2Fub3RoZXIudGxkL3Rlc3QiXX0.yiBJbaB2oyprfRzYcmP-iz3C-5PGwV1Yc5iDSLW_2JFKVPKH3BKL2mUHE62VvyH1EiXDfWjpGae7jT1bM8PSAQ&quot;
+    }
+</code></pre>
+<p>Compact-serialized request JWS:</p>
+<blockquote>
+<p>eyJ0eXAiOiJKV1QiLCJraWQiOiJRUFJHVlBKTldEWEg0RVNLMlJZRFRaSkxURSIsImp3ayI6eyJrdHkiOiJPS1AiLCJ1c2UiOiJzaWciLCJjcnYiOiJFZDI1NTE5IiwieCI6Il9fcG9TUXdOZWRvcGZMS1AzWmdNNkZYejlMSUpzekRaaDV3S2NvUUY3MVUifSwiYWxnIjoiRWREU0EifQ.eyJodHRwOi8vYXJpYWRuZS5pZC92ZXJzaW9uIjowLCJodHRwOi8vYXJpYWRuZS5pZC90eXBlIjoicmVxdWVzdCIsImh0dHA6Ly9hcmlhZG5lLmlkL2FjdGlvbiI6InVwZGF0ZSIsImlhdCI6MTY4ODM3MTgzNSwiaHR0cDovL2FyaWFkbmUuaWQvcHJvZmlsZV9qd3MiOiJleUowZVhBaU9pSktWMVFpTENKcmFXUWlPaUpSVUZKSFZsQktUbGRFV0VnMFJWTkxNbEpaUkZSYVNreFVSU0lzSW1wM2F5STZleUpyZEhraU9pSlBTMUFpTENKMWMyVWlPaUp6YVdjaUxDSmpjbllpT2lKRlpESTFOVEU1SWl3aWVDSTZJbDlmY0c5VFVYZE9aV1J2Y0daTVMxQXpXbWROTmtaWWVqbE1TVXB6ZWtSYWFEVjNTMk52VVVZM01WVWlmU3dpWVd4bklqb2lSV1JFVTBFaWZRLmV5Sm9kSFJ3T2k4dllYSnBZV1J1WlM1cFpDOTJaWEp6YVc5dUlqb3dMQ0pvZEhSd09pOHZZWEpwWVdSdVpTNXBaQzkwZVhCbElqb2ljSEp2Wm1sc1pTSXNJbWgwZEhBNkx5OWhjbWxoWkc1bExtbGtMMjVoYldVaU9pSjBaWE4wSWl3aWFIUjBjRG92TDJGeWFXRmtibVV1YVdRdlkyeGhhVzF6SWpwYkltaDBkSEJ6T2k4dlpHOXRZV2x1TG5Sc1pDOTFjMlZ5TDNSbGMzUWlMQ0pvZEhSd2N6b3ZMMkZ1YjNSb1pYSXVkR3hrTDNSbGMzUWlYWDAueWlCSmJhQjJveXByZlJ6WWNtUC1pejNDLTVQR3dWMVljNWlEU0xXXzJKRktWUEtIM0JLTDJtVUhFNjJWdnlIMUVpWERmV2pwR2FlN2pUMWJNOFBTQVEifQ.Ad3gfo6CA1d5YZPtKvbZrCDXgTxiMOYkUPasWpu6HfNLMZ1eZdVDIP1t6uikG0BcI3KTSaQOgLSU-2kCpiyZDA</p>
+</blockquote>
+<h3 id="a-3-deleting-a-profile">A.3. Deleting a profile</h3>
+<p>Assuming we are using the same Ed25519 key as in A.1.</p>
+<p>We now need to create a &quot;request JWS&quot; to tell the ASPE-compatible server to delete the profile. We do not need to create a &quot;profile JWS&quot;.</p>
+<p>Request JWS header:</p>
+<pre><code>    {
+        &quot;typ&quot;: &quot;JWT&quot;,
+        &quot;kid&quot;: &quot;QPRGVPJNWDXH4ESK2RYDTZJLTE&quot;,
+        &quot;jwk&quot;: {
+            &quot;kty&quot;: &quot;OKP&quot;,
+            &quot;use&quot;: &quot;sig&quot;,
+            &quot;crv&quot;: &quot;Ed25519&quot;,
+            &quot;x&quot;: &quot;__poSQwNedopfLKP3ZgM6FXz9LIJszDZh5wKcoQF71U&quot;
+        },
+        &quot;alg&quot;: &quot;EdDSA&quot;
+    }
+</code></pre>
+<p>Request JWS payload:</p>
+<pre><code>    {
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;version&quot;: 0,
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;type&quot;: &quot;request&quot;,
+        &quot;http:&#x2F;&#x2F;ariadne.id&#x2F;action&quot;: &quot;delete&quot;,
+        &quot;iat&quot;: 1688371843
+    }
+</code></pre>
+<p>Compact-serialized request JWS:</p>
+<blockquote>
+<p>eyJ0eXAiOiJKV1QiLCJraWQiOiJRUFJHVlBKTldEWEg0RVNLMlJZRFRaSkxURSIsImp3ayI6eyJrdHkiOiJPS1AiLCJ1c2UiOiJzaWciLCJjcnYiOiJFZDI1NTE5IiwieCI6Il9fcG9TUXdOZWRvcGZMS1AzWmdNNkZYejlMSUpzekRaaDV3S2NvUUY3MVUifSwiYWxnIjoiRWREU0EifQ.eyJodHRwOi8vYXJpYWRuZS5pZC92ZXJzaW9uIjowLCJodHRwOi8vYXJpYWRuZS5pZC90eXBlIjoicmVxdWVzdCIsImh0dHA6Ly9hcmlhZG5lLmlkL2FjdGlvbiI6ImRlbGV0ZSIsImlhdCI6MTY4ODM3MTg0M30.TulEElcr2mYuvQbXqEYfaBhEuQ1T-eEPQyBGRc0HIwjj34Ag0w67nqdgEzhC1SeHVvkHKSvbkBhLcyp6qtRcAw</p>
+</blockquote>
+
+</div>
+
+
+
+            <footer>
+                <p>
+                    Source code at <a href="https://codeberg.org/ariadne/ariadne-identity-specification">codeberg.org/ariadne/ariadne-identity-specification</a>
+                    <br>
+                    Ariadne Identity Specification licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0 License</a>.
+                </p>
+            </footer>
+        </main>
+
+        <aside>
+            <header class="large-screen">
+                <h1>
+                    <a href="/">
+                        Ariadne Identity
+                    </a>
+                </h1>
+            </header>
+            <nav>
+                
+                <a  href="&#x2F;">Introduction</a>
+                
+
+                    
+    
+                    <details >
+                        <summary>
+                            Core Specification
+                            <span class="flex"></span>
+                            <img src="/chevron-up.svg" class="collapse" alt="Collapse">
+                            <img src="/chevron-down.svg" class="expand" alt="Expand">
+                        </summary>
+    
+                        <a  href="&#x2F;core&#x2F;">Overview</a>
+                        
+                            <a  href="https://ariadne.id/core/0/">Version 0</a>
+                        
+                    </details>
+                
+
+                    
+    
+                    <details open>
+                        <summary>
+                            Related Specifications
+                            <span class="flex"></span>
+                            <img src="/chevron-up.svg" class="collapse" alt="Collapse">
+                            <img src="/chevron-down.svg" class="expand" alt="Expand">
+                        </summary>
+    
+                        <a  href="&#x2F;related&#x2F;">Overview</a>
+                        
+                            <a  href="https://ariadne.id/related/ariadne-alias-specification-1/">Ariadne Alias Specification v1</a>
+                        
+                            <a class="active" href="https://ariadne.id/related/ariadne-signature-profile-0/">Ariadne Signature Profile v0</a>
+                        
+                            <a  href="https://ariadne.id/related/web-signature-directory-0/">Web Signature Directory v0</a>
+                        
+                    </details>
+                
+
+                    
+    
+                    <details >
+                        <summary>
+                            ARCs
+                            <span class="flex"></span>
+                            <img src="/chevron-up.svg" class="collapse" alt="Collapse">
+                            <img src="/chevron-down.svg" class="expand" alt="Expand">
+                        </summary>
+    
+                        <a  href="&#x2F;arc&#x2F;">Overview</a>
+                        
+                            <a  href="https://ariadne.id/arc/0001/">ARC-0001 - ActivityPub service provider definition</a>
+                        
+                    </details>
+                
+            </nav>
+            
+        </aside>
+
+    </div>
+
+</body>
+</html>

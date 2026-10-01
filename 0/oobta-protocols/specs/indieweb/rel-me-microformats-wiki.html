@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<title>rel="me" - Microformats Wiki</title>
+<script>document.documentElement.className="client-js";RLCONF={"wgBreakFrames":false,"wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgRequestId":"d0b9be71f7836cbd7f17b609","wgCSPNonce":false,"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"rel-me","wgTitle":"rel-me","wgCurRevisionId":70656,"wgRevisionId":70656,"wgArticleId":4687,"wgIsArticle":true,"wgIsRedirect":false,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":[],"wgPageContentLanguage":"en","wgPageContentModel":"wikitext","wgRelevantPageName":"rel-me","wgRelevantArticleId":4687,"wgIsProbablyEditable":false,"wgRelevantPageIsProbablyEditable":false,"wgRestrictionEdit":[],"wgRestrictionMove":[]};RLSTATE={"site.styles":"ready","user.styles":"ready","user":"ready","user.options":"loading",
+"ext.pygments":"ready","skins.vector.styles.legacy":"ready"};RLPAGEMODULES=["site","mediawiki.page.ready","mediawiki.toc","skins.vector.legacy.js"];</script>
+<script>(RLQ=window.RLQ||[]).push(function(){mw.loader.implement("user.options@1i9g4",function($,jQuery,require,module){mw.user.tokens.set({"patrolToken":"+\\","watchToken":"+\\","csrfToken":"+\\"});});});</script>
+<link rel="stylesheet" href="/wiki/load.php?lang=en&amp;modules=ext.pygments%7Cskins.vector.styles.legacy&amp;only=styles&amp;skin=vector"/>
+<script async="" src="/wiki/load.php?lang=en&amp;modules=startup&amp;only=scripts&amp;raw=1&amp;skin=vector"></script>
+<meta name="generator" content="MediaWiki 1.38.4"/>
+<meta name="format-detection" content="telephone=no"/>
+<link rel="shortcut icon" href="/favicon.ico"/>
+<link rel="search" type="application/opensearchdescription+xml" href="/wiki/opensearch_desc.php" title="Microformats Wiki (en)"/>
+<link rel="EditURI" type="application/rsd+xml" href="//microformats.org/wiki/api.php?action=rsd"/>
+<link rel="alternate" type="application/atom+xml" title="Microformats Wiki Atom feed" href="/wiki/index.php?title=Special:RecentChanges&amp;feed=atom"/>
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-rel-me rootpage-rel-me skin-vector action-view skin-vector-legacy"><div id="mw-page-base" class="noprint"></div>
+<div id="mw-head-base" class="noprint"></div>
+<div id="content" class="mw-body" role="main">
+	<a id="top"></a>
+	<div id="siteNotice"></div>
+	<div class="mw-indicators">
+	</div>
+	<h1 id="firstHeading" class="firstHeading mw-first-heading">rel="me"</h1>
+	<div id="bodyContent" class="vector-body">
+		<div id="siteSub" class="noprint">From Microformats Wiki</div>
+		<div id="contentSub"></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="#searchInput">Jump to search</a>
+		<div id="mw-content-text" class="mw-body-content mw-content-ltr" lang="en" dir="ltr"><div class="mw-parser-output"><dl><dt>short URL</dt>
+<dd><a rel="nofollow" class="external free" href="http://ufs.cc/w/relme">http://ufs.cc/w/relme</a></dd></dl>
+<p><a href="/wiki/XFN" class="mw-redirect" title="XFN">XFN</a> 1.1 introduced the "me" <a href="/wiki/rel" title="rel">rel</a> value which is used to indicate profile equivalence and for <a href="/wiki/identity-consolidation" title="identity-consolidation">identity-consolidation</a>. 
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading"><input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none" /><div class="toctitle" lang="en" dir="ltr"><h2 id="mw-toc-heading">Contents</h2><span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#example"><span class="tocnumber">1</span> <span class="toctext">example</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#screencast_and_videos"><span class="tocnumber">2</span> <span class="toctext">screencast and videos</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#tutorials"><span class="tocnumber">3</span> <span class="toctext">tutorials</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#domain_verification"><span class="tocnumber">4</span> <span class="toctext">domain verification</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#rel-me-auth"><span class="tocnumber">5</span> <span class="toctext">rel-me-auth</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#implementations"><span class="tocnumber">6</span> <span class="toctext">implementations</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#past_implementations"><span class="tocnumber">6.1</span> <span class="toctext">past implementations</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#advocacy"><span class="tocnumber">6.2</span> <span class="toctext">advocacy</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9"><a href="#examples_in_the_wild"><span class="tocnumber">7</span> <span class="toctext">examples in the wild</span></a></li>
+<li class="toclevel-1 tocsection-10"><a href="#articles"><span class="tocnumber">8</span> <span class="toctext">articles</span></a></li>
+<li class="toclevel-1 tocsection-11"><a href="#see_also"><span class="tocnumber">9</span> <span class="toctext">see also</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="example">example</span></h2>
+<p><code>rel="me"</code> is used on hyperlinks from one page about a person to other pages about that same person.
+</p><p>For example, <a href="/wiki/User:Tantek" title="User:Tantek">Tantek</a>'s <a rel="nofollow" class="external text" href="https://tantek.com/">home page</a> has (markup simplified)
+</p>
+<div class="mw-highlight mw-highlight-lang-html mw-content-ltr" dir="ltr"><pre><span></span><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;https://github.com/tantek&quot;</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;me&quot;</span><span class="p">&gt;</span>@t<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+</pre></div>
+<p>And his GitHub profile itself has (markup simplified)
+</p>
+<div class="mw-highlight mw-highlight-lang-html mw-content-ltr" dir="ltr"><pre><span></span><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;https://tantek.com/&quot;</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;me&quot;</span><span class="p">&gt;</span>https://tantek.com/<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+</pre></div>
+<p>Thus establishing a bi-directional rel-me link and confirming that the two URLs represent the same person.
+</p><p>Publishers can use the <a rel="nofollow" class="external text" href="https://gmpg.org/xfn/creator">XFN creator</a> form to create rel-me hyperlinks.
+</p>
+<h2><span class="mw-headline" id="screencast_and_videos">screencast and videos</span></h2>
+<p>Watch some short videos:
+</p>
+<ul><li>David Recordon's excellent *30 second* explanation of XFN rel="me"
+<ul><li><a rel="nofollow" class="external text" href="http://web.archive.org/web/20090119054502/http://www.sixapart.com/static_news/opening_social_graph/xfn_links/xfn_links.html">Archived page</a>, though presentation requires Flash. (original: http://www.sixapart.com/static_news/opening_social_graph/xfn_links/xfn_links.html)</li></ul></li>
+<li><a rel="nofollow" class="external text" href="https://www.youtube.com/watch?v=LabCylbapuM">Brad Fitzpatrick explains rel="me" and more XFN</a>.</li>
+<li><a rel="nofollow" class="external text" href="https://connectedsocialmedia.com/423/plaxo-to-ship-online-identity-aggregator-based-on-microformats/">Joseph Smarr's whiteboard explanation</a> of rel="me" as implemented in the Plaxo online identity aggregator. (<a rel="nofollow" class="external text" href="http://web.archive.org/web/20220708203538/https://connectedsocialmedia.com/423/plaxo-to-ship-online-identity-aggregator-based-on-microformats/">archived</a>)</li></ul>
+<p>Longer:
+</p>
+<ul><li><a rel="nofollow" class="external text" href="https://www.youtube.com/watch?v=Q2WzVSVxrrI">Gavin Bell on "What is your provenance?"</a> (40 minutes) - provides a much broader discussion of the problem statement of who is a person on the Web, and <a rel="nofollow" class="external text" href="https://youtu.be/Q2WzVSVxrrI?t=450">starting at about 0:07:30</a> explains how <a href="/wiki/hCard" class="mw-redirect" title="hCard">hCard</a> + rel="me" helps solve this problem.</li></ul>
+<h2><span class="mw-headline" id="tutorials">tutorials</span></h2>
+<p><a rel="nofollow" class="external text" href="http://ungeekdapo.wordpress.com/2008/04/29/a-simple-data-portability-project-or-is-it/">A simple data portability project or is it</a> (<a rel="nofollow" class="external text" href="http://web.archive.org/web/20221110203949/https://ungeekdapo.wordpress.com/2008/04/29/a-simple-data-portability-project-or-is-it/">archived</a>) rel=me summary by Bob Ngu
+</p>
+<h2><span class="mw-headline" id="domain_verification">domain verification</span></h2>
+<p>rel=me is the standard way to check that a website belongs to a user on a 3rd party site.
+</p>
+<ul><li>read a user's website that they entered into their 3rd party site profile</li>
+<li>check for a rel=me hyperlink from their website to their 3rd party site profile</li>
+<li>if such a rel=me hyperlink is found, then the user has proven that they control that personal website sufficient to put a link back to their 3rd party site profile, and thus domain verification succeeds.</li></ul>
+<p>If you're the implementer of such a 3rd party site with user profiles, implement the above to implement a personal website domain verification feature.
+</p>
+<h2><span class="mw-headline" id="rel-me-auth">rel-me-auth</span></h2>
+<p><a href="/wiki/RelMeAuth" title="RelMeAuth">RelMeAuth</a> is a proposed open standard for using <a class="mw-selflink selflink">rel-me</a> links to profiles on <a href="/wiki/OAuth" class="mw-redirect" title="OAuth">OAuth</a> supporting services to authenticate via either those profiles or your own site.
+</p><p>In short it is a combination of <b>domain verification</b> as documented above, and OAuth authorization on the 3rd party site that the user's domain links to.
+</p><p>Read more about how to implement <a href="/wiki/RelMeAuth" title="RelMeAuth">RelMeAuth</a> and <a href="/wiki/web_sign-in" class="mw-redirect" title="web sign-in">web sign-in</a>.
+</p>
+<h2><span class="mw-headline" id="implementations">implementations</span></h2>
+<p>Notable Sites:
+</p>
+<ul><li><a rel="nofollow" class="external text" href="https://indieweb.org/Mastodon#rel-me_support">Mastodon</a> uses rel-me to support "verified" site links in a green box with a green checkmark next to the verified site.</li>
+<li><a rel="nofollow" class="external text" href="https://web.archive.org/web/20230314223136/https://hachyderm.io/@nova/109790530971147702">GitHub</a></li>
+<li><a rel="nofollow" class="external text" href="https://wikis.world/@wikipedia/110396865170645710">Wikipedia</a> via <a class="external text" href="https://www.mediawiki.org/wiki/Special:MyLanguage/Help:Extension:RealMe">MediaWiki Extension RealMe</a></li>
+<li><a rel="nofollow" class="external text" href="https://indieweb.org/rel-me#Threads">Threads</a> announced rel-me support 2023-08-09 <a rel="nofollow" class="external autonumber" href="https://www.threads.net/@mosseri/post/Cvu2eXurRbB">[1]</a></li>
+<li>...</li></ul>
+<p>Services:
+</p>
+<ul><li><b><a rel="nofollow" class="external text" href="https://indielogin.com/">IndieLogin</a></b> is perhaps the most comprehensive <a class="mw-selflink selflink">rel-me</a> implementation, using it to implement <a href="/wiki/RelMeAuth" title="RelMeAuth">RelMeAuth</a> and a superset of <a href="/wiki/web-sign-in" title="web-sign-in">web-sign-in</a> that is focused on <a rel="nofollow" class="external text" href="http://indiewebcamp.com/">independent websites</a>.</li></ul>
+<p><a href="/wiki/wordpress-plugins" title="wordpress-plugins">WordPress plugins</a>:
+</p>
+<ul><li><a rel="nofollow" class="external text" href="http://blog.maybe5.com/?page_id=94">Social Links Wordpress plugin</a> - supports rel-me links to other services</li>
+<li><a rel="nofollow" class="external text" href="http://code.l0g.in/about-me/">About Me plugin</a> (on github) - supports creation of an About Me page with rel-me links to other profiles.</li></ul>
+<h3><span class="mw-headline" id="past_implementations">past implementations</span></h3>
+<ul><li><b><a rel="nofollow" class="external text" href="https://web.archive.org/web/20170826050132/https://support.google.com/webmasters/answer/1229920">Google</a></b> used reciprocal rel=me links for domain verification, which it also used for independent site <a href="/wiki/rel-author" title="rel-author">rel-author</a> support.</li>
+<li><b><a rel="nofollow" class="external text" href="http://web.archive.org/web/20140117144124/http://blog.app.net/2013/04/29/announcing-domain-verification">App.net</a></b> implemented rel-me for officially connecting your domain to your app.net account, as well as publishing rel-me on your site.</li></ul>
+<h3><span class="mw-headline" id="advocacy">advocacy</span></h3>
+<p>Advocating rel=me support can be done a few ways, if a site has:
+</p>
+<ul><li>user profiles but no "website" field - ask them to add a "website" field and mark it up with rel=me.</li>
+<li>a "website" field on profiles - ask it to support publishing rel=me</li>
+<li>a notion of "verification" or "verified" profiles - ask it to do so via confirming reciprocal rel=me</li>
+<li>login/sign-in - ask it to support <a href="/wiki/RelMeAuth" title="RelMeAuth">RelMeAuth</a> with a <a href="/wiki/index.php?title=Web_sign-in&amp;action=edit&amp;redlink=1" class="new" title="Web sign-in (page does not exist)">Web sign-in</a> user interface.</li></ul>
+<p>Current requests:
+</p>
+<ul><li><a rel="nofollow" class="external text" href="https://github.com/liberapay/liberapay.com/issues/1034#issuecomment-461898619">Liberapay:  Associate accounts with websites #1034: rel="me" link</a> - requested 2019-02-08 by <a rel="nofollow" class="external free" href="https://github.com/Changaco">https://github.com/Changaco</a></li>
+<li>...</li></ul>
+<p><br />
+</p>
+<hr />
+<hr />
+<p><b>TO BE UPDATED</b>
+</p><p>The sections below this need to be updated (e.g. links verified, and deadlinks replaced with Internet Archive versions)
+</p>
+<hr />
+<hr />
+<h2><span class="mw-headline" id="examples_in_the_wild">examples in the wild</span></h2>
+<p>Examples of sites publishing rel=me support, e.g. on user profiles.
+</p><p>See:
+</p>
+<ul><li><a href="/wiki/hcard-xfn-supporting-friends-lists#Services_with_XFN_rel.3D.22me.22_to_multiple_external_sites" title="hcard-xfn-supporting-friends-lists">services supporting XFN rel=me</a></li></ul>
+<h2><span class="mw-headline" id="articles">articles</span></h2>
+<ul><li>2018-04-26 <a rel="nofollow" class="external text" href="https://vanderven.se/martijn/">Martijn van der Ven</a>: <a rel="nofollow" class="external text" href="https://wiki.zegnat.net/media/the-real-deal-about-rel-me.html">The Real Deal About <code>rel="me"</code></a></li></ul>
+<h2><span class="mw-headline" id="see_also">see also</span></h2>
+<ul><li><a rel="nofollow" class="external free" href="https://indieweb.org/rel-me">https://indieweb.org/rel-me</a></li>
+<li><a href="/wiki/hcard-xfn-supporting-friends-lists#Services_with_XFN_rel.3D.22me.22_to_multiple_external_sites" title="hcard-xfn-supporting-friends-lists">services that support rel="me"</a></li>
+<li><a href="/wiki/rel-me-faq" title="rel-me-faq">rel-me-faq</a></li>
+<li><a href="/wiki/xfn" title="xfn">xfn</a></li>
+<li><a href="/wiki/rel" title="rel">rel</a></li>
+<li><a href="/wiki/social_network_portability" class="mw-redirect" title="social network portability">social network portability</a></li>
+<li><a rel="nofollow" class="external text" href="https://gmpg.org/xfn/11">XFN 1.1 profile</a></li></ul>
+<!-- 
+NewPP limit report
+Cached time: 20260930111233
+Cache expiry: 86400
+Reduced expiry: false
+Complications: []
+CPU time usage: 0.021 seconds
+Real time usage: 1.100 seconds
+Preprocessor visited node count: 70/1000000
+Post‐expand include size: 0/2097152 bytes
+Template argument size: 0/2097152 bytes
+Highest expansion depth: 2/100
+Expensive parser function count: 0/100
+Unstrip recursion depth: 0/20
+Unstrip post‐expand size: 1124/5000000 bytes
+-->
+<!--
+Transclusion expansion time report (%,ms,calls,template)
+100.00%    0.000      1 -total
+-->
+
+<!-- Saved in parser cache with key wiki:pcache:idhash:4687-0!canonical and timestamp 20260930111232 and revision id 70656. Serialized with JSON.
+ -->
+</div>
+<div class="printfooter">Retrieved from "<a dir="ltr" href="http://microformats.org/wiki/index.php?title=rel-me&amp;oldid=70656">http://microformats.org/wiki/index.php?title=rel-me&amp;oldid=70656</a>"</div></div>
+		<div id="catlinks" class="catlinks catlinks-allhidden" data-mw="interface"></div>
+	</div>
+</div>
+
+<div id="mw-navigation">
+	<h2>Navigation menu</h2>
+	<div id="mw-head">
+		
+<nav id="p-personal" class="mw-portlet mw-portlet-personal vector-user-menu-legacy vector-menu" aria-labelledby="p-personal-label" role="navigation" 
+	 >
+	<label id="p-personal-label" aria-label="" class="vector-menu-heading">
+		<span class="vector-menu-heading-label">Personal tools</span>
+	</label>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="pt-login" class="mw-list-item"><a href="/wiki/index.php?title=Special:UserLogin&amp;returnto=rel-me" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o"><span>Log in</span></a></li></ul>
+		
+	</div>
+</nav>
+
+		<div id="left-navigation">
+			
+<nav id="p-namespaces" class="mw-portlet mw-portlet-namespaces vector-menu vector-menu-tabs" aria-labelledby="p-namespaces-label" role="navigation" 
+	 >
+	<label id="p-namespaces-label" aria-label="" class="vector-menu-heading">
+		<span class="vector-menu-heading-label">Namespaces</span>
+	</label>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="ca-nstab-main" class="selected mw-list-item"><a href="/wiki/rel-me" title="View the content page [c]" accesskey="c"><span>Page</span></a></li><li id="ca-talk" class="new mw-list-item"><a href="/wiki/index.php?title=Talk:rel-me&amp;action=edit&amp;redlink=1" rel="discussion" title="Discussion about the content page (page does not exist) [t]" accesskey="t"><span>Discussion</span></a></li></ul>
+		
+	</div>
+</nav>
+
+			
+<nav id="p-variants" class="mw-portlet mw-portlet-variants emptyPortlet vector-menu-dropdown-noicon vector-menu vector-menu-dropdown" aria-labelledby="p-variants-label" role="navigation" 
+	 >
+	<input type="checkbox"
+		id="p-variants-checkbox"
+		role="button"
+		aria-haspopup="true"
+		data-event-name="ui.dropdown-p-variants"
+		class="vector-menu-checkbox" aria-labelledby="p-variants-label" />
+	<label id="p-variants-label" aria-label="Change language variant" class="vector-menu-heading">
+		<span class="vector-menu-heading-label">English</span>
+			<span class="vector-menu-checkbox-expanded">expanded</span>
+			<span class="vector-menu-checkbox-collapsed">collapsed</span>
+	</label>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"></ul>
+		
+	</div>
+</nav>
+
+		</div>
+		<div id="right-navigation">
+			
+<nav id="p-views" class="mw-portlet mw-portlet-views vector-menu vector-menu-tabs" aria-labelledby="p-views-label" role="navigation" 
+	 >
+	<label id="p-views-label" aria-label="" class="vector-menu-heading">
+		<span class="vector-menu-heading-label">Views</span>
+	</label>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="ca-view" class="selected mw-list-item"><a href="/wiki/rel-me"><span>Read</span></a></li><li id="ca-viewsource" class="mw-list-item"><a href="/wiki/index.php?title=rel-me&amp;action=edit" title="This page is protected.&#10;You can view its source [e]" accesskey="e"><span>View source</span></a></li><li id="ca-history" class="mw-list-item"><a href="/wiki/index.php?title=rel-me&amp;action=history" title="Past revisions of this page [h]" accesskey="h"><span>View history</span></a></li></ul>
+		
+	</div>
+</nav>
+
+			
+<nav id="p-cactions" class="mw-portlet mw-portlet-cactions emptyPortlet vector-menu-dropdown-noicon vector-menu vector-menu-dropdown" aria-labelledby="p-cactions-label" role="navigation"  title="More options"
+	 >
+	<input type="checkbox"
+		id="p-cactions-checkbox"
+		role="button"
+		aria-haspopup="true"
+		data-event-name="ui.dropdown-p-cactions"
+		class="vector-menu-checkbox" aria-labelledby="p-cactions-label" />
+	<label id="p-cactions-label" aria-label="" class="vector-menu-heading">
+		<span class="vector-menu-heading-label">More</span>
+			<span class="vector-menu-checkbox-expanded">expanded</span>
+			<span class="vector-menu-checkbox-collapsed">collapsed</span>
+	</label>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"></ul>
+		
+	</div>
+</nav>
+
+			
+<div id="p-search" role="search" class="vector-search-box-vue  vector-search-box-show-thumbnail vector-search-box-auto-expand-width vector-search-box">
+	<div>
+			<h3 >
+				<label for="searchInput">Search</label>
+			</h3>
+		<form action="/wiki/index.php" id="searchform"
+			class="vector-search-box-form">
+			<div id="simpleSearch"
+				class="vector-search-box-inner"
+				 data-search-loc="header-navigation">
+				<input class="vector-search-box-input"
+					 type="search" name="search" placeholder="Search Microformats Wiki" aria-label="Search Microformats Wiki" autocapitalize="none" title="Search Microformats Wiki [f]" accesskey="f" id="searchInput"
+				/>
+				<input type="hidden" name="title" value="Special:Search"/>
+				<input id="mw-searchButton"
+					 class="searchButton mw-fallbackSearchButton" type="submit" name="fulltext" title="Search the pages for this text" value="Search" />
+				<input id="searchButton"
+					 class="searchButton" type="submit" name="go" title="Go to a page with this exact name if it exists" value="Go" />
+			</div>
+		</form>
+	</div>
+</div>
+
+		</div>
+	</div>
+	
+
+<div id="mw-panel">
+	<div id="p-logo" role="banner">
+		<a class="mw-wiki-logo" href="/wiki/Main_Page"
+			title="Visit the main page"></a>
+	</div>
+	
+<nav id="p-Microformats_Wiki" class="mw-portlet mw-portlet-Microformats_Wiki vector-menu vector-menu-portal portal" aria-labelledby="p-Microformats_Wiki-label" role="navigation" 
+	 >
+	<label id="p-Microformats_Wiki-label" aria-label="" class="vector-menu-heading">
+		<span class="vector-menu-heading-label">Microformats Wiki</span>
+	</label>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="n-Front-Page" class="mw-list-item"><a href="/wiki/Main_Page"><span>Front Page</span></a></li><li id="n-recentchanges" class="mw-list-item"><a href="/wiki/Special:RecentChanges" icon="recentChanges" title="A list of recent changes in the wiki [r]" accesskey="r"><span>Recent changes</span></a></li></ul>
+		
+	</div>
+</nav>
+
+	
+<nav id="p-Microformats" class="mw-portlet mw-portlet-Microformats vector-menu vector-menu-portal portal" aria-labelledby="p-Microformats-label" role="navigation" 
+	 >
+	<label id="p-Microformats-label" aria-label="" class="vector-menu-heading">
+		<span class="vector-menu-heading-label">Microformats</span>
+	</label>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="n-Blog" class="mw-list-item"><a href="http://microformats.org" rel="nofollow"><span>Blog</span></a></li><li id="n-Events" class="mw-list-item"><a href="/wiki/Microformats_Wiki:Current_events"><span>Events</span></a></li><li id="n-About" class="mw-list-item"><a href="/wiki/About"><span>About</span></a></li></ul>
+		
+	</div>
+</nav>
+
+<nav id="p-tb" class="mw-portlet mw-portlet-tb vector-menu vector-menu-portal portal" aria-labelledby="p-tb-label" role="navigation" 
+	 >
+	<label id="p-tb-label" aria-label="" class="vector-menu-heading">
+		<span class="vector-menu-heading-label">Tools</span>
+	</label>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list"><li id="t-whatlinkshere" class="mw-list-item"><a href="/wiki/Special:WhatLinksHere/rel-me" title="A list of all wiki pages that link here [j]" accesskey="j"><span>What links here</span></a></li><li id="t-recentchangeslinked" class="mw-list-item"><a href="/wiki/Special:RecentChangesLinked/rel-me" rel="nofollow" title="Recent changes in pages linked from this page [k]" accesskey="k"><span>Related changes</span></a></li><li id="t-specialpages" class="mw-list-item"><a href="/wiki/Special:SpecialPages" title="A list of all special pages [q]" accesskey="q"><span>Special pages</span></a></li><li id="t-print" class="mw-list-item"><a href="javascript:print();" rel="alternate" title="Printable version of this page [p]" accesskey="p"><span>Printable version</span></a></li><li id="t-permalink" class="mw-list-item"><a href="/wiki/index.php?title=rel-me&amp;oldid=70656" title="Permanent link to this revision of the page"><span>Permanent link</span></a></li><li id="t-info" class="mw-list-item"><a href="/wiki/index.php?title=rel-me&amp;action=info" title="More information about this page"><span>Page information</span></a></li></ul>
+		
+	</div>
+</nav>
+
+	
+</div>
+
+</div>
+
+<footer id="footer" class="mw-footer" role="contentinfo" >
+	<ul id="footer-info">
+	<li id="footer-info-lastmod"> This page was last edited on 11 August 2023, at 19:51.</li>
+</ul>
+
+	<ul id="footer-places">
+	<li id="footer-places-privacy"><a href="/wiki/Microformats_Wiki:Privacy_policy" title="Microformats Wiki:Privacy policy">Privacy policy</a></li>
+	<li id="footer-places-about"><a href="/wiki/Microformats_Wiki:About" title="Microformats Wiki:About">About Microformats Wiki</a></li>
+	<li id="footer-places-disclaimer"><a href="/wiki/Microformats_Wiki:General_disclaimer" title="Microformats Wiki:General disclaimer">Disclaimers</a></li>
+</ul>
+
+	<ul id="footer-icons" class="noprint">
+	<li id="footer-poweredbyico"><a href="https://www.mediawiki.org/"><img src="/wiki/resources/assets/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" srcset="/wiki/resources/assets/poweredby_mediawiki_132x47.png 1.5x, /wiki/resources/assets/poweredby_mediawiki_176x62.png 2x" width="88" height="31" loading="lazy"/></a></li>
+</ul>
+
+</footer>
+
+<script src="https://www.googletagmanager.com/gtag/js?id=UA-1889385-1" async=""></script><script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'UA-1889385-1');
+</script>
+
+<script>(RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgPageParseReport":{"limitreport":{"cputime":"0.021","walltime":"1.100","ppvisitednodes":{"value":70,"limit":1000000},"postexpandincludesize":{"value":0,"limit":2097152},"templateargumentsize":{"value":0,"limit":2097152},"expansiondepth":{"value":2,"limit":100},"expensivefunctioncount":{"value":0,"limit":100},"unstrip-depth":{"value":0,"limit":20},"unstrip-size":{"value":1124,"limit":5000000},"timingprofile":["100.00%    0.000      1 -total"]},"cachereport":{"timestamp":"20260930111233","ttl":86400,"transientcontent":false}}});mw.config.set({"wgBackendResponseTime":167});});</script>
+</body>
+</html>

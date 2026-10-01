@@ -1,0 +1,347 @@
+[
+  {
+    "offering": "nip39",
+    "title": "NIP-39 External Identities in Profiles",
+    "url": "https://raw.githubusercontent.com/nostr-protocol/nips/master/39.md"
+  },
+  {
+    "offering": "nip05",
+    "title": "NIP-05 Mapping Nostr keys to DNS-based internet identifiers",
+    "url": "https://raw.githubusercontent.com/nostr-protocol/nips/master/05.md"
+  },
+  {
+    "offering": "nip39",
+    "title": "NIP-01 Basic protocol flow",
+    "url": "https://raw.githubusercontent.com/nostr-protocol/nips/master/01.md"
+  },
+  {
+    "offering": "nip39",
+    "title": "NIP-26 Delegated Event Signing",
+    "url": "https://raw.githubusercontent.com/nostr-protocol/nips/master/26.md"
+  },
+  {
+    "offering": "atproto-handle",
+    "title": "did:plc method specification",
+    "url": "https://raw.githubusercontent.com/did-method-plc/did-method-plc/main/README.md"
+  },
+  {
+    "offering": "ucan",
+    "title": "UCAN specification",
+    "url": "https://raw.githubusercontent.com/ucan-wg/spec/main/README.md"
+  },
+  {
+    "offering": "ucan",
+    "title": "UCAN Delegation",
+    "url": "https://raw.githubusercontent.com/ucan-wg/delegation/main/README.md"
+  },
+  {
+    "offering": "ucan",
+    "title": "UCAN Invocation",
+    "url": "https://raw.githubusercontent.com/ucan-wg/invocation/main/README.md"
+  },
+  {
+    "offering": "ucan",
+    "title": "UCAN Revocation",
+    "url": "https://raw.githubusercontent.com/ucan-wg/revocation/main/README.md"
+  },
+  {
+    "offering": "ucan",
+    "title": "UCAN Promise",
+    "url": "https://raw.githubusercontent.com/ucan-wg/promise/main/README.md"
+  },
+  {
+    "offering": "recap",
+    "title": "ERC-5573 SIWE ReCap",
+    "url": "https://raw.githubusercontent.com/ethereum/ERCs/master/ERCS/erc-5573.md"
+  },
+  {
+    "offering": "recap",
+    "title": "ERC-4361 Sign-In with Ethereum",
+    "url": "https://raw.githubusercontent.com/ethereum/ERCs/master/ERCS/erc-4361.md"
+  },
+  {
+    "offering": "indieweb",
+    "title": "IndieAuth",
+    "url": "https://indieauth.spec.indieweb.org/"
+  },
+  {
+    "offering": "indieweb",
+    "title": "rel-me (microformats wiki)",
+    "url": "https://microformats.org/wiki/rel-me"
+  },
+  {
+    "offering": "dif-wellknown",
+    "title": "DIF Well Known DID Configuration",
+    "url": "https://identity.foundation/.well-known/resources/did-configuration/"
+  },
+  {
+    "offering": "did-web",
+    "title": "did:web method specification",
+    "url": "https://w3c-ccg.github.io/did-method-web/"
+  },
+  {
+    "offering": "farcaster",
+    "title": "Farcaster protocol specification",
+    "url": "https://raw.githubusercontent.com/farcasterxyz/protocol/main/docs/SPECIFICATION.md"
+  },
+  {
+    "offering": "pkarr",
+    "title": "Pkarr README",
+    "url": "https://raw.githubusercontent.com/pubky/pkarr/main/README.md"
+  },
+  {
+    "offering": "_common",
+    "title": "W3C Decentralized Identifiers (DIDs) v1.0",
+    "url": "https://www.w3.org/TR/did-core/"
+  },
+  {
+    "offering": "_common",
+    "title": "W3C Verifiable Credentials Data Model v2.0",
+    "url": "https://www.w3.org/TR/vc-data-model-2.0/"
+  },
+  {
+    "offering": "ucan",
+    "title": "did:key method",
+    "url": "https://w3c-ccg.github.io/did-key-spec/"
+  },
+  {
+    "offering": "atproto-handle",
+    "title": "AT Protocol Handle",
+    "url": "https://atproto.com/specs/handle"
+  },
+  {
+    "offering": "atproto-handle",
+    "title": "AT Protocol DID",
+    "url": "https://atproto.com/specs/did"
+  },
+  {
+    "offering": "atproto-handle",
+    "title": "AT Protocol Cryptography",
+    "url": "https://atproto.com/specs/cryptography"
+  },
+  {
+    "offering": "atproto-handle",
+    "title": "AT Protocol Account Migration",
+    "url": "https://atproto.com/guides/account-migration"
+  },
+  {
+    "offering": "keyoxide",
+    "title": "Ariadne Identity Specification core v0",
+    "url": "https://ariadne.id/core/0/"
+  },
+  {
+    "offering": "keyoxide",
+    "title": "Ariadne Signature Profile v0",
+    "url": "https://ariadne.id/related/ariadne-signature-profile-0/"
+  },
+  {
+    "offering": "keyoxide",
+    "title": "Keyoxide service providers",
+    "url": "https://docs.keyoxide.org/service-providers/"
+  },
+  {
+    "offering": "atproto-handle",
+    "title": "AT Protocol Repository",
+    "url": "https://atproto.com/specs/repository"
+  },
+  {
+    "offering": "atproto-handle",
+    "title": "did:plc specification (web.plc.directory)",
+    "url": "https://web.plc.directory/spec/v0.1/did-plc"
+  },
+  {
+    "offering": "atproto-handle",
+    "title": "Creating an Independent PLC Directory Organization",
+    "url": "https://atproto.com/blog/plc-directory-org"
+  },
+  {
+    "offering": "atproto-handle",
+    "title": "PLC Read Replicas",
+    "url": "https://atproto.com/blog/plc-replicas"
+  },
+  {
+    "offering": "atproto-handle",
+    "title": "Kicking off the ATP Working Group at the IETF",
+    "url": "https://atproto.com/blog/kicking-off-the-atp-working-group"
+  },
+  {
+    "offering": "atproto-handle",
+    "title": "First steps of the PLC organization",
+    "url": "https://blog.plcred.org/3mwlphq42d227"
+  },
+  {
+    "offering": "bsky-verification",
+    "title": "app.bsky.graph.verification lexicon",
+    "url": "https://raw.githubusercontent.com/bluesky-social/atproto/main/lexicons/app/bsky/graph/verification.json"
+  },
+  {
+    "offering": "bsky-verification",
+    "title": "app.bsky.actor.defs lexicon",
+    "url": "https://raw.githubusercontent.com/bluesky-social/atproto/main/lexicons/app/bsky/actor/defs.json"
+  },
+  {
+    "offering": "bsky-verification",
+    "title": "A New Form of Verification on Bluesky",
+    "url": "https://bsky.social/about/blog/04-21-2025-verification"
+  },
+  {
+    "offering": "keybase",
+    "title": "Keybase Book: Server security",
+    "url": "https://book.keybase.io/docs/server"
+  },
+  {
+    "offering": "keybase",
+    "title": "Keybase Book: Stellar Merkle root",
+    "url": "https://book.keybase.io/docs/server/stellar"
+  },
+  {
+    "offering": "keybase",
+    "title": "Keybase Book: account",
+    "url": "https://book.keybase.io/account"
+  },
+  {
+    "offering": "keybase",
+    "title": "keybase client expire_times.go",
+    "url": "https://raw.githubusercontent.com/keybase/client/master/go/libkb/expire_times.go"
+  },
+  {
+    "offering": "farcaster",
+    "title": "FIP-19 Social Attestations",
+    "url": "https://github.com/farcasterxyz/protocol/discussions/199"
+  },
+  {
+    "offering": "farcaster",
+    "title": "FIP Snapchain",
+    "url": "https://github.com/farcasterxyz/protocol/discussions/207"
+  },
+  {
+    "offering": "farcaster",
+    "title": "Snapchain message.proto",
+    "url": "https://raw.githubusercontent.com/farcasterxyz/snapchain/main/proto/definitions/message.proto"
+  },
+  {
+    "offering": "pkarr",
+    "title": "Pkarr base design",
+    "url": "https://raw.githubusercontent.com/pubky/pkarr/main/design/base.md"
+  },
+  {
+    "offering": "pkarr",
+    "title": "Pkarr endpoints design",
+    "url": "https://raw.githubusercontent.com/pubky/pkarr/main/design/endpoints.md"
+  },
+  {
+    "offering": "pkarr",
+    "title": "Pkarr relays design",
+    "url": "https://raw.githubusercontent.com/pubky/pkarr/main/design/relays.md"
+  },
+  {
+    "offering": "storacha-mailto",
+    "title": "did:mailto spec",
+    "url": "https://raw.githubusercontent.com/storacha/specs/main/did-mailto.md"
+  },
+  {
+    "offering": "storacha-mailto",
+    "title": "w3-account spec",
+    "url": "https://raw.githubusercontent.com/storacha/specs/main/w3-account.md"
+  },
+  {
+    "offering": "storacha-mailto",
+    "title": "w3-session spec",
+    "url": "https://raw.githubusercontent.com/storacha/specs/main/w3-session.md"
+  },
+  {
+    "offering": "storacha-mailto",
+    "title": "w3-ucan spec",
+    "url": "https://raw.githubusercontent.com/storacha/specs/main/w3-ucan.md"
+  },
+  {
+    "offering": "indieweb",
+    "title": "IndieAuth W3C Working Group Note",
+    "url": "https://www.w3.org/TR/indieauth/"
+  },
+  {
+    "offering": "indieweb",
+    "title": "Mastodon profile link verification",
+    "url": "https://docs.joinmastodon.org/user/profile/"
+  },
+  {
+    "offering": "indieweb",
+    "title": "Mastodon VerifyLinkService",
+    "url": "https://raw.githubusercontent.com/mastodon/mastodon/main/app/services/verify_link_service.rb"
+  },
+  {
+    "offering": "pkarr",
+    "title": "DID DHT Method Specification",
+    "url": "https://raw.githubusercontent.com/TBD54566975/did-dht/main/spec/spec.md"
+  },
+  {
+    "offering": "sigstore",
+    "title": "Fulcio: how certificate issuing works",
+    "url": "https://raw.githubusercontent.com/sigstore/fulcio/main/docs/how-certificate-issuing-works.md"
+  },
+  {
+    "offering": "sigstore",
+    "title": "Fulcio certificate specification",
+    "url": "https://raw.githubusercontent.com/sigstore/fulcio/main/docs/certificate-specification.md"
+  },
+  {
+    "offering": "sigstore",
+    "title": "Fulcio security model",
+    "url": "https://raw.githubusercontent.com/sigstore/fulcio/main/docs/security-model.md"
+  },
+  {
+    "offering": "sigstore",
+    "title": "Sigstore public deployment spec",
+    "url": "https://raw.githubusercontent.com/sigstore/architecture-docs/main/sigstore-public-deployment-spec.md"
+  },
+  {
+    "offering": "sigstore",
+    "title": "Sigstore client spec",
+    "url": "https://raw.githubusercontent.com/sigstore/architecture-docs/main/client-spec.md"
+  },
+  {
+    "offering": "sigstore",
+    "title": "Sigstore docs: OIDC in Fulcio",
+    "url": "https://docs.sigstore.dev/certificate_authority/oidc-in-fulcio/"
+  },
+  {
+    "offering": "sigstore",
+    "title": "Rekor v2 GA",
+    "url": "https://blog.sigstore.dev/rekor-v2-ga/"
+  },
+  {
+    "offering": "passport",
+    "title": "Human Passport: key terms",
+    "url": "https://docs.passport.human.tech/overview/key-terms"
+  },
+  {
+    "offering": "passport",
+    "title": "Human Passport: expirations",
+    "url": "https://docs.passport.human.tech/building-with-passport/stamps/major-concepts/expirations"
+  },
+  {
+    "offering": "passport",
+    "title": "passport identity credentials.ts",
+    "url": "https://raw.githubusercontent.com/passportxyz/passport/main/identity/src/credentials.ts"
+  },
+  {
+    "offering": "passport",
+    "title": "passport identity issuers.ts",
+    "url": "https://raw.githubusercontent.com/passportxyz/passport/main/identity/src/issuers.ts"
+  },
+  {
+    "offering": "passport",
+    "title": "passport eas-proxy onchain data",
+    "url": "https://raw.githubusercontent.com/passportxyz/eas-proxy/main/docs/00-onchain-data.md"
+  },
+  {
+    "offering": "dif-wellknown",
+    "title": "DIF Well-Known DID Configuration v1.0",
+    "url": "https://identity.foundation/well-known-did-configuration/"
+  },
+  {
+    "offering": "did-web",
+    "title": "W3C DID Methods WG charter draft",
+    "url": "https://w3c.github.io/did-methods-wg-charter/2025/did-methods-wg.html"
+  }
+]

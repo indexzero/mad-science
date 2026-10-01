@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Keybase Book: Learn about your Keybase account</title>
+    <meta name="description" content="Keybase accounts are protected by end-to-end encryption. Devices, proofs, and following help keep it secure. Learn how." />
+    <meta name="robots" content="index,follow" />
+    <link rel="stylesheet" href="/static/css/style.css" />
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/static/favicon/site.webmanifest">
+    <link rel="mask-icon" href="/static/favicon/safari-pinned-tab.svg" color="#030303">
+    <meta name="msapplication-TileColor" content="#f0f0f0">
+    <meta name="theme-color" content="#f0f0f0">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@KeybaseIO">
+    <meta name="twitter:creator" content="@KeybaseIO">
+    <meta name="twitter:title" content="Keybase Book">
+    <meta name="twitter:description" content="Use Keybase for end-to-end encrypted chat messaging, file sharing, and team collaboration. Get the free app for iOS, Mac, Android, Windows, and Linux.">
+    <meta name="twitter:image" content="/static/img/twitter-card.jpg">
+
+    <script>
+    function url_for(filename) {
+        const prefix = "/static/";
+        const STATIC_ASSET_MAP = {};
+
+        if (STATIC_ASSET_MAP.hasOwnProperty(filename)) {
+            return prefix + STATIC_ASSET_MAP[filename] + "/" + filename;
+        }
+
+        return prefix + filename;
+    }
+    </script>
+  </head>
+  <body>
+
+    <div class="app">
+      <nav class="site-nav">
+            <a class="site-nav__brand" href="/">Keybase&nbsp;<span>Book</span></a>
+            <a class="site-nav__jump" href="https://keybase.io">Go to keybase.io</a>
+        </nav>
+      <main class="main">
+        
+    <div class="content">
+        
+        <div class="side-nav">
+        <nav class="chapter-nav">
+            <p class="chapter-nav__label">Chapters</p>
+            <ol class="chapter-nav__list">
+                    
+                    <li class="chapter-nav__list-item chapter-nav__list-item--current">
+                        <a class="chapter-nav__link chapter-nav__link--active" href="/account">01 — Your Account</a>
+                        
+                        <ol class="chapter-nav__list">
+                            <li class="chapter-nav__list-item">
+                                <a href="#overview" class="chapter-nav__link">Your Account</a>
+                            </li>
+                            
+                                <li class="chapter-nav__list-item">
+                                    <a href="#usernames" class="chapter-nav__link">Usernames</a>
+                                </li>
+                            
+                                <li class="chapter-nav__list-item">
+                                    <a href="#devices" class="chapter-nav__link">Devices</a>
+                                </li>
+                            
+                                <li class="chapter-nav__list-item">
+                                    <a href="#proofs" class="chapter-nav__link">Proofs</a>
+                                </li>
+                            
+                                <li class="chapter-nav__list-item">
+                                    <a href="#following" class="chapter-nav__link">Following</a>
+                                </li>
+                            
+                        </ol>
+                        
+                    </li>
+                
+                    
+                    <li class="chapter-nav__list-item ">
+                        <a class="chapter-nav__link" href="/chat">02 — Chat</a>
+                        
+                    </li>
+                
+                    
+                    <li class="chapter-nav__list-item ">
+                        <a class="chapter-nav__link" href="/files">03 — Files</a>
+                        
+                    </li>
+                
+                    
+                    <li class="chapter-nav__list-item ">
+                        <a class="chapter-nav__link" href="/teams">04 — Teams</a>
+                        
+                    </li>
+                
+                    
+                    <li class="chapter-nav__list-item ">
+                        <a class="chapter-nav__link" href="/sites">05 — Sites</a>
+                        
+                    </li>
+                
+                    
+                    <li class="chapter-nav__list-item ">
+                        <a class="chapter-nav__link" href="/wallet">06 — Wallet</a>
+                        
+                    </li>
+                
+                    
+                    <li class="chapter-nav__list-item ">
+                        <a class="chapter-nav__link" href="/git">07 — Git</a>
+                        
+                    </li>
+                
+                    
+                    <li class="chapter-nav__list-item ">
+                        <a class="chapter-nav__link" href="/tools">08 — Tools</a>
+                        
+                    </li>
+                
+            </ol>
+            <p class="chapter-nav__label">Appendices</p>
+            <ol class="chapter-nav__list">
+                    
+                    <li class="chapter-nav__list-item">
+                        <a class="chapter-nav__link" href="/privacy">A — Privacy</a>
+                    </li>
+                
+                    
+                    <li class="chapter-nav__list-item">
+                        <a class="chapter-nav__link" href="/security">B — Security</a>
+                    </li>
+                
+                    
+                    <li class="chapter-nav__list-item">
+                        <a class="chapter-nav__link" href="/guides">C — Guides</a>
+                    </li>
+                
+                    
+                    <li class="chapter-nav__list-item">
+                        <a class="chapter-nav__link" href="/docs">D — Docs</a>
+                    </li>
+                
+            </ol>
+        </nav>
+    </div>
+        
+        <div class="content__inner">
+            <section id="overview" class="content__section">
+                <h1 class="compose">Your Keybase Account</h1>  <div class="compose-highlight" data-text="tl;dr">Your Keybase account is secured by public-key cryptography. Installing Keybase on your computer or device, adding more devices and paper keys, adding proofs, and following all make your Keybase account more trustworthy and secure.</div>  <figure role="figure" aria-label="Your username, devices, proofs, and followers are visible on your Keybase profile."><img src="/static/img/account-profile.png" alt="" /><figcaption>Your username, devices, proofs, and followers are visible on your Keybase profile.</figcaption></figure>  <p class="compose">Your Keybase account and everything you store or share through it in <a class="compose" href="/chat">Chat</a>, <a class="compose" href="files">Files</a>, <a class="compose" href="/teams">Teams</a>, <a class="compose" href="/sites">Sites</a>, <a class="compose" href="/wallet">Wallet</a>, and <a class="compose" href="/git">Git</a> are all protected with encryption.</p>  <p class="compose">When you create your Keybase account, it’s linked to your <a class="compose" href="/account#devices">devices</a>. You further protect your account with <a class="compose" href="/account#proofs">proofs</a> and <a class="compose" href="/account#following">following</a>. All of these actions are backed by public-key cryptography.</p>  <p class="compose">You can learn more about how public-key cryptography works in <a class="compose" href="/security">Security</a>. The gist is that, thanks to public-key cryptography your contacts can be sure your Keybase account belongs to you and that only you can access it. No phishing, spoofing, or scamming around here.</p>  <h4 class="compose"><a class="compose-anchor" href="#devices-proofs-and-following-help-make-your-keybase-account-trustworthy-and-secure" name="devices-proofs-and-following-help-make-your-keybase-account-trustworthy-and-secure"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>Devices, proofs, and following help make your Keybase account trustworthy and secure.</h4>  <p class="compose">Lots of apps only require a username and password to create and protect an account. Your username theoretically lets others know that an account belongs to you. And your password theoretically allows only you to access it.</p>  <p class="compose">But with just a username and password, accounts can be hacked, phished, and otherwise compromised. They’re not totally trustworthy and secure. In best-case scenarios, you can use two-factor authentication for more security but it’s still not perfect.</p>  <p class="compose">Your Keybase account is trustworthy and secure because—instead of being protected by just a password—it’s cryptographically linked to your <a class="compose" href="account#devices">devices</a>. Your account can only be accessed through your devices. So long as only you have access to your devices, only you can access your Keybase account.</p>  <p class="compose">You do create a username to help let others know that an account belongs to you. But you further confirm who you are with <a class="compose" href="account#proofs">proofs</a>, which link your Keybase account to your other online accounts.</p>  <p class="compose"><a class="compose" href="account#following">Following</a> provides a public record that also confirms that you are who you say you are. Adding proofs and following are both public actions. And, as the name “proof” implies, these actions are also provable. Your contacts don’t have to trust that you’re you on Keybase just because you say you are; they can see for themselves.</p>  <p class="compose">Anyone can check your proofs; Keybase regularly does as well. If there are any changes to your devices or proofs—indicating that your account has possibly been hacked—your followers are notified before they interact with you.</p>  <h2 class="compose"><a class="compose-anchor" href="#usernames" name="usernames"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>Usernames</h2>  <div class="compose-highlight" data-text="tip">Before you create your account, give your username some thought. Everyone on the internet can see it.</div>  <h4 class="compose"><a class="compose-anchor" href="#your-username-is-public-and-cant-be-changed" name="your-username-is-public-and-cant-be-changed"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>Your username is public and can’t be changed.</h4>  <p class="compose">Choosing your username is the first action of many that you take to help establish your account on Keybase. These actions are part of a public record that helps secure your account and confirm that you are who you say you are. Changing your username has the potential to undo this.</p>  <p class="compose">We know there are lots of reasons why people may need to change their usernames. And there are solutions we could implement to help people do so. But they’re complicated and, unfortunately, not something we can work on right now. In the meantime, you can learn more about this issue <a class="compose" href="https://github.com/keybase/keybase-issues/issues/2842#issuecomment-283706335">on GitHub</a>.</p>  <h4 class="compose"><a class="compose-anchor" href="#usernames-must-be-lowercase-letters-numbers-and-underscores-only-with-no-spaces" name="usernames-must-be-lowercase-letters-numbers-and-underscores-only-with-no-spaces"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>Usernames must be lowercase letters, numbers and underscores only, with no spaces.</h4>  <p class="compose">This format helps keep Keybase accounts secure because it makes it harder for tricksters to use visually similar names to impersonate people.</p>  <p class="compose">For example, if uppercase letters were allowed someone could create the account Isteele (with a capital “i”) and pretend to be lsteele (with a lowercase “L”). Spaces are not allowed for the same reason. The difference between “karen m” and “karen&nbsp;&nbsp;m” is too subtle for people to notice the difference.</p>  <h4 class="compose"><a class="compose-anchor" href="#deleting-a-username-and-account-is-permanent" name="deleting-a-username-and-account-is-permanent"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>Deleting a username and account is permanent.</h4>  <p class="compose">If you’ve gone to the trouble of deleting your account, we don’t want to give that username to anyone who asks for it. If undeleting were allowed, it would be hard to be sure that the person undeleting is the same person who deleted the account.</p>  <h2 class="compose"><a class="compose-anchor" href="#devices" name="devices"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>Devices</h2>  <div class="compose-highlight" data-text="tl;dr">You can think of your devices and paper keys as keys to your account. You can only access your account through your devices. Paper keys provide backup access to your account in case you lose your devices.</div>  <div class="compose-highlight" data-text="tip">Add multiple devices and paper keys to your account to ensure its security.</div>  <p class="compose">When you create your Keybase account, Keybase creates a key pair for your account and the device—your phone or computer—that you sign up with.</p>  <figure role="figure" aria-label="Your Keybase account is linked to the device you sign up on."><img src="/static/img/kb-one-device.png" alt="" /><figcaption>Your Keybase account is linked to the device you sign up on.</figcaption></figure>  <p class="compose">The public key is uploaded to Keybase’s servers and is publicly available. The private key lives only on your device. This means that no one else can access your account—or anything shared through it—without having your device (not even Keybase).</p>  <p class="compose">You can and should add more devices and paper keys to your account so you don’t lose access to it if you lose a device. A <strong class="compose">paper key</strong> is a long string of randomly-generated words that’s linked to your account the same way a device is.</p>  <figure role="figure" aria-label="Adding more devices and paper keys helps make your account more secure."><img src="/static/img/kb-three-devices.png" alt="" /><figcaption>Adding more devices and paper keys helps make your account more secure.</figcaption></figure>  <p class="compose">When you add a new device or paper key, your existing device vouches for the new one. All your devices and paper keys are cryptographically linked. And each additional device or paper key you add to your account also gets a key pair.</p>  <p class="compose">So, no one can compromise your account without having all of your devices and paper keys. This guarantees that only you have access to your account.</p>  <h3 class="compose"><a class="compose-anchor" href="#adding-devices" name="adding-devices"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>Adding devices</h3>  <p class="compose">Install Keybase on your other devices so that you don’t lose access to your account if you lose access to a device.</p>  <h4 class="compose"><a class="compose-anchor" href="#to-install-keybase-on-additional-devices-you-need" name="to-install-keybase-on-additional-devices-you-need"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>To install Keybase on additional devices, you need:</h4>  <ul class="compose"> <li class="compose">your Keybase username</li> <li class="compose">the device you signed up with (you’ll use a QR code to vouch for the new device)</li> <li class="compose">a name for the new device</li>  </ul>  <p class="compose">Download the Keybase app on any device using <a class="compose" href="https://apps.apple.com/us/app/keybase-crypto-for-everyone/id1044461770">iOS</a>, <a class="compose" href="https://keybase.io/docs/the_app/install_macos">MacOS</a>, <a class="compose" href="https://play.google.com/store/apps/details?id=io.keybase.ossifrage">Android</a>, <a class="compose" href="https://keybase.io/docs/the_app/install_windows">Windows</a>, or <a class="compose" href="https://keybase.io/docs/the_app/install_linux">Linux</a>.</p>  <h4 class="compose"><a class="compose-anchor" href="#device-names-are-public-and-cant-be-changed" name="device-names-are-public-and-cant-be-changed"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>Device names are public and can’t be changed.</h4>  <p class="compose">When you add a device, you’ll have to name it. Device names are visible to everyone on the internet and can’t be changed. Choose carefully.</p>  <p class="compose">Like your username, devices names are part of a public record that helps secure your account and confirm that you are who you say you are. Changing device names has the potential to undo this.</p>  <h3 class="compose"><a class="compose-anchor" href="#revoking-devices" name="revoking-devices"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>Revoking devices</h3>  <p class="compose">If you lose or replace a device, you should revoke it. Revoking removes the device from your account.</p>  <p class="compose">Revoking lost or old devices helps ensure that only you can access your account. Your account cannot be accessed through revoked devices.</p>  <p class="compose">Revoked devices still publicly appear on your account but are marked as revoked.</p>  <h3 class="compose"><a class="compose-anchor" href="#adding-paper-keys" name="adding-paper-keys"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>Adding paper keys</h3>  <p class="compose">Add paper keys so that you can access your account even if (worst-case scenario) you lose all of your devices.</p>  <p class="compose">When you create a paper key, write it down on—you guessed it—paper. It’ll be too long to memorize. We recommend storing paper keys somewhere like a locked drawer at home.</p>  <h2 class="compose"><a class="compose-anchor" href="#proofs" name="proofs"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>Proofs</h2>  <div class="compose-highlight" data-text="tip">Add as many proofs as you can to provide the most assurance that you are you on Keybase.</div>  <p class="compose">The best way to let others know that your Keybase account belongs to you is to tell them in person. The next best way is through proofs.</p>  <p class="compose">Proofs link your Keybase account to your other online accounts. Proofs help people trust that you are really you on Keybase.</p>  <figure role="figure" aria-label="You can link your Twitter and GitHub accounts and personal website to your Keybase account as proofs."><img src="/static/img/kb-three-accounts.png" alt="" /><figcaption>You can link your Twitter and GitHub accounts and personal website to your Keybase account as proofs.</figcaption></figure>  <p class="compose">Some people may already know you as you through your other accounts. But proofs are public, so Keybase can (and does) check them, and importantly, anyone can. Publicly proving that you are who you say you are is an important part of what makes Keybase accounts so secure and trustworthy.</p>  <p class="compose">If a proof changes, indicating that your Keybase or other social accounts may have been compromised, Keybase automatically warns the people you interact with.</p>  <h3 class="compose"><a class="compose-anchor" href="#adding-proofs" name="adding-proofs"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>Adding proofs</h3>  <p class="compose">You can add proofs for your personal website and social accounts on Twitter, GitHub, Reddit, and Hacker News. Your accounts must be public for them to work as proofs.</p>  <p class="compose">For example, if you use your Twitter account as a proof, Keybase will give you a specific phrase to tweet that includes your Keybase username.</p>  <figure role="figure" aria-label="Proofs must be public so anyone can check them."><img src="/static/img/kb-proof-twitter.png" alt="" /><figcaption>Proofs must be public so anyone can check them.</figcaption></figure>  <p class="compose">For the proof to work, you must tweet the phrase exactly as Keybase gives it to you. The tweet must be public and you can’t delete it.</p>  <p class="compose">Keeping proofs public lets Keybase—and anyone else—check them. Everyone can be sure that you are you.</p>  <h2 class="compose"><a class="compose-anchor" href="#following" name="following"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>Following</h2>  <div class="compose-highlight" data-text="tl;dr">Following helps keep Keybase accounts secure. It allows you and those you interact with to be notified quickly if something on an account changes, indicating that it may be compromised and isn’t trustworthy.</div>  <div class="compose-highlight" data-text="tip">Follow people on Keybase to help make your account and theirs more trustworthy.</div>  <p class="compose">Following helps confirm that people are who they say they are on Keybase. But it doesn’t necessarily indicate a relationship. More importantly, following helps provide reassurance that accounts are trustworthy and secure.</p>  <h4 class="compose"><a class="compose-anchor" href="#follow-people-you-interact-with" name="follow-people-you-interact-with"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>Follow people you interact with.</h4>  <p class="compose">You can and definitely should follow people you know and interact with on Keybase. But following helps keep accounts secure and trustworthy even if you don’t know someone you follow or someone who follows you.</p>  <p class="compose">For example, let’s say you follow Mary Poppins on Keybase. You probably don’t know her and she probably doesn’t know you (if that’s not true, lucky you). By following her, you’re essentially documenting her Keybase account, including all her proofs and devices.</p>  <p class="compose">This documentation is a time-stamped public record that can be checked by anyone else on Keybase. It’s also automatically checked by your computer or device every time you share messages or files with Ms. Poppins. If anything about her account changes, you—and everyone else who follows her—will be notified when you attempt to interact with her on Keybase again.</p>  <h4 class="compose"><a class="compose-anchor" href="#more-followers-provide-more-security" name="more-followers-provide-more-security"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>More followers provide more security.</h4>  <p class="compose">But if you don’t know Ms. Poppins, you might not interact with her and get notified that her account has changed. This is where safety in numbers kicks in.</p>  <p class="compose">The more followers Mary Poppins has, the more likely that <em class="compose">someone</em> who follows her will attempt to interact with her on Keybase, be notified about the change, and reach out to her over other channels. Then she can confirm that she made the change or recover her account if it’s been hacked. This helps gives both you and Ms. Poppins more confidence about the safety and trustworthiness of her account.</p>  <p class="compose">And even if no one’s interacting with Ms. Poppins on Keybase, you get some confidence knowing that for every follower she has, a public record of who she is (according to her devices and proofs) has been added to a giant, public Keybase database.
+Someone might be able to fake one or even two of these records so they look the same, but it’d be virtually impossible to fake dozens or more.</p>  <h4 class="compose"><a class="compose-anchor" href="#older-followers-provide-more-security-than-newer-ones" name="older-followers-provide-more-security-than-newer-ones"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>Older followers provide more security than newer ones.</h4>  <p class="compose">Along the same lines, the older a follower is, the more security it provides. Remember that following someone creates a time-stamped public record of who they are on Keybase (according to their proofs and devices). So, if you followed Ms. Poppins way back in February 2014, your record helps confirm that her account hasn’t been hacked over the years between now and then. If someone had hacked her account, they’d have to maintain control of her computer, other device(s), and proofs over that whole period of time.</p>  <p class="compose">As long as someone’s account hasn’t been hacked the day you follow them (which would be kinda wild), you can be pretty confident they are who they say they are on Keybase. Likewise, your own followers help guarantee to your contacts—and better, to future contacts—that your Keybase account is controlled by you.</p>  <h4 class="compose"><a class="compose-anchor" href="#follow-soon-and-follow-often" name="follow-soon-and-follow-often"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>Follow soon and follow often.</h4>  <p class="compose">If you keep (ahem) <em class="compose">following</em> this logic, it’s easy to see that an older Keybase account is more secure and trustworthy than a newer Keybase account. And, older followers are more valuable than new followers. So, if you haven’t already, set up your account and start following your contacts.</p>  <p class="compose">This is a pretty simplified version of how following works. You can dig into more details in our <a class="compose" href="https://keybase.io/docs/server_security/following">docs</a> and on <a class="compose" href="https://github.com/keybase/keybase-issues/issues/100">Github</a>. (Note: following was previously called tracking.)</p>  <h3 class="compose"><a class="compose-anchor" href="#blocking-followers" name="blocking-followers"><svg fill="var(--color--content__compose-anchor)" 
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">
+    <path d="M1.9 5c0-1.71 1.39-3.1 3.1-3.1h4V0H5C2.24 0 0 2.24 0 5s2.24 5 5 5h4V8.1H5C3.29 8.1 1.9 6.71 1.9 5zM6 6h8V4H6v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.71-1.39 3.1-3.1 3.1h-4V10h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+</svg>
+</a>Blocking followers</h3>  <p class="compose">While even followers you don’t know help keep your account trustworthy, you can block them.</p>  <p class="compose">When you block someone, you can remove them from your public list of followers. You won’t see them and their account will not be publicly associated with yours. They also won’t be able to chat with you or add you to a team.</p>  <p class="compose">But please note, they will still, technically, be following you. The public record that was created when they followed you will still exist. And they may know that you blocked them if they attempt to chat with you or add you to a team. You can learn more about blocking in <a class="compose" href="/chat">Chat</a>.</p>
+            </section>
+        </div>
+    </div>
+        <footer class="footer" data-footer-label="">
+        <a class="footer__link" href="/chat">
+            <div class="footer__inner">
+            <p class="footer__title" data-chapter-count="02">Chat</p>
+                
+                <p class="footer__subtitle">Share messages and files with anyone.</p>
+                
+            </div>
+            <img alt="" class="footer__image" src="/static/img/illos/chat.jpg" loading="lazy" width="870"/>
+        </a>
+    </footer>
+    
+    <script src="/static/js/Nav.js" type="module" async></script>
+
+    
+
+        
+            <script src="/static/js/vendor/simplex-noise.min.js"></script>
+
+        
+    
+      </main>
+    </div>
+    <footer class="site-footer">
+  <div class="site-footer__inner">
+    <a class="site-footer__brand" href="/">Keybase&nbsp;<span>Book</span></a>
+    <ul class="site-footer__list">
+      <li class="site-footer__list-item">
+        <a class="site-footer__link" href="https://keybase.io/">Keybase Home</a>
+      </li>
+      <li class="site-footer__list-item">
+        <a class="site-footer__link" href="https://github.com/keybase/book-content/issues">Bug Reporting</a>
+      </li>
+      <li class="site-footer__list-item">
+        <a class="site-footer__link" href="https://keybase.io/docs/terms">Terms</a>
+      </li>
+      <li class="site-footer__list-item">
+        <a class="site-footer__link" href="https://keybase.io/docs/privacypolicy">Privacy</a>
+      </li>
+      <li class="site-footer__list-item">
+        <a class="site-footer__link" href="https://keybase.io/docs/acceptable-use-policy">Acceptable Use</a>
+      </li>
+    </ul>
+    
+
+
+<template id="link-android">
+    <a href="https://keybase.io/_/download/keybase-for-android" class="download__button" aria-label="Download Keybase"><img src="https://keybase.io/images/getting-started/play_store_badge_320x94.png" alt="" style="width: 120px;"></a>
+    <a class="download__link" href="https://keybase.io/download">Also available for iOS, Linux, Mac OS, and Windows</a>
+</template>
+
+<template id="link-ios">
+    <a href="https://keybase.io/_/download/keybase-for-ios" class="download__button" aria-label="Download Keybase">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 119.664 40">
+    <path
+    d="M110.135 0H9.535c-.367 0-.73 0-1.095.002-.306.002-.61.008-.919.013A13.215 13.215 0 005.517.19a6.665 6.665 0 00-1.9.627 6.438 6.438 0 00-1.62 1.18A6.258 6.258 0 00.82 3.617 6.601 6.601 0 00.195 5.52a12.993 12.993 0 00-.179 2.002c-.01.307-.01.615-.015.921V31.56c.005.31.006.61.015.921a12.992 12.992 0 00.18 2.002 6.588 6.588 0 00.624 1.905A6.208 6.208 0 001.998 38a6.274 6.274 0 001.618 1.179 6.7 6.7 0 001.901.63 13.455 13.455 0 002.004.177c.31.007.613.011.919.011.366.002.728.002 1.095.002h100.6c.36 0 .724 0 1.084-.002.304 0 .617-.004.922-.01a13.279 13.279 0 002-.178 6.804 6.804 0 001.908-.63A6.277 6.277 0 00117.666 38a6.395 6.395 0 001.182-1.614 6.604 6.604 0 00.619-1.905 13.506 13.506 0 00.185-2.002c.004-.31.004-.61.004-.921.008-.364.008-.725.008-1.094V9.536c0-.366 0-.73-.008-1.092 0-.306 0-.614-.004-.92a13.507 13.507 0 00-.185-2.003 6.618 6.618 0 00-.62-1.903 6.466 6.466 0 00-2.798-2.8 6.768 6.768 0 00-1.908-.627 13.044 13.044 0 00-2-.176c-.305-.005-.618-.011-.922-.013-.36-.002-.725-.002-1.084-.002z"
+    fill="var(--color--content__text)"
+    />
+    <path
+    d="M8.445 39.125c-.305 0-.602-.004-.904-.01a12.687 12.687 0 01-1.87-.164 5.884 5.884 0 01-1.656-.548 5.406 5.406 0 01-1.397-1.016 5.32 5.32 0 01-1.02-1.397 5.722 5.722 0 01-.544-1.657 12.414 12.414 0 01-.166-1.875c-.007-.21-.015-.913-.015-.913v-23.1s.009-.692.015-.895a12.37 12.37 0 01.165-1.872 5.755 5.755 0 01.544-1.662 5.373 5.373 0 011.015-1.398 5.565 5.565 0 011.402-1.023 5.823 5.823 0 011.653-.544A12.586 12.586 0 017.543.887l.902-.012h102.769l.913.013a12.385 12.385 0 011.858.162 5.938 5.938 0 011.671.548 5.594 5.594 0 012.415 2.42 5.763 5.763 0 01.535 1.649 12.995 12.995 0 01.174 1.887c.003.283.003.588.003.89.008.375.008.732.008 1.092v20.929c0 .363 0 .718-.008 1.075 0 .325 0 .623-.004.93a12.731 12.731 0 01-.17 1.853 5.739 5.739 0 01-.54 1.67 5.48 5.48 0 01-1.016 1.386 5.413 5.413 0 01-1.4 1.022 5.862 5.862 0 01-1.668.55 12.542 12.542 0 01-1.869.163c-.293.007-.6.011-.897.011l-1.084.002z"
+    fill="var(--color--content__background)"
+    />
+    <path
+    d="M24.997 19.89a5.146 5.146 0 012.45-4.318 5.268 5.268 0 00-4.15-2.244c-1.746-.183-3.44 1.045-4.33 1.045-.906 0-2.276-1.027-3.752-.997a5.527 5.527 0 00-4.65 2.837c-2.012 3.482-.512 8.6 1.415 11.414.963 1.378 2.09 2.918 3.564 2.863 1.442-.06 1.981-.92 3.722-.92 1.725 0 2.23.92 3.734.886 1.548-.026 2.523-1.385 3.453-2.776a11.4 11.4 0 001.58-3.216 4.973 4.973 0 01-3.036-4.575zm-2.841-8.413a5.067 5.067 0 001.16-3.63 5.155 5.155 0 00-3.336 1.726 4.821 4.821 0 00-1.19 3.495 4.263 4.263 0 003.366-1.591zM42.302 27.14h-4.734l-1.136 3.356h-2.005l4.483-12.418h2.083l4.484 12.418h-2.04zm-4.243-1.55h3.752l-1.85-5.446h-.052zm17.101.38c0 2.813-1.507 4.62-3.78 4.62a3.07 3.07 0 01-2.848-1.583h-.043v4.484h-1.858V21.442h1.799v1.506h.034a3.212 3.212 0 012.883-1.6c2.298 0 3.812 1.816 3.812 4.622zm-1.911 0c0-1.833-.947-3.038-2.393-3.038-1.42 0-2.375 1.23-2.375 3.038 0 1.824.956 3.046 2.375 3.046 1.446 0 2.393-1.197 2.393-3.046zm11.876 0c0 2.813-1.507 4.62-3.78 4.62a3.07 3.07 0 01-2.848-1.583h-.043v4.484h-1.858V21.442h1.799v1.506h.034a3.212 3.212 0 012.883-1.6c2.297 0 3.813 1.816 3.813 4.622zm-1.911 0c0-1.833-.947-3.038-2.393-3.038-1.42 0-2.375 1.23-2.375 3.038 0 1.824.955 3.046 2.375 3.046 1.446 0 2.393-1.197 2.393-3.046zm8.496 1.066c.137 1.232 1.333 2.04 2.968 2.04 1.567 0 2.694-.808 2.694-1.919 0-.964-.68-1.54-2.29-1.936l-1.609-.388c-2.28-.55-3.339-1.617-3.339-3.348 0-2.142 1.867-3.614 4.518-3.614 2.625 0 4.424 1.472 4.484 3.614H77.26c-.112-1.239-1.136-1.987-2.634-1.987s-2.521.757-2.521 1.858c0 .878.654 1.395 2.255 1.79l1.368.336c2.548.603 3.605 1.626 3.605 3.443 0 2.323-1.85 3.778-4.793 3.778-2.753 0-4.613-1.42-4.733-3.667zM83.346 19.3v2.142h1.722v1.472h-1.722v4.991c0 .776.345 1.137 1.102 1.137a5.808 5.808 0 00.611-.043v1.463a5.104 5.104 0 01-1.032.086c-1.833 0-2.548-.689-2.548-2.445v-5.189h-1.316v-1.472h1.316V19.3zm2.718 6.67c0-2.849 1.678-4.639 4.294-4.639 2.625 0 4.295 1.79 4.295 4.639 0 2.856-1.661 4.638-4.295 4.638-2.633 0-4.294-1.782-4.294-4.638zm6.695 0c0-1.954-.895-3.108-2.401-3.108s-2.401 1.162-2.401 3.108c0 1.962.895 3.106 2.4 3.106s2.402-1.144 2.402-3.106zm3.426-4.528h1.773v1.541H98a2.16 2.16 0 012.177-1.635 2.866 2.866 0 01.637.069v1.738a2.598 2.598 0 00-.835-.112 1.873 1.873 0 00-1.937 2.083v5.37h-1.858zm13.198 6.395c-.25 1.643-1.85 2.771-3.898 2.771-2.634 0-4.269-1.764-4.269-4.595 0-2.84 1.644-4.682 4.19-4.682 2.506 0 4.08 1.72 4.08 4.466v.637h-6.394v.112a2.358 2.358 0 002.436 2.564 2.048 2.048 0 002.09-1.273zm-6.282-2.702h4.526a2.177 2.177 0 00-2.22-2.298 2.292 2.292 0 00-2.306 2.298zM37.826 8.731a2.64 2.64 0 012.808 2.965c0 1.906-1.03 3.002-2.808 3.002h-2.155V8.73zm-1.228 5.123h1.125a1.876 1.876 0 001.967-2.146 1.881 1.881 0 00-1.967-2.134h-1.125zm5.082-1.41a2.133 2.133 0 114.248 0 2.134 2.134 0 11-4.247 0zm3.334 0c0-.976-.439-1.547-1.208-1.547-.773 0-1.207.571-1.207 1.547 0 .984.434 1.55 1.207 1.55.77 0 1.208-.57 1.208-1.55zm6.559 2.254h-.922l-.93-3.317h-.07l-.927 3.317h-.913l-1.242-4.503h.902l.806 3.436h.067l.926-3.436h.852l.926 3.436h.07l.803-3.436h.889zm2.281-4.503h.855v.715h.066a1.348 1.348 0 011.344-.802 1.465 1.465 0 011.559 1.675v2.915h-.889v-2.692c0-.724-.314-1.084-.972-1.084a1.033 1.033 0 00-1.075 1.141v2.635h-.888zm5.24-1.758h.888v6.26h-.888zm2.124 4.007a2.133 2.133 0 114.247 0 2.134 2.134 0 11-4.247 0zm3.333 0c0-.976-.439-1.547-1.208-1.547-.773 0-1.207.571-1.207 1.547 0 .984.434 1.55 1.207 1.55.77 0 1.208-.57 1.208-1.55zm1.849.98c0-.81.604-1.278 1.676-1.344l1.22-.07v-.389c0-.475-.315-.744-.922-.744-.497 0-.84.182-.939.5h-.86c.09-.773.818-1.27 1.84-1.27 1.128 0 1.765.563 1.765 1.514v3.077h-.855v-.633h-.07a1.515 1.515 0 01-1.353.707 1.36 1.36 0 01-1.501-1.348zm2.895-.384v-.377l-1.1.07c-.62.042-.9.253-.9.65 0 .405.351.64.834.64a1.062 1.062 0 001.166-.983zm2.053-.596c0-1.423.732-2.324 1.87-2.324a1.484 1.484 0 011.38.79h.067V8.437h.888v6.26h-.851v-.71h-.07a1.563 1.563 0 01-1.415.785c-1.145 0-1.869-.901-1.869-2.328zm.918 0c0 .955.45 1.53 1.203 1.53.75 0 1.212-.583 1.212-1.526 0-.938-.468-1.53-1.212-1.53-.748 0-1.203.58-1.203 1.526zm6.964 0a2.133 2.133 0 114.247 0 2.134 2.134 0 11-4.247 0zm3.333 0c0-.976-.438-1.547-1.208-1.547-.772 0-1.207.571-1.207 1.547 0 .984.435 1.55 1.207 1.55.77 0 1.208-.57 1.208-1.55zm2.107-2.249h.855v.715h.066a1.348 1.348 0 011.344-.802 1.465 1.465 0 011.559 1.675v2.915h-.889v-2.692c0-.724-.314-1.084-.972-1.084a1.033 1.033 0 00-1.075 1.141v2.635h-.889zm8.845-1.121v1.141h.976v.749h-.976v2.315c0 .472.194.679.637.679a2.967 2.967 0 00.339-.021v.74a2.916 2.916 0 01-.484.046c-.988 0-1.381-.348-1.381-1.216v-2.543h-.715v-.749h.715V9.074zm2.19-.637h.88v2.481h.07a1.386 1.386 0 011.374-.806 1.483 1.483 0 011.55 1.679v2.907h-.889V12.01c0-.72-.335-1.084-.963-1.084a1.052 1.052 0 00-1.134 1.142v2.63h-.888zm9.056 5.045a1.828 1.828 0 01-1.95 1.303 2.045 2.045 0 01-2.081-2.325 2.077 2.077 0 012.076-2.352c1.253 0 2.009.856 2.009 2.27v.31h-3.18v.05a1.19 1.19 0 001.2 1.29 1.08 1.08 0 001.07-.546zm-3.126-1.451h2.275a1.086 1.086 0 00-1.109-1.167 1.152 1.152 0 00-1.166 1.167z"
+    fill="var(--color--content__text)"
+    />
+</svg>
+    </a>
+    <a class="download__link" href="https://keybase.io/download">Also available for Android, Linux, Mac OS, and Windows</a>
+</template>
+
+<template id="link-linux">
+    <a href="https://keybase.io/docs/the_app/install_linux" class="download__button" aria-label="Download Keybase">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+    <path fill="var(--color--content__text)" d="M0 0h120v40H0z"/>
+    <path fill="var(--color--content__background)" d="M1 1h118v38H1z"/>
+    <path fill="var(--color--content__text)" d="M100.4 8a6 6 0 00-.5 0c-4.2.4-3.1 4.8-3.2 6.3 0 1.1-.3 2-1 3-.9 1-2.1 2.8-2.7 4.6-.3.8-.4 1.6-.3 2.5h-.1l-.7 1-.8.3c-.3.2-.6.3-.8.7l-.2.6v.5c.1.4.2.8.1 1-.2.7-.3 1.2 0 1.5 0 .3.4.5.8.6.9.2 2 .1 2.8.6 1 .5 1.9.7 2.6.5.6-.1 1-.5 1.2-1l2.3-.3c.7 0 1.6.3 2.6.2l.1.3c.4.8 1.1 1.2 1.9 1.1.8 0 1.6-.5 2.2-1.3.7-.8 1.7-1 2.4-1.5.4-.2.7-.5.7-.9s-.2-.8-.7-1.3v-.1c-.2-.2-.3-.6-.4-1 0-.4-.2-.8-.5-1l-.2-.2h-.2c.5-1.3.3-2.6-.1-3.7-.6-1.4-1.5-2.6-2.2-3.5-.8-1-1.6-2-1.6-3.4 0-2.1.3-6-3.5-6.1zm.5 3.4c.2 0 .4 0 .6.2l.5.5.1.8v-.1.1l-.1.7-.2.3h-.1l-.3-.2h-.2l.1-.2.1-.4v-.5l-.2-.3-.3-.1-.3.1-.2.3v.7l-.6-.2V13v-.8l.5-.5.6-.2zm-3 0l.5.2c.1.1.3.3.3.5l.2.6v.3l-.1.1-.4.2V13v-.3l-.2-.3h-.4l-.1.4v.6c0 .2.1.2.2.3l-.2.2c-.2 0-.3-.2-.4-.4l-.1-.6a1.8 1.8 0 01.3-1.2c.2-.2.3-.2.5-.2zm1.4 1.8c.4 0 .8 0 1.2.4l1.1.4.5.4v-.1.5c-.1.3-.5.6-1 .8l-.8.5c-.3.1-.6.3-1 .3l-.5-.1-.3-.2-.6-.5c-.4-.2-.7-.5-.7-.7-.1-.3 0-.5.2-.6l.4-.3.2-.2.9-.6h.4zm2.8 2.1a24 24 0 001.8 4.5c.2.5.8 1.6 1 3h.6c.6-1.6-.6-3.4-1.1-3.9-.2-.2-.2-.3-.1-.3.6.5 1.3 1.5 1.6 2.7.1.6.2 1.1 0 1.7h.2c1 .6 1.5 1 1.3 1.6h-.2c.1-.5-.2-.9-1-1.3-1-.4-1.7-.3-1.9.5v.1l-.2.1c-.4.3-.7.7-.8 1.2l-.2 1.9-.3 1.3c-1.5 1-3.6 1.5-5.4.3l-.4-.5-.2-.3h.4l.3-.4c.2-.3 0-.7-.3-1.2s-1-1-1.8-1.5c-.6-.4-1-.9-1.1-1.4-.2-.5-.2-1 0-1.6.2-1.1.8-2.2 1.2-2.8l-.4 1c-.4.7-1.1 2.5-.1 3.8 0-1 .2-2 .6-2.9.6-1.2 1.8-3.5 1.9-5.2l.3.2.6.4c.2.2.4.4.8.4h.1c.5 0 .8-.2 1-.3l.8-.4a2 2 0 001-.7zm2.2 9c0 .6.4 1.2.9 1.3.6.2 1.4-.3 1.8-.7h.2c.3 0 .6 0 .8.2.3.2.4.6.4 1l.4 1c.5.5.7.9.7 1.1 0 .3-.2.4-.5.6-.6.4-1.8.7-2.5 1.6-.6.7-1.3 1.1-2 1.2-.7 0-1.2-.2-1.6-1-.2-.3-.1-1 0-1.6.2-.7.5-1.4.5-2l.2-1.7c.1-.5.3-.8.7-1zm-10.8 0h.2c.3 0 .7.4 1 .8l.9 1.6c.2.6.8 1.1 1.2 1.7.4.6.8 1.1.7 1.6 0 .7-.5 1.1-1.1 1.3-.7.1-1.5 0-2.4-.5-1-.5-2.1-.5-2.9-.6-.3 0-.6-.2-.7-.4l.1-1.2c.2-.4 0-.8 0-1.2v-.9c.2-.3.5-.4.7-.5.3-.2.7-.2 1-.5l.6-.8c.2-.2.4-.4.7-.4zm7.2-9c-.5.1-1 .5-1.5.5-.6 0-1-.3-1.3-.5l-.4-.3c-.1-.2-.1-.4 0-.4l.1.2.4.4c.3.2.7.4 1.2.4s1-.2 1.4-.4l.6-.5.3-.3-.2.4-.6.4zm-1.1-1.6v-.1h.3l.1.1-.1.1h-.2l-.1-.1zm-.6 0H99l-.2.1h-.1l.1-.2h.3zM18.1 14v-.9h-3.6v1.3h1.9v.1c0 1-.9 1.8-2 1.8-1.4 0-2.3-1.1-2.3-3 0-1.8.8-2.8 2.2-2.8 1 0 1.7.5 2 1.4H18c-.2-1.7-1.7-2.9-3.7-2.9-2.5 0-4 1.6-4 4.3 0 2.8 1.5 4.4 4 4.4 2.4 0 3.8-1.3 3.8-3.6zM22 12.5c.7 0 1.2.5 1.3 1.3h-2.7c0-.8.6-1.3 1.3-1.3zm1.3 3.2c-.2.5-.6.8-1.3.8-.8 0-1.4-.6-1.4-1.5v-.1h4.3v-.6c0-1.9-1.1-3.1-3-3.1-1.8 0-3 1.3-3 3.3 0 2 1.2 3.2 3 3.2 1.6 0 2.8-.8 3-2h-1.6zM26.3 9.9v1.4h-1v1.3h1V16c0 1.2.5 1.7 2 1.7h.8v-1.3h-.4c-.5 0-.7-.2-.7-.7v-3H29v-1.3H28V10h-1.7zM34.4 17.6V15l.7-1 2.6 3.6h2l-3.3-4.7 3.2-3.8h-2L34.4 13V9.1h-1.8v8.5h1.8zM42.8 12.5c.7 0 1.3.5 1.3 1.3h-2.7c0-.8.6-1.3 1.4-1.3zm1.3 3.2c-.1.5-.6.8-1.2.8-1 0-1.5-.6-1.5-1.5v-.1h4.3v-.6c0-1.9-1.1-3.1-3-3.1-1.8 0-3 1.3-3 3.3 0 2 1.2 3.2 3.1 3.2 1.6 0 2.7-.8 2.9-2h-1.6zM47.3 20c1.6 0 2.4-.6 3-2.3l2.1-6.4h-1.8l-1.3 5-1.4-5h-1.8l2.1 6.3v.3c-.1.5-.4.7-1 .7h-.5v1.3h.6zM56.8 17.7c1.6 0 2.5-1.2 2.5-3.2s-1-3.3-2.5-3.3a2 2 0 00-2 1.2V9.1h-1.7v8.5h1.7v-1a2 2 0 002 1.1zm-.6-5.1c.9 0 1.4.7 1.4 1.9 0 1.1-.5 1.8-1.4 1.8-.8 0-1.4-.7-1.4-1.8 0-1.2.6-2 1.4-2zM62.7 16.5c-.6 0-1-.3-1-.8 0-.4.4-.7 1-.8H64v.4c0 .7-.6 1.2-1.3 1.2zm-.6 1.2c.8 0 1.6-.4 2-1v.9h1.6v-4.3c0-1.3-1-2.1-2.7-2.1-1.6 0-2.7.8-2.7 2h1.5c.1-.4.5-.7 1.2-.7.6 0 1 .3 1 .9v.4l-1.6.1c-1.5 0-2.4.8-2.4 1.9 0 1.1 1 1.9 2.1 1.9zM66.7 13.2c0 1 .6 1.5 1.8 1.8l1.1.2c.6.1.8.3.8.7 0 .4-.4.6-1 .6-.7 0-1-.3-1.2-.8h-1.7c.2 1.2 1.2 2 2.9 2 1.6 0 2.7-.8 2.7-2 0-1-.5-1.4-1.8-1.7l-1-.3c-.7 0-1-.3-1-.6 0-.4.4-.7 1-.7.7 0 1 .3 1.1.8H72c0-1.2-1-2-2.7-2-1.6 0-2.6.8-2.6 2zM75.8 12.5c.8 0 1.3.5 1.3 1.3h-2.6c0-.8.6-1.3 1.3-1.3zm1.3 3.2c-.1.5-.6.8-1.2.8-.9 0-1.5-.6-1.5-1.5v-.1h4.4v-.6c0-1.9-1.2-3.1-3-3.1-1.9 0-3 1.3-3 3.3 0 2 1.1 3.2 3 3.2 1.6 0 2.7-.8 3-2H77zM10.9 31.6h1.7v-5h1.2v-1.3h-1.3V25c0-.4.3-.7.8-.7h.5v-1a5 5 0 00-.9-.1c-1.5 0-2 .5-2 1.8v.4H10v1.3h.9v5zM17.4 31.7c1.9 0 3-1.2 3-3.2s-1.1-3.3-3-3.3-3.1 1.2-3.1 3.3c0 2 1.2 3.2 3 3.2zm0-1.3c-.9 0-1.4-.7-1.4-2 0-1.2.6-2 1.4-2 .8 0 1.4.8 1.4 2 0 1.3-.6 2-1.4 2zM21.4 31.6H23v-3.5c0-.9.5-1.4 1.3-1.4h.6v-1.4h-.4c-.8 0-1.3.4-1.5 1.2v-1.2h-1.7v6.3zM33.7 30.1H30v-7h-1.7v8.5h5.4v-1.5zM34.7 31.6h1.7v-6.3h-1.7v6.3zm.8-7.1c.5 0 1-.4 1-1 0-.4-.5-.8-1-.8a.9.9 0 100 1.8zM37.5 31.6h1.7V28c0-.8.5-1.4 1.3-1.4s1.1.5 1.1 1.3v3.7h1.8v-4c0-1.5-.8-2.4-2.2-2.4-1 0-1.7.5-2 1.2v-1h-1.7v6.2zM50.2 25.3h-1.7V29c0 .9-.4 1.4-1.2 1.4-.8 0-1.2-.5-1.2-1.3v-3.7h-1.7v4c0 1.5 1 2.4 2.3 2.4 1 0 1.5-.4 1.9-1.2v1.1h1.6v-6.3zM54 29.4l1.1 2.2H57l-2-3.2 2-3h-1.9l-1 2H54l-1.1-2h-2l2 3-2 3.2h1.8l1.2-2.2z"/>
+</svg>
+        </a>
+    <a class="download__link" href="https://keybase.io/download">Also available for Android, iOS, Mac OS, and Windows</a>
+</template>
+
+<template id="link-mac">
+    <a href="https://keybase.io/docs/the_app/install_macos" class="download__button" aria-label="Download Keybase">
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 120 40">
+  <path fill="var(--color--content__text)" d="M0 0h120v40H0z"/>
+  <path fill="var(--color--content__background)" d="M1 1h118v38H1z"/>
+  <path fill="var(--color--content__text)" d="M15.2617 13.4492v-.9551h-3.5625v1.2891h1.8399l-.0059.1348c-.0352 1.0488-.8379 1.7578-1.9922 1.7578-1.4062 0-2.29686-1.1192-2.29686-2.9531 0-1.7989.83786-2.85942 2.23246-2.85942.955 0 1.6757.52732 1.9336 1.41212h1.7753c-.2519-1.71095-1.7402-2.87696-3.7148-2.87696-2.48437 0-4.03125 1.64066-4.03125 4.34766 0 2.748 1.54688 4.4004 4.07225 4.4004 2.3555 0 3.75-1.3945 3.75-3.6973zM19.1055 11.8496c.7617 0 1.2832.5508 1.3183 1.3535h-2.666c.0586-.7851.5977-1.3535 1.3477-1.3535zm1.3418 3.2285c-.1582.4805-.6387.791-1.2657.791-.873 0-1.4414-.6152-1.4414-1.5117v-.1054h4.3301v-.5215c0-1.9102-1.1543-3.1465-2.9824-3.1465-1.8574 0-3.0293 1.3008-3.0293 3.3047 0 2.0097 1.1602 3.2461 3.0937 3.2461 1.5528 0 2.6778-.8262 2.8653-2.0567h-1.5703zM23.4121 9.27148v1.44732h-.8848v1.289h.8848v3.2988c0 1.2246.5742 1.7168 2.0508 1.7168.3457 0 .6387-.0293.8144-.0703v-1.2597c-.1054.0175-.2636.0293-.416.0293-.5039 0-.7383-.2286-.7383-.709v-3.0059h1.1602v-1.289H25.123V9.27148h-1.7109zM31.5156 17v-2.584l.791-.9492L34.8145 17h2.1152l-3.3457-4.7051 3.1289-3.74998h-1.9688l-3.1757 3.85548h-.0528V8.54492h-1.7695V17h1.7695zM39.9414 11.8496c.7617 0 1.2832.5508 1.3184 1.3535h-2.666c.0585-.7851.5976-1.3535 1.3476-1.3535zm1.3418 3.2285c-.1582.4805-.6387.791-1.2656.791-.8731 0-1.4414-.6152-1.4414-1.5117v-.1054h4.33v-.5215c0-1.9102-1.1542-3.1465-2.9824-3.1465-1.8574 0-3.0293 1.3008-3.0293 3.3047 0 2.0097 1.1602 3.2461 3.0938 3.2461 1.5527 0 2.6777-.8262 2.8652-2.0567h-1.5703zM44.5059 19.3262c1.5996 0 2.3906-.5742 2.9238-2.1856l2.1621-6.4218h-1.8047l-1.3301 4.9101h-.0351l-1.336-4.9101h-1.875l2.1856 6.2871c.0058.0234-.0586.2753-.0586.2988-.1172.498-.4277.6973-1.0488.6973-.0645 0-.375 0-.4336-.0118v1.3184c.0586.0117.5859.0176.6504.0176zM53.957 17.0996c1.5821 0 2.5489-1.2187 2.5489-3.2402 0-2.0274-.9727-3.2403-2.5547-3.2403-.8965 0-1.5938.4454-1.9395 1.1895h-.0351V8.54492h-1.711V17h1.6875v-1.0781h.0352c.3457.7324 1.0488 1.1777 1.9687 1.1777zm-.5918-5.1094c.8496 0 1.3887.7266 1.3887 1.8692 0 1.1484-.5332 1.8633-1.3887 1.8633-.832 0-1.3945-.7266-1.3945-1.8633 0-1.125.5684-1.8692 1.3945-1.8692zM59.8223 15.8633c-.5801 0-.9668-.293-.9668-.7617 0-.4454.3633-.7325 1.0019-.7793l1.3242-.0821v.4571c0 .6797-.6152 1.166-1.3593 1.166zm-.5625 1.2363c.7851 0 1.5644-.3926 1.916-1.0605h.0351V17h1.6524v-4.3184c0-1.2656-1.0488-2.0976-2.6602-2.0976-1.664 0-2.7011.8379-2.7656 2.0566h1.5645c.082-.4629.4863-.7793 1.125-.7793.6445 0 1.0546.3399 1.0546.9258v.416l-1.582.0938c-1.5644.0937-2.4434.7558-2.4434 1.8984 0 1.1309.9083 1.9043 2.1036 1.9043zM63.8652 12.5645c0 .9433.6153 1.5527 1.8282 1.8105l1.0722.2227c.6153.1406.8321.3281.8321.6621 0 .4101-.3985.6738-1.043.6738-.6797 0-1.0723-.293-1.1777-.8438h-1.67c.1114 1.2364 1.1133 2.045 2.8477 2.045 1.6172 0 2.748-.8145 2.748-2.0508 0-.9199-.539-1.4356-1.8515-1.711l-1.0723-.2285c-.6328-.1347-.8672-.3515-.8672-.6738 0-.416.3926-.6855.9844-.6855.6328 0 1.0137.3457 1.0664.8554h1.5762c-.0352-1.2304-1.0313-2.0566-2.6426-2.0566-1.5996 0-2.6309.7851-2.6309 1.9805zM72.9648 11.8496c.7618 0 1.2832.5508 1.3184 1.3535h-2.666c.0586-.7851.5976-1.3535 1.3476-1.3535zm1.3418 3.2285c-.1582.4805-.6386.791-1.2656.791-.873 0-1.4414-.6152-1.4414-1.5117v-.1054h4.3301v-.5215c0-1.9102-1.1543-3.1465-2.9824-3.1465-1.8575 0-3.0293 1.3008-3.0293 3.3047 0 2.0097 1.1601 3.2461 3.0937 3.2461 1.5528 0 2.6778-.8262 2.8653-2.0567h-1.5704zM8.01367 31h1.71094v-4.9922h1.20699V24.748H9.68359v-.416c0-.4453.2461-.6914.80861-.6914.1699 0 .3398.0117.4629.0352v-1.1309c-.1992-.041-.5567-.0761-.8731-.0761-1.48825 0-2.06833.5742-2.06833 1.8046v.4746H7.1582v1.2598h.85547V31zM14.541 31.1348c1.8985 0 3.1113-1.2129 3.1113-3.2813 0-2.039-1.2304-3.2695-3.1113-3.2695-1.8808 0-3.1113 1.2363-3.1113 3.2695 0 2.0625 1.2129 3.2813 3.1113 3.2813zm0-1.3067c-.8437 0-1.3769-.709-1.3769-1.9687 0-1.2481.5449-1.9688 1.3769-1.9688s1.3711.7207 1.3711 1.9688c0 1.2597-.5332 1.9687-1.3711 1.9687zM18.5371 31h1.7109v-3.5098c0-.8847.4922-1.4004 1.336-1.4004.2461 0 .4805.0411.6211.0997v-1.5059c-.1172-.0352-.2871-.0645-.4863-.0645-.7383 0-1.2715.4336-1.4942 1.2305h-.0351v-1.1308h-1.6524V31zM25.2871 31h1.7109v-3.791c0-.7031.4395-1.1953 1.0899-1.1953.6328 0 1.0137.3984 1.0137 1.0722V31h1.6464v-3.8145c0-.6972.4278-1.1718 1.0782-1.1718.6621 0 1.0254.3984 1.0254 1.125V31h1.7109v-4.2891c0-1.2656-.8262-2.1093-2.0566-2.1093-.92 0-1.67.498-1.9512 1.289h-.0352c-.2109-.8203-.8437-1.289-1.7519-1.289-.8555 0-1.5293.498-1.793 1.2539h-.0351v-1.1367h-1.6524V31zM38.0723 29.8633c-.5801 0-.9668-.293-.9668-.7617 0-.4454.3633-.7325 1.0019-.7793l1.3242-.0821v.4571c0 .6797-.6152 1.166-1.3593 1.166zm-.5625 1.2363c.7851 0 1.5644-.3926 1.916-1.0605h.0351V31h1.6524v-4.3184c0-1.2656-1.0488-2.0976-2.6602-2.0976-1.664 0-2.7011.8379-2.7656 2.0566h1.5645c.082-.4629.4863-.7793 1.125-.7793.6445 0 1.0546.3399 1.0546.9258v.416l-1.582.0938c-1.5644.0937-2.4434.7558-2.4434 1.8984 0 1.1309.9083 1.9043 2.1036 1.9043zM47.9277 27.0566c-.0761-1.4238-1.1543-2.4726-2.8535-2.4726-1.8808 0-3.082 1.2539-3.082 3.2695 0 2.0508 1.2012 3.2813 3.0937 3.2813 1.6524 0 2.7598-.9551 2.8477-2.4375h-1.5938c-.1054.6855-.5507 1.0957-1.2363 1.0957-.8496 0-1.3769-.7032-1.3769-1.9395 0-1.2129.5273-1.9277 1.3711-1.9277.7031 0 1.1425.4687 1.2421 1.1308h1.5879zM52.7207 22.3984c-2.5078 0-4.0781 1.6817-4.0781 4.377 0 2.6894 1.5703 4.3711 4.0781 4.3711 2.502 0 4.0781-1.6817 4.0781-4.3711 0-2.6953-1.5761-4.377-4.0781-4.377zm0 1.4766c1.3828 0 2.2676 1.125 2.2676 2.9004 0 1.7695-.8848 2.8887-2.2676 2.8887-1.3887 0-2.2734-1.1192-2.2734-2.8887 0-1.7754.8906-2.9004 2.2734-2.9004zM57.6191 28.5859c.0528 1.5938 1.3946 2.5606 3.4102 2.5606 2.1152 0 3.4102-1.0488 3.4102-2.7012 0-1.2832-.7793-2.0039-2.5665-2.3613l-.8964-.1817c-.9961-.1992-1.4063-.5214-1.4063-1.0429 0-.6211.5859-1.0313 1.459-1.0313.8906 0 1.5176.4336 1.5762 1.1543h1.6699c-.0293-1.5527-1.2715-2.584-3.2461-2.584-1.8809 0-3.2285 1.0254-3.2285 2.5723 0 1.2598.8262 2.0684 2.5137 2.4023l.8906.1758c1.0605.2168 1.459.5332 1.459 1.0899 0 .6211-.6446 1.0781-1.5879 1.0781-.961 0-1.6758-.4219-1.7871-1.1309h-1.67zM94.7091 29.5758c-.4611-.2895-.8705-.644-1.2126-1.0535-.3734-.4242-.7194-.8703-1.0372-1.3321-.7466-1.026-1.3305-2.1483-1.7351-3.331C90.2369 22.4831 90 21.1657 90 19.8767c0-1.4383.3314-2.6934.9767-3.7469.4776-.8246 1.1892-1.5144 2.047-1.999.8285-.4856 1.7936-.7513 2.7683-.7696.3412 0 .7116.0458 1.1015.1374.2827.0733.6238.1924 1.043.339.5361.1924.8285.3115.926.339.3119.1099.5751.1557.7798.1557.156 0 .3797-.0458.6287-.1191.141-.0458.409-.1282.79-.284.376-.1283.674-.2382.911-.3206.361-.1008.71-.1924 1.023-.2382.381-.055.758-.0733 1.12-.0458.692.0458 1.325.1832 1.891.3847.994.3757 1.796.962 2.395 1.7957-.254.1465-.488.3169-.707.5038-.475.394-.877.8612-1.199 1.3788-.419.7054-.634 1.5025-.628 2.3087.015.9921.283 1.8643.819 2.6201.377.5497.881 1.0206 1.495 1.4072.302.1924.568.3252.819.4122-.117.3436-.246.678-.395 1.0078-.338.7393-.741 1.4475-1.218 2.1162-.421.5772-.753 1.0078-1.004 1.2918-.392.4397-.77.7695-1.15 1.005-.42.2611-.912.3994-1.416.3994-.341.0138-.682-.0275-1.008-.1163-.282-.0871-.561-.1851-.834-.2959-.286-.1228-.581-.2272-.882-.3115-.371-.0916-.751-.1356-1.1349-.1347-.3899 0-.77.0458-1.1307.1328-.3022.0807-.5946.1796-.8841.2978-.4094.1603-.6774.2657-.8334.3115-.3158.0879-.6395.1411-.965.1603-.5069 0-.9787-.1374-1.4485-.4123l.0127-.0119zM101.39 12.664c-.663.3115-1.292.4434-1.9231.3995-.0975-.5919 0-1.2002.2631-1.8662.234-.568.546-1.081.975-1.5391.448-.47639.984-.87033 1.589-1.15433.643-.31148 1.257-.47639 1.842-.50387.078.62297 0 1.23678-.244 1.89639-.222.58631-.553 1.12681-.974 1.61241-.425.4764-.951.8703-1.546 1.1543l.018.0009z"/>
+</svg>
+        </a>
+    <a class="download__link" href="https://keybase.io/download">Also available for Android, iOS, Linux, and Windows</a>
+</template>
+
+<template id="link-windows">
+    <a href="https://keybase.io/docs/the_app/install_windows" class="download__button" aria-label="Download Keybase">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+    <path fill="var(--color--content__text)" d="M0 0h120v40H0z"/>
+    <path fill="var(--color--content__background)" d="M1 1h118v38H1z"/>
+    <path fill="var(--color--content__text)" d="M17.3 13.4v-1h-3.6v1.4h1.8v.1c0 1-.8 1.8-2 1.8-1.4 0-2.3-1.1-2.3-3 0-1.8.9-2.8 2.3-2.8 1 0 1.7.5 2 1.4h1.7c-.3-1.7-1.8-2.9-3.7-2.9-2.5 0-4 1.6-4 4.3 0 2.8 1.5 4.4 4 4.4 2.4 0 3.8-1.3 3.8-3.7zM21.1 11.8c.8 0 1.3.6 1.3 1.4h-2.6c0-.8.6-1.4 1.3-1.4zm1.3 3.3c-.1.5-.6.8-1.2.8-.9 0-1.5-.6-1.5-1.5v-.1h4.4v-.6c0-1.9-1.2-3.1-3-3.1-1.9 0-3 1.3-3 3.3 0 2 1.1 3.2 3 3.2 1.6 0 2.7-.8 3-2h-1.7zM25.4 9.3v1.4h-.9V12h1v3.3c0 1.2.5 1.7 2 1.7h.8v-1.3h-.4c-.5 0-.8-.2-.8-.7v-3h1.2v-1.3H27V9.3h-1.7zM33.5 17v-2.6l.8-1 2.5 3.6H39l-3.3-4.7 3.1-3.8h-2l-3.1 3.9V8.5h-1.9V17h1.8z"/>
+    <path fill="var(--color--content__text)" d="M42 11.8c.7 0 1.2.6 1.3 1.4h-2.7c0-.8.6-1.4 1.3-1.4zm1.3 3.3c-.2.5-.7.8-1.3.8-.9 0-1.4-.6-1.4-1.5v-.1h4.3v-.6c0-1.9-1.1-3.1-3-3.1-1.8 0-3 1.3-3 3.3 0 2 1.2 3.2 3 3.2 1.6 0 2.8-.8 3-2h-1.6zM46.5 19.3c1.6 0 2.4-.5 3-2.2l2-6.4h-1.7l-1.3 5-1.4-5h-1.9l2.2 6.3v.3c-.2.5-.5.7-1.1.7h-.4v1.3h.6zM56 17.1c1.5 0 2.5-1.2 2.5-3.2s-1-3.3-2.5-3.3a2 2 0 00-2 1.2V8.5h-1.7V17H54v-1a2 2 0 002 1.1zm-.6-5.1c.8 0 1.4.7 1.4 1.9 0 1.1-.6 1.8-1.4 1.8-.9 0-1.4-.7-1.4-1.8 0-1.2.5-2 1.4-2zM61.8 15.9c-.6 0-1-.3-1-.8 0-.4.4-.7 1-.8h1.4v.4c0 .7-.6 1.2-1.4 1.2zm-.5 1.2c.7 0 1.5-.4 1.9-1v.9H65v-4.3c0-1.3-1-2.1-2.7-2.1-1.7 0-2.7.8-2.8 2H61c0-.4.5-.7 1.1-.7.7 0 1 .3 1 .9v.4l-1.5.1c-1.6 0-2.4.8-2.4 1.9 0 1.1.9 1.9 2 1.9zM65.9 12.6c0 1 .6 1.5 1.8 1.8l1 .2c.7.1.9.3.9.7 0 .4-.4.6-1 .6-.7 0-1.1-.3-1.2-.8h-1.7c.1 1.2 1.1 2 2.9 2 1.6 0 2.7-.8 2.7-2 0-1-.5-1.5-1.8-1.7l-1.1-.3c-.7 0-.9-.3-.9-.6 0-.4.4-.7 1-.7s1 .3 1 .8h1.6c0-1.2-1-2-2.6-2s-2.6.8-2.6 2zM75 11.8c.7 0 1.2.6 1.3 1.4h-2.7c0-.8.6-1.4 1.4-1.4zm1.3 3.3c-.2.5-.6.8-1.3.8-.8 0-1.4-.6-1.4-1.5v-.1h4.3v-.6c0-1.9-1.1-3.1-3-3.1-1.8 0-3 1.3-3 3.3 0 2 1.2 3.2 3.1 3.2 1.6 0 2.7-.8 2.9-2h-1.6zM10 31h1.7v-5H13v-1.3h-1.2v-.4c0-.4.2-.7.8-.7h.5v-1a5 5 0 00-1-.1c-1.4 0-2 .5-2 1.8v.4h-.8V26h.8v5zM16.5 31.1c2 0 3.2-1.2 3.2-3.2s-1.3-3.3-3.2-3.3c-1.8 0-3 1.2-3 3.3 0 2 1.1 3.2 3 3.2zm0-1.3c-.8 0-1.3-.7-1.3-2 0-1.2.5-2 1.3-2 .9 0 1.4.8 1.4 2 0 1.3-.5 2-1.4 2zM20.5 31h1.7v-3.5c0-.9.5-1.4 1.4-1.4h.6v-1.4h-.5c-.7 0-1.3.4-1.5 1.1v-1h-1.7V31zM32.5 25.2l1.7 5.8h1.6l2.3-8.5h-1.9L35 28.7l-1.6-6.2h-1.5l-1.6 6.2-1.4-6.2H27l2.2 8.5H31l1.6-5.8zM39 31h1.6v-6.3H39V31zm.8-7.1c.5 0 .8-.4.8-1 0-.4-.3-.8-.8-.8a.9.9 0 100 1.8zM41.8 31h1.7v-3.6c0-.8.5-1.4 1.2-1.4.8 0 1.2.5 1.2 1.3V31h1.7v-4c0-1.5-.8-2.4-2.2-2.4-1 0-1.6.5-2 1.2v-1h-1.6V31zM51 31.1a2 2 0 002-1.2V31h1.7v-8.5H53v3.3a2 2 0 00-2-1.2c-1.6 0-2.6 1.3-2.6 3.2 0 2 1 3.3 2.6 3.3zm.6-5.1c.8 0 1.4.7 1.4 1.9 0 1.1-.6 1.8-1.4 1.8-.9 0-1.4-.7-1.4-1.8 0-1.2.5-2 1.4-2zM58.7 31.1c1.9 0 3.1-1.2 3.1-3.2s-1.2-3.3-3-3.3c-2 0-3.2 1.2-3.2 3.3 0 2 1.2 3.2 3.1 3.2zm0-1.3c-.8 0-1.4-.7-1.4-2 0-1.2.6-2 1.4-2 .8 0 1.4.8 1.4 2 0 1.3-.6 2-1.4 2zM71.5 24.7h-1.7l-1 4.7-1.1-4.7H66L65 29.4l-1-4.7h-1.7l1.7 6.3h1.8l1.1-4.4L68 31h1.8l1.7-6.3zM72 26.6c0 1 .6 1.5 1.8 1.8l1 .2c.7.1 1 .3 1 .7 0 .4-.5.6-1.1.6-.7 0-1.1-.3-1.2-.8h-1.7c.1 1.2 1.1 2 2.9 2 1.6 0 2.7-.8 2.7-2 0-1-.5-1.5-1.8-1.7l-1.1-.3c-.6 0-.9-.3-.9-.6 0-.4.4-.7 1-.7s1 .3 1 .8h1.7c0-1.2-1-2-2.7-2-1.6 0-2.6.8-2.6 2zM88 12.2l9-1.3v8.7h-9v-7.4zm10-1.4L110 9v10.4H98v-8.6zm-10 9.8h9v8.6L88 28v-7.4zm10 0h12V31l-11.8-1.7"/>
+</svg>
+        </a>
+    <a class="download__link" href="https://keybase.io/download">Also available for Android, iOS, Linux, and Mac OS</a>
+</template>
+
+
+<template id="link-unknown">
+  <a href="https://keybase.io/download" class="download__button" aria-label="Download Keybase">
+  <svg viewBox="0 0 118 38" xmlns="http://www.w3.org/2000/svg">
+    <rect stroke="var(--color--content__text)" fill="none"  x=".5" y=".5" width="117" height="37" rx="4.5"/>
+    <path fill="var(--color-content__text)" d="M27.7 25.6a1 1 0 00-.9.6 1 1 0 00.7 1.3 1 1 0 001-.4 1 1 0 00-.8-1.5zm5.7-7.6a11 11 0 00-5.4-4.2 4 4 0 00-2.4-5.3 5 5 0 00-1.7-.3c0-.1-.1-.6.5-1.8l-1.2-.7-.3.3-1.2 1.8h-.5l-2-.1c-2.7 0-2.7 2.7-2.7 2.3v2c-.2 1.3 1 2.5 2.4 2.6h.4a11 11 0 00-2.4 1.9c-3.2 3.2-3.2 6.8-3.2 9.7v1.7l1.2-1.5c.2.7.4 1.3.8 2 .3.5.7.4 1 .3.2 0 .5-.3.2-1-.4-.9-.7-1.8-.8-2.8l2.4-3-1.3 3.8c3-2.2 8-3.2 12.1-2 1.8.5 3.5 0 4.4-1.2v-.2c.2.5.2 1 .2 1.5a12 12 0 01-.8 4.2c0 .3.1.7.5.8.4 0 .8-.2 1-.6.4-1.3.7-2.8.7-4.4 0-2-.7-4-1.9-5.8zm-13-7.4h-.9v1.1h.6v1H19a.6.6 0 01-.6-.7v-1.9c.1-.6.8-.5.8-.5h1.5l-.4 1zm7.5 9a.5.5 0 01-.7-.1l-.5-.6-1.8 1.4a.4.4 0 01-.5 0l-.9-1a.4.4 0 01.1-.6l1.8-1.4-.7-.9-1 .7a.4.4 0 01-.5 0l-.2-.2a.4.4 0 01.1-.6l.9-.7-1-1.1a.5.5 0 01.1-.7.5.5 0 01.8 0l4.1 5a.5.5 0 010 .7zm-5.3 6a1 1 0 00-.8.6 1 1 0 00.6 1.3 1 1 0 001-.4 1 1 0 00-.8-1.5z"/>
+    <path fill="var(--color-content__text)" d="M49.7 15V8.3h2.4c.5 0 1 .1 1.4.3a3.1 3.1 0 011.8 1.7 3.5 3.5 0 010 2.7 3 3 0 01-1.8 1.8l-1.4.2h-2.4zm2.4-.9c.4 0 .8 0 1-.2.4-.1.6-.3.8-.5l.5-.8.1-1-.1-.9a2.2 2.2 0 00-1.2-1.3l-1-.2h-1.5v5h1.4zm6.8 1c-.4 0-.7 0-1-.2l-.8-.5-.5-.8a2.8 2.8 0 01.5-2.8A2.3 2.3 0 0159 10c.4 0 .7.1 1 .3.3 0 .6.3.8.5l.5.8.2 1-.2 1-.5.8-.8.5c-.3.2-.6.2-1 .2zm0-.8l.7-.1.4-.4.3-.6a2.2 2.2 0 000-1.3c0-.2-.2-.4-.3-.5a1.4 1.4 0 00-1-.6l-.7.2c-.2 0-.4.2-.5.4l-.3.5v1.4c0 .2.2.3.3.5a1.4 1.4 0 001.1.5zm7.8.7l-1.2-3.7-1.2 3.7h-1L62 10.2h.9l1 3.7 1.3-3.7h.8l1.2 3.7 1-3.7h1L67.6 15h-1zm6.5 0v-3c0-.5-.1-.8-.3-1l-.7-.2c-.3 0-.6.1-.8.3l-.6.5V15H70v-4.8h1v.7a2 2 0 01.6-.6 2.2 2.2 0 011-.3c.6 0 1 .2 1.2.4.3.3.4.7.4 1.2V15h-1zm2.3 0V8.3h1V15h-1zm4.5.1c-.4 0-.7 0-1-.2l-.8-.5-.5-.8a2.8 2.8 0 01.5-2.8A2.3 2.3 0 0180 10c.4 0 .7.1 1 .3.3 0 .6.3.8.5l.5.8.1 1-.1 1-.5.8-.8.5c-.3.2-.6.2-1 .2zm0-.8l.6-.1.5-.4.3-.6a2.2 2.2 0 000-1.3c0-.2-.2-.4-.3-.5a1.4 1.4 0 00-1.1-.6l-.6.2c-.2 0-.4.2-.5.4l-.3.5-.1.7v.7l.4.5a1.4 1.4 0 001 .5zm6.6.7v-.5a2 2 0 01-.7.5l-1 .1h-.5l-.6-.4a1.5 1.5 0 01-.5-1.2l.1-.7.4-.5.6-.3h.6l.9.1.7.5v-.8c0-.3-.2-.6-.4-.7-.2-.2-.5-.3-.8-.3a2 2 0 00-1.5.7l-.4-.7c.6-.5 1.2-.8 2-.8l.8.1a1.6 1.6 0 011 .9l.2.7V15h-1zm-1.3-.5c.3 0 .5 0 .7-.2.2 0 .4-.2.6-.4v-.8l-.6-.4-.7-.1c-.3 0-.6 0-.8.2-.2.2-.3.4-.3.7 0 .3.1.6.3.7.2.2.5.3.8.3zm7 .5v-.7c-.1.3-.4.4-.7.6l-.8.2c-.4 0-.6 0-1-.2a2 2 0 01-.6-.5l-.4-.8-.2-1c0-.4 0-.7.2-1 0-.4.2-.6.4-.9a2 2 0 011.6-.6c.3 0 .6 0 .8.2.3.1.5.3.7.6V8.3h1V15h-1zm-1.3-.7c.3 0 .5 0 .8-.2l.5-.5v-2c0-.2-.3-.4-.5-.5a1.5 1.5 0 00-1.4-.1c-.2 0-.3.2-.5.3l-.3.6v1.4l.3.5a1.3 1.3 0 001.1.5zM55.5 29l-2.9-3.7-.7.8V29h-2v-9.3h2v4.1l3.3-4.1h2.5L54 24l4 5h-2.5zm6 .2c-.4 0-1-.1-1.4-.3l-1.1-.7a3.4 3.4 0 01-1-2.6c0-.5 0-1 .2-1.4a3.5 3.5 0 011.9-1.8 3.5 3.5 0 012.7 0c.5.1.8.4 1.1.7.3.3.5.7.7 1.2.2.4.3 1 .3 1.5v.4h-5c0 .4.2.8.5 1 .3.4.8.6 1.4.6a2.8 2.8 0 001.8-.7l.8 1.1c-.4.3-.8.6-1.3.7a5 5 0 01-1.5.3zm1.6-4.2v-.5l-.4-.5-.5-.4-.7-.1-.8.1-.5.4-.3.5-.1.5h3.3zm3 5l.3.1H67.3l.4-.4.2-.6-2.7-6.9H67l1.7 4.7 1.8-4.7h2l-3.3 8c-.2.5-.6 1-1 1.2a3.4 3.4 0 01-2 .3H66l.3-1.6zm9-3.2l.7.6.8.2c.5 0 1-.2 1.3-.5.3-.4.4-.9.4-1.5s-.1-1-.4-1.4c-.3-.4-.8-.5-1.3-.5-.3 0-.6 0-.8.2-.3.1-.6.3-.7.5v2.4zM73.3 29v-9.3h1.8V23a2.6 2.6 0 012-1 2.8 2.8 0 012.2 1c.3.2.5.6.7 1l.2 1.5c0 .6-.1 1-.3 1.5-.1.5-.3.8-.6 1.1-.3.3-.6.6-1 .7a3 3 0 01-1.1.3l-1.2-.3-1-.8v.9h-1.7zm12.3 0v-.7c-.3.3-.6.5-1 .6-.3.2-.7.3-1.2.3a2.6 2.6 0 01-1.5-.6c-.3-.2-.5-.4-.6-.7l-.2-1c0-.4 0-.7.2-1 .1-.3.3-.5.6-.7.2-.1.4-.3.7-.3l.8-.2c.5 0 .9.1 1.3.3.4 0 .7.3.9.6v-1a1 1 0 00-.4-.8c-.3-.2-.7-.3-1.1-.3-.8 0-1.4.3-2 .8l-.7-1.2a4 4 0 011.4-.8 4.8 4.8 0 012.7-.1c.4 0 .7.2 1 .4l.6.8c.2.3.3.7.3 1.2V29h-1.8zm-1.4-1c.2 0 .5 0 .8-.2.2 0 .4-.2.6-.4v-.9l-.6-.4-.8-.2c-.4 0-.7.1-1 .3-.2.2-.3.4-.3.8 0 .3.1.5.3.7.3.2.6.3 1 .3zm7.4 1.2c-.6 0-1.2-.1-1.7-.3-.6-.2-1-.5-1.4-.8l.8-1.2.5.3.5.3.7.2.6.1c.4 0 .7 0 .9-.2.2-.1.3-.3.3-.5l-.1-.3-.3-.2-.5-.1a15.9 15.9 0 00-1.4-.4c-.3 0-.6-.2-.8-.3l-.7-.6c-.2-.3-.2-.6-.2-1l.1-.8.6-.7.8-.4c.4-.2.8-.2 1.2-.2.6 0 1.1 0 1.6.2l1.2.7-.8 1.2c-.2-.2-.4-.4-.8-.5-.4-.2-.7-.3-1.2-.3-.3 0-.5 0-.7.2-.2.2-.3.3-.3.5s0 .3.3.4l1 .3c.3 0 .6 0 .9.2l.9.3.6.7c.2.2.3.6.3 1 0 .3 0 .6-.2.9a2 2 0 01-.6.7l-.9.4-1.2.2zm7.4 0l-1.5-.3-1.1-.7a3.4 3.4 0 01-1-2.6c0-.5 0-1 .2-1.4a3.5 3.5 0 011.8-1.8 3.5 3.5 0 012.8 0c.5.1.8.4 1.1.7.3.3.5.7.7 1.2.2.4.2 1 .2 1.5v.4h-5c0 .4.3.8.6 1 .3.4.8.6 1.4.6a2.8 2.8 0 001.8-.7l.8 1.1c-.4.3-.8.6-1.3.7a5 5 0 01-1.5.3zm1.5-4.2v-.5l-.4-.5-.5-.4-.7-.1-.8.1-.5.4-.3.5-.1.5h3.3z"/>
+  </svg>
+  </a>
+</template>
+
+<div class="download">
+  <div class="download__title">Get Keybase</div>
+  <p class="download__description">
+    Keybase is a safe, secure, and private app for everything you do online.
+  </p>
+</div>
+<script>
+let ua = window.navigator.userAgent;
+let platform = 'unknown';
+
+if (ua.indexOf('Android') !== -1) { platform = 'android'; }
+else if (ua.indexOf('Linux') !== -1) { platform = 'linux'; }
+else if (ua.indexOf('Windows') !== -1) { platform = 'windows'; }
+else if (ua.indexOf('Win32') !== -1) { platform = 'windows'; }
+else if (ua.indexOf('iPhone') !== -1) { platform = 'ios'; }
+else if (ua.indexOf('iPad') !== -1) { platform = 'ios'; }
+else if (ua.indexOf('Mac OS') !== -1) { platform = 'mac'; }
+
+let temp = document.querySelector('#link-' + platform);
+let clone = temp.content.cloneNode(true);
+
+document.querySelector("div.download").appendChild(clone);
+</script>
+    <span class="site-footer__copyright">(C) Keybase — 2022</span>
+    <span class="site-footer__disclaimer">Keybase Book is <a href="https://github.com/keybase/book-content/">open source</a>.</span>
+  </div>
+</footer>
+  </body>
+</html>

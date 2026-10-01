@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="referrer" content="origin-when-cross-origin">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/pico.min.css">
+  <title>
+did:plc Specification v0.1
+</title>
+  <style>
+html { position: relative; min-height: 100%; height: auto; }
+body { margin-bottom: 3em; }
+body > nav { background-color: var(--muted-border-color); }
+body > footer { position: absolute; bottom: 0px; padding: 2em; background-color: var(--muted-border-color); }
+thead th { font-weight: bold; }
+main article { margin: 2.5rem 0; padding: 2rem; }
+
+/* Green Light scheme (Default) */
+/* Can be forced with data-theme="light" */
+[data-theme="light"],
+:root:not([data-theme="dark"]) {
+  --color: black;
+  --primary: #3949ab;
+  --primary-hover: #3f51b5;
+  --primary-focus: rgba(57, 73, 171, 0.125);
+  --primary-inverse: #FFF;
+  --code-color: var(--color);
+}
+
+/* Green Dark scheme (Auto) */
+/* Automatically enabled if user has Dark mode enabled */
+@media only screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color: white;
+    --primary: #3949ab;
+    --primary-hover: #3f51b5;
+    --primary-focus: rgba(57, 73, 171, 0.25);
+    --primary-inverse: #FFF;
+    --code-color: var(--color);
+  }
+}
+
+/* Green Dark scheme (Forced) */
+/* Enabled if forced with data-theme="dark" */
+[data-theme="dark"] {
+  --color: white;
+  /* --muted-color: white; */
+  --primary: #3949ab;
+  --primary-hover: #3f51b5;
+  --primary-focus: rgba(57, 73, 171, 0.25);
+  --primary-inverse: #FFF;
+  --code-color: var(--color);
+}
+
+/* Green (Common styles) */
+:root {
+  --form-element-active-border-color: var(--primary);
+  --form-element-focus-color: var(--primary-focus);
+  --switch-color: var(--primary-inverse);
+  --switch-checked-background-color: var(--primary);
+}
+  </style>
+  
+  
+  
+  
+  <meta name="application-name" name="DID PLC Directory">
+  <meta name="generator" name="webplc">
+</head>
+<body>
+<nav class="container-fluid">
+  <ul>
+  	<li><a href="/"><strong>did:plc</strong></a></li>
+  </ul>
+  <ul>
+  	<li><a href="/resolve" >Lookup</a> </li>
+  	<li><a href="/api/redoc" >API</a> </li>
+  	<li><a href="/spec/v0.1/did-plc" >Specification</a> </li>
+    <li><a href="https://github.com/did-method-plc/did-method-plc">Code</a></li>
+  </ul>
+</nav>
+
+<main class="container">
+  <h1><code>did:plc</code> Method Specification</h1>
+
+<p><strong>Version:</strong> v0.3.0 (December 2025)</p>
+
+<p>DID PLC is a self-authenticating <a href="https://www.w3.org/TR/did-core/">DID</a> which is strongly-consistent, recoverable, and allows for key rotation.</p>
+
+<p>An example DID is: <code>did:plc:ewvi7nxzyoun6zhxrhs64oiz</code></p>
+
+<p>Control over a <code>did:plc</code> identity rests in a set of reconfigurable rotation keys pairs. These keys can sign update operations to mutate the identity (including key rotations), with each operation referencing a prior version of the identity state by hash. Each identity starts from an initial genesis operation, and the hash of this initial object is what defines the DID itself (that is, the DID URI identifier string). A central directory server collects and validates operations, and maintains a transparent log of operations for each DID.</p>
+
+<h2>How it works</h2>
+
+<p>The metadata associated with an active <code>did:plc</code> identifier at any point in time is listed below. The encoding and structure differs somewhat from DID document formatting and semantics, but this information is sufficient to render a valid DID document.</p>
+
+<ul>
+<li><code>did</code> (string): the full DID identifier</li>
+<li><code>rotationKeys</code> (array of strings): priority-ordered list of public keys in <code>did:key</code> encoding. must include least 1 key and at most 5 keys, with no duplication. control of the DID identifier rests in these keys. not included in DID document.</li>
+<li><code>verificationMethods</code> (map with string keys and values): maps services to public keys, stored in <code>did:key</code> encoding. The service id strings should not include a <code>#</code> prefix; that will be added when rendering the DID document. used to generate <code>verificationMethods</code> of DID document. these keys do not have control over the DID document.</li>
+<li><code>alsoKnownAs</code> (array of strings): priority-ordered list of URIs which indicate other names or aliases associated with the DID identifier</li>
+<li><code>services</code> (map with string keys; values are maps with <code>type</code> and <code>endpoint</code> string fields): a set of service / URL mappings. the key strings should not include a <code>#</code> prefix; that will be added when rendering the DID document.</li>
+</ul>
+
+<p>Every update operation to the DID identifier, including the initial creation operation (the genesis operation), contains all of the above information, except for the <code>did</code> field. The DID itself is generated from a hash of the signed genesis operation (details described below), which makes the DID entirely self-certifying. Updates after initial creation contain a pointer to the most-recent previous operation (by hash).</p>
+
+<p>Operations are signed and submitted to the central PLC directory server over an un-authenticated HTTP request. The PLC server validates operations against any and all existing operations on the DID (including signature validation, recovery time windows, etc), and either rejects the operation or accepts and permanently stores the operation, along with a server-generated timestamp.</p>
+
+<p>A special operation type is a &ldquo;tombstone&rdquo;, which clears all of the data fields and permanently deactivates the DID. Note that the usual recovery time window applies to tombstone operations.</p>
+
+<p>Note that <code>rotationKeys</code> and <code>verificationMethods</code> (signing keys) may have public keys which are re-used across many accounts. There is not necessarily a one-to-one mapping between a DID and either rotation keys or signing keys.</p>
+
+<p>Only <code>secp256k1</code> (&ldquo;k256&rdquo;) and NIST P-256 (&ldquo;p256&rdquo;) keys are currently supported for rotation keys, whereas <code>verificationMethods</code> keys can be any syntactically-valid <code>did:key</code>.</p>
+
+<h3>Use with AT Protocol</h3>
+
+<p>The following information should be included for use with atproto:</p>
+
+<ul>
+<li><code>verificationMethods</code>: an <code>atproto</code> entry with a &ldquo;blessed&rdquo; public key type, to be used as a signing key for authenticating updates to the account&rsquo;s repository. The signing key does not have any control over the DID identity unless also included in the <code>rotationKeys</code> list. Best practice is to maintain separation between rotation keys and atproto signing keys.</li>
+<li><code>alsoKnownAs</code>: should include an <code>at://</code> URI indicating a handle (hostname) for the account. Note that the handle/DID mapping needs to be validated bi-directionally (via handle resolution), and needs to be re-verified periodically</li>
+<li><code>services</code>: an <code>atproto_pds</code> entry with an <code>AtprotoPersonalDataServer</code> type and http/https URL <code>endpoint</code> indicating the account&rsquo;s current PDS hostname. for example, <code>https://pds.example.com</code> (no <code>/xrpc/</code> suffix needed).</li>
+</ul>
+
+<h3>Operation Serialization, Signing, and Validation</h3>
+
+<p>There are a couple of variations on the operation data object schema. The operations are also serialized both as simple JSON objects, or binary DAG-CBOR encoding for the purpose of hashing or signing.</p>
+
+<p>A regular creation or update operation contains the following fields:</p>
+
+<ul>
+<li><code>type</code> (string): with fixed value <code>plc_operation</code></li>
+<li><code>rotationKeys</code> (array of strings): as described above</li>
+<li><code>verificationMethods</code> (mapping of string keys and values): as described above</li>
+<li><code>alsoKnownAs</code> (array of strings): as described above</li>
+<li><code>services</code> (mapping of string keys and object values): as described above</li>
+<li><code>prev</code> (string, nullable): a CID hash pointer to a previous operation of an update, or <code>null</code> for a creation. If <code>null</code>, the key should actually be part of the object, with value <code>null</code>, not simply omitted. In DAG-CBOR encoding, the CID is string-encoded, not a binary IPLD &ldquo;Link&rdquo;</li>
+<li><code>sig</code> (string): signature of the operation in <code>base64url</code> encoding</li>
+</ul>
+
+<p>A tombstone operation contains:</p>
+
+<ul>
+<li><code>type</code> (string): with fixed value <code>plc_tombstone</code></li>
+<li><code>prev</code> (string): same as above, but not nullable</li>
+<li><code>sig</code> (string): signature of the operation (same as above)</li>
+</ul>
+
+<p>There is also a deprecated legacy operation format, supported <em>only</em> for creation (&ldquo;genesis&rdquo;) operations:</p>
+
+<ul>
+<li><code>type</code> (string): with fixed value <code>create</code></li>
+<li><code>signingKey</code> (string): single <code>did:key</code> value (not an array of strings)</li>
+<li><code>recoveryKey</code> (string): single <code>did:key</code> value (not an array of strings); and note &ldquo;recovery&rdquo; terminology, not &ldquo;rotation&rdquo;</li>
+<li><code>handle</code> (string): single value, indicating atproto handle, instead of <code>alsoKnownAs</code>. bare handle, with no <code>at://</code> prefix</li>
+<li><code>service</code> (string): single value, http/https URL of atproto PDS</li>
+<li><code>prev</code> (null): always include, but always with value <code>null</code></li>
+<li><code>sig</code> (string): signature of the operation (same as above)</li>
+</ul>
+
+<p>Legacy <code>create</code> operations are stored in the PLC registry and may be returned in responses, so validating software needs to support that format. Conversion of the legacy format to &ldquo;regular&rdquo; operation format is relatively straight-forward, but there exist many <code>did:plc</code> identifiers where the DID identifier itself is based on the hash of the old format, so they will unfortunately be around forever.</p>
+
+<p>The process for signing and hashing operation objects is to first encode them in the DAG-CBOR binary serialization format. <a href="https://ipld.io/specs/codecs/dag-cbor/spec/">DAG-CBOR</a> is a restricted subset of the Concise Binary Object Representation (CBOR), an IETF standard (RFC 8949), with semantics and value types similar to JSON.</p>
+
+<p>As an anti-abuse mechanism, operations have a maximum size when encoded as DAG-CBOR. The current limit is 7500 bytes.</p>
+
+<p>For signatures, the object is first encoded as DAG-CBOR <em>without</em> the <code>sig</code> field at all (as opposed to a <code>null</code> value in that field). Those bytes are signed using ECDSA-SHA256, and the signature value is encoded as follows:</p>
+
+<ol>
+<li><p>The signature value is represented as a pair of integers <code>(r, s)</code>, as described in <a href="https://datatracker.ietf.org/doc/html/rfc4754#section-3">RFC 4754</a></p></li>
+
+<li><p>The signature is canonicalized in &ldquo;low-S&rdquo; form. This means that if <code>s</code> is greater than or equal to half the EC group order constant, the value of <code>s</code> is replaced by <code>-s</code> (modulo the EC group order). This process is described for the secp256k1 curve as part of <a href="https://github.com/bitcoin/bips/blob/master/bip-0062.mediawiki">Bitcoin BIP-0062</a>, but this definition can be generalized to the NIST P-256 curve also.</p></li>
+
+<li><p>The <code>(r, s)</code> tuple is encoded to bytes in the same format as specified in the <a href="https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/sign#ecdsa">SubtleCrypto</a> web API. This format is refered to by a variety of names, including &ldquo;raw&rdquo;, &ldquo;compact&rdquo;, &ldquo;IEEE P1363&rdquo;. For secp256k1 and NIST P-256 curves, it is concretely: 32 big-endian bytes representing integer <code>r</code>, followed by 32 big-endian bytes representing integer <code>s</code>.</p></li>
+
+<li><p>Those bytes are encoded as a string using <code>base64url</code> encoding, without equals-padding. Trailing padding bits MUST be set to zero, as described in <a href="https://www.rfc-editor.org/rfc/rfc4648.html#section-3.5">RFC 4648 section 3.5</a></p></li>
+</ol>
+
+<p>The <code>sig</code> field is then populated with the encoded signature string.</p>
+
+<p>When verifying signatures, the above encoding requirements must be enforced strictly, with non-canonical encodings or &ldquo;High-S&rdquo; values rejected as invalid. Otherwise, it would be possible for the signature encoding to be modified (thus modifying the operation&rsquo;s CID) without invalidating the signature.</p>
+
+<p>For <code>prev</code> references, the SHA-256 of the previous operation&rsquo;s bytes are encoded as a &ldquo;<a href="https://github.com/multiformats/cid">CID</a>&rdquo;, with the following parameters:</p>
+
+<ul>
+<li>CIDv1</li>
+<li><code>base32</code> multibase encoding (prefix: <code>b</code>)</li>
+<li><code>dag-cbor</code> multibase type (code: 0x71)</li>
+<li><code>sha-256</code> multihash (code: 0x12)</li>
+</ul>
+
+<p>Rotation keys are serialized as strings using <a href="https://w3c-ccg.github.io/did-key-spec/">did:key</a>, and only <code>secp256k1</code> (&ldquo;k256&rdquo;) and NIST P-256 (&ldquo;p256&rdquo;) are currently supported.</p>
+
+<p>The signing keys (<code>verificationMethods</code>) are also serialized using <code>did:key</code> in operations. When rendered in a DID document, signing keys are represented as objects, with the actual keys in multibase encoding, as required by the DID Core specification.</p>
+
+<p>Although <code>verificationMethods</code> signing keys can be of any key type (unlike rotation keys), they must still be syntactically valid. i.e. They must have a <code>did:key:</code> prefix, followed by a <code>base58btc</code> multibase string.</p>
+
+<p>The DID itself is derived from the hash of the first operation in the log, called the &ldquo;genesis&rdquo; operation. The signed operation is encoded in DAG-CBOR; the bytes are hashed with SHA-256; the hash bytes are <code>base32</code>-encoded (not hex encoded) as a string; and that string is truncated to 24 chars to yield the &ldquo;identifier&rdquo; segment of the DID.</p>
+
+<p>In pseudo-code:
+<code>did:plc:${base32Encode(sha256(createOp)).slice(0,24)}</code></p>
+
+<h3>Identifier Syntax</h3>
+
+<p>The DID PLC method name is <code>plc</code>. The identifier part is 24 characters long, including only characters from the <code>base32</code> encoding set. An example is <code>did:plc:yk4dd2qkboz2yv6tpubpc6co</code>. This means:</p>
+
+<ul>
+<li>the overall identifier length is 32 characters</li>
+<li>the entire identifier is lower-case (and should be normalized to lower-case)</li>
+<li>the entire identifier is ASCII, and includes only the characters <code>a-z</code>, <code>0-9</code>, and <code>:</code> (and does not even use digits <code>0189</code>)</li>
+</ul>
+
+<h3>Key Rotation &amp; Account Recovery</h3>
+
+<p>Any key specified in <code>rotationKeys</code> has the ability to sign operations for the DID document.</p>
+
+<p>The set of rotation keys for a DID is not included in the DID document. They are an internal detail of PLC, and are stored in the operation log.</p>
+
+<p>Keys are listed in the <code>rotationKeys</code> field of operations in order of descending authority.</p>
+
+<p>The PLC server provides a 72hr window during which a higher authority rotation key can &ldquo;rewrite&rdquo; history, clobbering any operations (or chain of operations) signed by a lower-authority rotation key.</p>
+
+<p>To do so, that key must sign a new operation that points to the CID of the last &ldquo;valid&rdquo; operation - ie the fork point.
+The PLC server will accept this recovery operation as long as:</p>
+
+<ul>
+<li>it is submitted within 72hrs of the to-be-invalidated operation</li>
+<li>the key used for the signature has a lower index in the <code>rotationKeys</code> array than the key that signed the to-be-invalidated operation</li>
+</ul>
+
+<h3>Privacy and Security Concerns</h3>
+
+<p>The full history of DID operations and updates, including timestamps, is permanently publicly accessible. This is true even after DID deactivation. It is important to recognize (and communicate to account holders) that any personally identifiable information (PII) encoded in <code>alsoKnownAs</code> URIs will be publicly visible even after DID deactivation, and can not be redacted or purged.</p>
+
+<p>In the context of atproto, this includes the full history of handle updates and PDS locations (URLs) over time. To be explicit, it does not include any other account metadata such as email addresses or IP addresses. Handle history could potentially de-anonymize account holders if they switch handles between a known identity and an anonymous or pseudonymous identity.</p>
+
+<p>The PLC server does not cross-validate <code>alsoKnownAs</code> or <code>service</code> entries in operations. This means that any DID can &ldquo;claim&rdquo; to have any identity, or to have an active account with any service (identified by URL). This data should <em>not</em> be trusted without bi-directionally verification, for example using handle resolution.</p>
+
+<p>The timestamp metadata encoded in the PLC audit log could be cross-verified against network traffic or other information to de-anonymize account holders. It also makes the &ldquo;identity creation date&rdquo; public.</p>
+
+<p>If &ldquo;rotation&rdquo; and &ldquo;signing&rdquo; keys are re-used across multiple accounts, it could reveal non-public identity details or relationships. For example, if two individuals cross-share rotation keys as a trusted backup, that information is public. If device-local recovery or signing keys are uniquely shared by two identifiers, that would indicate that those identities may actually be the same person.</p>
+
+<h4>PLC Server Trust Model</h4>
+
+<p>The PLC server has a public endpoint to receive operation objects from any client (without authentication). The server verifies operations, orders them according to recovery rules, and makes the log of operations publicly available.</p>
+
+<p>The operation log is self-certifying, and contains all the information needed to construct (or verify) the the current state of the DID document.</p>
+
+<p>Some trust is required in the PLC server. Its attacks are limited to:</p>
+
+<ul>
+<li>Denial of service: rejecting valid operations, or refusing to serve some information about the DID</li>
+<li>Misordering: In the event of a fork in DID document history, the server could choose to serve the &ldquo;wrong&rdquo; fork</li>
+</ul>
+
+<h3>DID Creation</h3>
+
+<p>To summarize the process of creating a new <code>did:plc</code> identifier:</p>
+
+<ul>
+<li>collect values for the essential operation data fields, including generating new secure key pairs if necessary</li>
+<li>construct an &ldquo;unsigned&rdquo; regular operation object. include a <code>prev</code> field with <code>null</code> value. do not use the deprecated/legacy operation format for new DID creations</li>
+<li>serialize the &ldquo;unsigned&rdquo; operation with DAG-CBOR, and sign the resulting bytes with one of the initial <code>rotationKeys</code>. encode the signature as <code>base64url</code>, and use that to construct a &ldquo;signed&rdquo; operation object</li>
+<li>serialize the &ldquo;signed&rdquo; operation with DAG-CBOR, take the SHA-256 hash of those bytes, and encode the hash bytes in <code>base32</code>. use the first 24 characters to generate DID value (<code>did:plc:&lt;hashchars&gt;</code>)</li>
+<li>serialize the &ldquo;signed&rdquo; operation as simple JSON, and submit it via HTTP POST to <code>https://plc.directory/:did</code></li>
+<li>if the HTTP status code is successful, the DID has been registered</li>
+</ul>
+
+<p>When &ldquo;signing&rdquo; using a &ldquo;<code>rotationKey</code>&rdquo;, what is meant is to sign using the private key associated the public key in the <code>rotationKey</code> list.</p>
+
+<h3>DID Update</h3>
+
+<p>To summarize the process of updating a new <code>did:plc</code> identifier:</p>
+
+<ul>
+<li>if the current DID state isn&rsquo;t known, fetch the current state from <code>https://plc.directory/:did/data</code></li>
+<li>if the most recent valid DID operation CID (hash) isn&rsquo;t known, fetch the audit log from <code>https://plc.directory/:did/log/audit</code>, identify the most recent valid operation, and get the <code>cid</code> value. if this is a recovery operation, the relevant &ldquo;valid&rdquo; operation to fork from may not be the most recent in the audit log</li>
+<li>collect updated values for the essential operation data fields, including generating new secure key pairs if necessary (eg, key rotation)</li>
+<li>construct an &ldquo;unsigned&rdquo; regular operation object. include a <code>prev</code> field with the CID (hash) of the previous valid operation</li>
+<li>serialize the &ldquo;unsigned&rdquo; operation with DAG-CBOR, and sign the resulting bytes with one of the previously-existing <code>rotationKeys</code>. encode the signature as <code>base64url</code>, and use that to construct a &ldquo;signed&rdquo; operation object</li>
+<li>serialize the &ldquo;signed&rdquo; operation as simple JSON, and submit it via HTTP POST to <code>https://plc.directory/:did</code></li>
+<li>if the HTTP status code is successful, the DID has been updated</li>
+<li>the DID update may be nullified by a &ldquo;rotation&rdquo; operation during the recovery window (currently 72hr)</li>
+</ul>
+
+<h3>DID Deactivation</h3>
+
+<p>To summarize the process of de-activating an existing <code>did:plc</code> identifier:</p>
+
+<ul>
+<li>if the most recent valid DID operation CID (hash) isn&rsquo;t known, fetch the audit log from <code>https://plc.directory/:did/log/audit</code>, identify the most recent valid operation, and get the <code>cid</code> value</li>
+<li>construct an &ldquo;unsigned&rdquo; tombstone operation object. include a <code>prev</code> field with the CID (hash) of the previous valid operation</li>
+<li>serialize the &ldquo;unsigned&rdquo; tombstone operation with DAG-CBOR, and sign the resulting bytes with one of the previously-existing <code>rotationKeys</code>. encode the signature as <code>base64url</code>, and use that to construct a &ldquo;signed&rdquo; tombstone operation object</li>
+<li>serialize the &ldquo;signed&rdquo; tombstone operation as simple JSON, and submit it via HTTP POST to <code>https://plc.directory/:did</code></li>
+<li>if the HTTP status code is successful, the DID has been deactivated</li>
+<li>the DID deactivation may be nullified by a &ldquo;rotation&rdquo; operation during the recovery window (currently 72hr)</li>
+</ul>
+
+<h3>DID Resolution</h3>
+
+<p>PLC DIDs are resolved to a DID document (JSON) by making simple HTTP GET request to the PLC server. The resolution endpoint is: <code>https://plc.directory/:did</code></p>
+
+<p>The PLC-specific state data (based on the most recent operation) can be fetched as a JSON object at: <code>https://plc.directory/:did/data</code></p>
+
+<h3>Audit Logs</h3>
+
+<p>As an additional check against abuse by the PLC server, and to promote resiliency, the set of all identifiers is enumerable, and the set of all operations for all identifiers (even &ldquo;nullified&rdquo; operations) can be enumerated and audited.</p>
+
+<p>The log of currently-valid operations for a given DID, as JSON, can be found at: <code>https://plc.directory/:did/log/audit</code></p>
+
+<p>The audit history of a given DID (complete with timestamps and invalidated forked histories), as JSON, can be found at: <code>https://plc.directory/:did/log/audit</code></p>
+
+<p>To fully validate a DID document against the operation log:</p>
+
+<ul>
+<li>fetch the full audit log</li>
+<li>for the genesis operation, validate the DID
+
+<ul>
+<li>note that the genesis operation may be in deprecated/legacy format, and should be encoded and verified in that format</li>
+<li>see the &ldquo;DID Creation&rdquo; section above for details</li>
+</ul></li>
+<li>for each operation in the log, validate signatures:
+
+<ul>
+<li>identify the set of valid <code>rotationKeys</code> at that point of time: either the initial keys for a &ldquo;genesis&rdquo; operation, or the keys in the <code>prev</code> operation</li>
+<li>remove any <code>sig</code> field and serialize the &ldquo;unsigned&rdquo; operation with DAG-CBOR, yielding bytes</li>
+<li>decode the <code>base64url</code> <code>sig</code> field to bytes</li>
+<li>for each of the <code>rotationKeys</code>, attempt to verify the signature against the &ldquo;unsigned&rdquo; bytes</li>
+<li>if no key matches, there has been a trust violation; the PLC server should never have accepted the operation</li>
+</ul></li>
+<li>verify the correctness of &ldquo;nullified&rdquo; operations and the current active operation log using the rules around rotation keys and recovery windows</li>
+</ul>
+
+<h3>Bulk Export</h3>
+
+<p>The complete log of operations for all DIDs on the PLC server can be enumerated efficiently.</p>
+
+<p>The HTTP endpoint <code>https://plc.directory/export</code> returns data in <a href="https://jsonlines.org/">JSON lines</a> format. It supports two query parameters:</p>
+
+<ul>
+<li><code>count</code>: An integer, maximum 1000 lines per request.</li>
+<li><code>after</code>: The cursor for pagination, either an integer or a timestamp string (see below).</li>
+</ul>
+
+<p>When <code>after</code> is an integer, each JSON line has the following fields:</p>
+
+<ul>
+<li><code>type</code> (string): A string with fixed value <code>sequenced_op</code>.</li>
+<li><code>operation</code> (object): A valid PLC create, update, or tombstone operation.</li>
+<li><code>did</code> (string): The corresponding <code>did:plc:</code> identifier.</li>
+<li><code>cid</code> (string): The computed CID of the <code>operation</code> value.</li>
+<li><code>createdAt</code> (string): The timestamp corresponding to when the operation was accepted by the directory, in <code>YYYY-MM-DDTHH:mm:ss.sssZ</code> format.</li>
+<li><code>seq</code> (integer): A sequence number. The returned entries have strictly monotonic sequence numbers. (See also: &ldquo;Sequence Number Semantics&rdquo;)</li>
+</ul>
+
+<p>The <code>seq</code> value of the final JSON line can be used as the <code>after</code> cursor value to retrieve the next page of results.</p>
+
+<p>For legacy compatibility reasons, when <code>after</code> is a timestamp string (in <code>YYYY-MM-DDTHH:mm:ss.sssZ</code> format), each JSON line has the following fields:</p>
+
+<ul>
+<li><code>operation</code> (object): A valid PLC create, update, or tombstone operation.</li>
+<li><code>did</code> (string): The corresponding <code>did:plc:</code> identifier.</li>
+<li><code>cid</code> (string): The computed CID of the <code>operation</code> value.</li>
+<li><code>createdAt</code> (string): The timestamp corresponding to when the operation was accepted by the directory, in <code>YYYY-MM-DDTHH:mm:ss.sssZ</code> format.</li>
+<li><code>nullified</code> (boolean): Whether the directory considers this operation to have been nullified (per &ldquo;Key Rotation &amp; Account Recovery&rdquo; section).</li>
+</ul>
+
+<p>This format is referred to as the legacy export format. Its use is discouraged and it may be deprecated in the future.</p>
+
+<p>Legacy response entries are sorted in <code>createdAt</code> order, and the <code>createdAt</code> value of the final JSON line can be used as the <code>after</code> cursor to retrieve the next page of results.</p>
+
+<p>NOTE: If the <code>after</code> query parameter is not set, the response format defaults to the legacy format, returning the first page of results. Request <code>after=0</code> to retrieve the first page of results in the <code>sequenced_op</code> format.</p>
+
+<p>NOTE: Legacy responses order operations by <code>createdAt</code>, while non-legacy responses order operations by <code>seq</code>. These orders may be slightly different! In either case, operations for a particular DID will always be in the same order relative to each other. In other words, if you isolated the operations for a single DID, the <code>seq</code> order and the <code>createdAt</code> orders are identical.</p>
+
+<h3>Export Streaming WebSocket</h3>
+
+<p>The <a href="https://datatracker.ietf.org/doc/html/rfc6455">WebSocket</a> endpoint at <code>wss://plc.directory/export/stream</code> returns a stream of JSON objects in the same format as the (non-legacy) <code>/export</code> endpoint. JSON objects are delimited by the WebSocket message framing layer (<em>not</em> newlines).</p>
+
+<p>When a client connects with no parameters set, the WebSocket streams newly accepted operations after the time of connection.</p>
+
+<p>The <code>cursor</code> parameter may be set to a previously-seen sequence number, to allow the client to &ldquo;catch up&rdquo; on earlier operations (starting with the first operation with greater <code>seq</code> than the passed <code>cursor</code> value). Once the client has caught up, the WebSocket will continue to stream new operations in real-time. The PLC directory may place limits on how far back the cursor value can go (see close reasons below), and in such cases clients are advised to fall back to the paginated <code>/export</code> API. A typical catch-up limit may be on the order of 7 days.</p>
+
+<p>In certain error conditions, the server will close the connection with a &ldquo;reason&rdquo; string (as specified in <a href="https://datatracker.ietf.org/doc/html/rfc6455#section-7.1.6">RFC-6455 Section 7.1.6</a>). The following close reasons are specified:</p>
+
+<ul>
+<li><code>FutureCursor</code> (The cursor value is too high)</li>
+<li><code>OutdatedCursor</code> (The cursor value is too low - before the catch-up limit)</li>
+<li><code>ConsumerTooSlow</code> (The stream consumer is not receiving messages fast enough to keep up with real-time)</li>
+</ul>
+
+<h3>Sequence Number Semantics</h3>
+
+<p>The PLC directory service assigns sequence numbers (<code>seq</code>) to all accepted operations. These sequence numbers should be seen as an annotation of the authenticated data (similarly to <code>createdAt</code> timestamps), and not an intrinsic property of the operations themselves. Sequence numbers are only visible in <code>/export*</code> API responses, and they exist to facilitate pagination/cursoring through these endpoints.</p>
+
+<p>A PLC mirror or replica service could plausibly assign different sequence numbers to the same operations, so long as the operation ordering is internally consistent.</p>
+
+<h2>Example</h2>
+
+<pre><code class="language-ts">// note: we use shorthand for keys for ease of reference, but consider them valid did:keys
+
+// Genesis operation
+const genesisOp = {
+  type: 'plc_operation',
+  verificationMethods: {
+    atproto: &quot;did:key:zSigningKey&quot;
+  },
+  rotationKeys: [
+    &quot;did:key:zRecoveryKey&quot;,
+    &quot;did:key:zRotationKey&quot;
+  ],
+  alsoKnownAs: [
+    &quot;at://alice.test&quot;
+  ],
+  services: {
+    atproto_pds: {
+      type: &quot;AtprotoPersonalDataServer&quot;,
+      endpoint: &quot;https://example.test&quot;
+    }
+  },
+  prev: null,
+  sig: 'sig_from_did:key:zRotationKey'
+}
+
+// Operation to update recovery key
+const updateKeys = {
+  type: 'plc_operation',
+  verificationMethods: {
+    atproto: &quot;did:key:zSigningKey&quot;
+  },
+  rotationKeys: [
+    &quot;did:key:zNewRecoveryKey&quot;,
+    &quot;did:key:zRotationKey&quot;
+  ],
+  alsoKnownAs: [
+    &quot;at://alice.test&quot;
+  ],
+  services: {
+    atproto_pds: {
+      type: &quot;AtprotoPersonalDataServer&quot;,
+      endpoint: &quot;https://example.test&quot;
+    }
+  },
+  prev: CID(genesisOp),
+  sig: 'sig_from_did:key:zRotationKey'
+}
+
+// Invalid operation that will be rejected
+// because did:key:zAttackerKey is not listed in rotationKeys
+const invalidUpdate = {
+  type: 'plc_operation',
+  verificationMethods: {
+    atproto: &quot;did:key:zAttackerKey&quot;
+  },
+  rotationKeys: [
+    &quot;did:key:zAttackerKey&quot;
+  ],
+  alsoKnownAs: [
+    &quot;at://bob.test&quot;
+  ],
+  services: {
+    atproto_pds: {
+      type: &quot;AtprotoPersonalDataServer&quot;,
+      endpoint: &quot;https://example.test&quot;
+    }
+  },
+  prev: CID(updateKeys),
+  sig: 'sig_from_did:key:zAttackerKey'
+}
+
+// Valid recovery operation that &quot;undoes&quot; updateKeys
+const recoveryOp = {
+  type: 'plc_operation',
+  verificationMethods: {
+    atproto: &quot;did:key:zSigningKey&quot;
+  },
+  rotationKeys: [
+    &quot;did:key:zRecoveryKey&quot;
+  ],
+  alsoKnownAs: [
+    &quot;at://alice.test&quot;
+  ],
+  services: {
+    atproto_pds: {
+      type: &quot;AtprotoPersonalDataServer&quot;,
+      endpoint: &quot;https://example.test&quot;
+    }
+  },
+  prev: CID(genesisOp),
+  sig: 'sig_from_did:key:zRecoveryKey'
+}
+</code></pre>
+
+<h2>Presentation as DID Document</h2>
+
+<p>The following data:</p>
+
+<pre><code class="language-ts">{
+  did: 'did:plc:7iza6de2dwap2sbkpav7c6c6',
+  verificationMethods: {
+    atproto: 'did:key:zDnaeh9v2RmcMo13Du2d6pjUf5bZwtauYxj3n9dYjw4EZUAR7'
+  },
+  rotationKeys: [
+    'did:key:zDnaedvvAsDE6H3BDdBejpx9ve2Tz95cymyCAKF66JbyMh1Lt',
+    'did:key:zDnaeh9v2RmcMo13Du2d6pjUf5bZwtauYxj3n9dYjw4EZUAR7'
+  ],
+  alsoKnownAs: [
+    'at://alice.test'
+  ],
+  services: {
+    atproto_pds: {
+      type: &quot;AtprotoPersonalDataServer&quot;,
+      endpoint: &quot;https://example.test&quot;
+    }
+  }
+}
+</code></pre>
+
+<p>Will be presented as the following DID document:</p>
+
+<pre><code class="language-ts">{
+  '@context': [
+    'https://www.w3.org/ns/did/v1',
+    'https://w3id.org/security/multikey/v1',
+    'https://w3id.org/security/suites/ecdsa-2019/v1'
+  ],
+  id: 'did:plc:7iza6de2dwap2sbkpav7c6c6',
+  alsoKnownAs: [ 'at://alice.test' ],
+  verificationMethod: [
+    {
+      id: '#atproto',
+      type: 'Multikey',
+      controller: 'did:plc:7iza6de2dwap2sbkpav7c6c6',
+      publicKeyMultibase: 'zDnaeh9v2RmcMo13Du2d6pjUf5bZwtauYxj3n9dYjw4EZUAR7'
+    }
+  ],
+  service: [
+    {
+      id: '#atproto_pds',
+      type: 'AtprotoPersonalDataServer',
+      serviceEndpoint: 'https://example2.com'
+    }
+  ]
+}
+</code></pre>
+
+<h2>Possible Future Changes</h2>
+
+<p>The set of allowed (&ldquo;blessed&rdquo;) public key cryptographic algorithms (aka, curves) may expanded over time, slowly. Likewise, support for additional blessed CID types and parameters may be expanded over time, slowly.</p>
+
+<p>The recovery time window may become configurable, within constraints, as part of the DID metadata itself.</p>
+
+<p>Support for &ldquo;DID Controller Delegation&rdquo; could be useful (eg, in the context of atproto PDS hosts), and may be incorporated.</p>
+
+<p>In the context of atproto, support for multiple handles for the same DID is being considered, with a single primary handle. But no final decision has been made yet.</p>
+
+<p>We welcome proposals for small additions to make <code>did:plc</code> more generic and reusable for applications other than atproto. But no promises: atproto will remain the focus for the near future.</p>
+
+<p>We are enthusiastic about the prospect of moving governance of the <code>did:plc</code> method, and operation of registry servers, out of the sole control of Bluesky Social PBC. Audit log snapshots, mirroring, and automated third-party auditing have all been considered as mechanisms to mitigate the centralized nature of the PLC server.</p>
+
+<p>The size of the <code>verificationMethods</code>, <code>alsoKnownAs</code>, and <code>service</code> mappings/arrays may be specifically constrained. And the maximum DAG-CBOR size may be constrained.</p>
+
+<p>As an anti-abuse mechanisms, the PLC server load balancer restricts the number of HTTP requests per time window. The limits are generous, and operating large services or scraping the operation log should not run into limits. Specific per-DID limits on operation rate may be introduced over time. For example, no more than N operations per DID per rotation key per 24 hour window.</p>
+
+<p>A &ldquo;DID PLC history explorer&rdquo; web interface would make the public nature of the DID audit log more publicly understandable.</p>
+
+<p>It is conceivable that longer DID PLCs, with more of the SHA-256 characters, will be supported in the future. It is also conceivable that a different hash algorithm would be allowed. Any such changes would allow existing DIDs in their existing syntax to continue being used.</p>
+
+<h2>Changelog</h2>
+
+<h3>2025-12-04 (v0.3.0)</h3>
+
+<ul>
+<li><p>Introduces <code>/export/stream</code> WebSocket endpoint</p></li>
+
+<li><p>Existing <code>/export</code> endpoint supports using sequence numbers for pagination, with a new response format.</p></li>
+</ul>
+
+<h3>2025-10-22 (v0.2.1)</h3>
+
+<p>This update resolves ambiguities in the spec, aligning it with the existing behaviour of the reference implementation.</p>
+
+<ul>
+<li><p>Clarify signature encoding rules.</p></li>
+
+<li><p>Clarify operation nullification time constraints.</p></li>
+
+<li><p>Remove some non-normative statements.</p></li>
+</ul>
+
+<h3>2025-06-05 (v0.2)</h3>
+
+<ul>
+<li><p><code>verificationMethods</code> keys may now use any syntactically-valid <code>did:key:</code>, regardless of key format (allowing e.g. <code>ed25519</code> keys). Rotation keys are not affected by this change, the original format constraints still apply.</p></li>
+
+<li><p>A total limit of 10 <code>verificationMethods</code> (per DID) has been added.</p></li>
+</ul>
+
+</main>
+
+<footer class="container-fluid">
+	<div class="container">
+    <small>Developed by <a href="https://bsky.social">Bluesky Social PBC</a> for <a href="https://atproto.com">atproto</a></small>
+  </div>
+</footer>
+</body>
+</html>
