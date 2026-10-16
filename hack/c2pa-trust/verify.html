@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>C2PA one-shot verifier</title>
+  </head>
+  <body>
+    <input id="asset" type="file" />
+    <pre id="result"></pre>
+
+    <script type="module">
+      import { createC2pa } from '@contentauth/c2pa-web';
+
+      const LIVE_WASM = 'https://verify.contentauthenticity.org/c2pa.wasm';
+      const OFFICIAL_ANCHORS = [
+        'https://raw.githubusercontent.com/c2pa-org/conformance-public/refs/heads/main/trust-list/C2PA-TRUST-LIST.pem',
+        'https://raw.githubusercontent.com/c2pa-org/conformance-public/refs/heads/main/trust-list/C2PA-TSA-TRUST-LIST.pem',
+      ];
+      const LEGACY_ANCHORS = 'https://verify.contentauthenticity.org/trust/anchors.pem';
+      const LEGACY_ALLOWED = 'https://verify.contentauthenticity.org/trust/allowed.pem';
+
+      const input = document.querySelector('#asset');
+      const result = document.querySelector('#result');
+
+      function finish(value) {
+        result.textContent = JSON.stringify(value);
+        document.body.dataset.done = 'true';
+      }
+
+      async function fetchText(url) {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch ${url}: HTTP ${response.status}`);
+        }
+        return response.text();
+      }
+
+      async function createToolkitSettings() {
+        const [official, localAnchors, allowedList] = await Promise.all([
+          Promise.all(OFFICIAL_ANCHORS.map(fetchText)),
+          fetchText(LEGACY_ANCHORS),
+          fetchText(LEGACY_ALLOWED),
+        ]);
+
+        return {
+          trust: {
+            trustAnchors: [...official, localAnchors].join('\n'),
+            allowedList,
+          },
+          verify: {
+            verifyTrust: true,
+            verifyAfterReading: true,
+          },
+        };
+      }
+
+      function mediaType(file) {
+        if (file.type) return file.type;
+        return file.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+      }
+
+      input.addEventListener(
+        'change',
+        async () => {
+          const file = input.files?.[0];
+          if (!file) {
+            finish({ status: 'error', error: 'No input file selected' });
+            return;
+          }
+
+          let sdk;
+          let reader;
+
+          try {
+            const settings = await createToolkitSettings();
+
+            // This is the SDK/WASM pairing deployed by the official Verify site.
+            // Source: https://github.com/contentauth/verify-site/blob/main/package.json
+            sdk = await createC2pa({ wasmSrc: LIVE_WASM });
+
+            // Reader.fromBlob returns null when no C2PA metadata is present.
+            // Source: https://github.com/contentauth/c2pa-js/tree/main/packages/c2pa-web
+            reader = await sdk.reader.fromBlob(mediaType(file), file, settings);
+
+            if (!reader) {
+              finish({ status: 'no-manifest' });
+              return;
+            }
+
+            const store = await reader.manifestStore();
+            finish({
+              status: 'manifest-found',
+              activeManifest: store.active_manifest ?? null,
+              validationState: store.validation_state ?? null,
+              validationStatus: store.validation_status ?? [],
+            });
+          } catch (error) {
+            finish({
+              status: 'error',
+              error: error instanceof Error ? error.message : String(error),
+            });
+          } finally {
+            if (reader) await reader.free();
+            if (sdk) sdk.dispose();
+          }
+        },
+        { once: true },
+      );
+    </script>
+  </body>
+</html>
