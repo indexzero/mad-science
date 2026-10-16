@@ -1,0 +1,10 @@
+{
+  "citationKey": "schema-fixture-not-evidence",
+  "sourceURL": "https://example.invalid/not-evidence",
+  "notes": "Synthetic values used only to exercise the import schema. Never cite as human data.",
+  "samples": [
+    { "durationSeconds": 0.45, "distance": 300, "width": 30, "participant": "synthetic-1", "sourceRow": 1 },
+    { "durationSeconds": 0.58, "distance": 300, "width": 30, "participant": "synthetic-2", "sourceRow": 2 },
+    { "durationSeconds": 0.71, "distance": 300, "width": 30, "participant": "synthetic-3", "sourceRow": 3 }
+  ]
+}
