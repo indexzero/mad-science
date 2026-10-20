@@ -27,26 +27,26 @@ final class PowerController {
         log("assertion released")
     }
 
-    /// Run `/usr/bin/pmset displaysleepnow`. Log the exit code, stderr,
-    /// and stdout. Never throws out. The app never runs `pmset repeat`.
+    /// Run `/usr/bin/pmset displaysleepnow`. Log the exit code and the
+    /// output. Never throws out. The app never runs `pmset repeat`.
+    /// Rider B4-F1: stdout and stderr share one pipe, read once, so a
+    /// chatty child cannot fill the other pipe and block.
     func displaySleepNow() {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/pmset")
         process.arguments = Power.displaySleepArgs
-        let standardOutput = Pipe()
-        let standardError = Pipe()
-        process.standardOutput = standardOutput
-        process.standardError = standardError
+        let output = Pipe()
+        process.standardOutput = output
+        process.standardError = output
         do {
             try process.run()
         } catch {
             log("pmset displaysleepnow failed to start: \(error)")
             return
         }
-        let out = Self.text(standardOutput.fileHandleForReading.readDataToEndOfFile())
-        let err = Self.text(standardError.fileHandleForReading.readDataToEndOfFile())
+        let text = Self.text(output.fileHandleForReading.readDataToEndOfFile())
         process.waitUntilExit()
-        log("pmset displaysleepnow exit \(process.terminationStatus) stderr: [\(err)] stdout: [\(out)]")
+        log("pmset displaysleepnow exit \(process.terminationStatus) output: [\(text)]")
     }
 
     /// Declare local user activity so the panel powers on. Used after a
