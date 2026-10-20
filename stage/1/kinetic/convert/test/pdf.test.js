@@ -116,7 +116,17 @@ test('a page with images and no placements is a picture; body paths only is a sh
   assert.equal(pic.images.length, 1);
   assert.deepEqual(pic.images[0].box, { x: 384, y: 324, w: 1920, h: 540 });
   const shape = pageToElements({ width: 10, height: 10, uses: [], imageUses: [], images: [], bodyPaths: [{ d: 'M0 0H10V10Z', fill: '#1b1b1b', matrix: null }], defs: new Map() }, fullSlideLeaf);
-  assert.deepEqual(shape, { kind: 'shape', paths: [{ d: 'M0 0L1920 0L1920 1080Z', fill: '#1b1b1b' }] });
+  assert.deepEqual(shape, { kind: 'shape', paths: [{ order: 0, d: 'M0 0L1920 0L1920 1080Z', fill: '#1b1b1b' }] });
+  assert.equal(pic.images[0].order, 0, 'a synthetic image without an order sorts first');
+});
+
+test('page order: body paths, glyph placements, and images carry their document order', () => {
+  const p = parseSvg(svg);
+  const orders = [...p.bodyPaths.map((b) => b.order), ...p.uses.map((u) => u.order)];
+  assert.equal(new Set(orders).size, orders.length, 'orders are distinct');
+  assert.ok(p.bodyPaths.some((b) => b.order > p.uses[0].order), 'slide 1 draws rules after its first glyph');
+  const el = pageToElements(p, fullSlideLeaf);
+  assert.ok(el.paths.every((s) => typeof s.order === 'number'));
 });
 
 test('slide 12 texture C4BF6FDE page 6: a <use href="#image_7"> is an image placement, never a word (D-008 F-01)', () => {
@@ -153,4 +163,23 @@ test('classifyPage orders poster, background, composite ahead of the content cla
   assert.equal(classifyPage({ ...blank, uses: [{}], images: [{}] }, { textureType: 5 }), 'mixed');
   assert.equal(classifyPage({ ...blank, uses: [{}] }, { textureType: 6 }), 'text');
   assert.equal(classifyPage({ uses: [], imageUses: [], images: [], bodyPaths: [] }, { textureType: 5 }), 'empty');
+});
+
+// ---------- checkpoint 3 ----------
+test('a <g opacity> multiplies into the fill opacity of body paths and the opacity of images; a <use> in <defs> is no placement', () => {
+  const svgText = `<svg width="100" height="50"><defs><mask id="m"><g transform="matrix(1,0,0,1,0,0)"><image id="image_1" width="10" height="10" xlink:href="data:x"/><use xlink:href="#image_1" x="0" y="0" width="10" height="10"/></g></mask></defs>
+<g><g opacity=".1"><path d="M0 0L10 0L10 10Z" fill="#1fffa5"/><path d="M0 0L10 0L10 10Z" fill="#1fffa5" fill-opacity=".5"/></g>
+<g opacity=".5"><g opacity=".4"><image id="image_2" width="10" height="10" xlink:href="data:x"/></g></g>
+<path d="M0 0L10 0L10 10Z" fill="#ffffff"/><use xlink:href="#image_2" x="0" y="0" width="10" height="10"/></g></svg>`;
+  const p = parseSvg(svgText);
+  assert.deepEqual(p.bodyPaths.map((b) => b.fillOpacity), [0.1, 0.05, null]);
+  assert.equal(p.images.length, 1);
+  assert.ok(Math.abs(p.images[0].opacity - 0.2) < 1e-9);
+  assert.equal(p.imageUses.length, 1, 'the mask use is skipped, the body use counts');
+  assert.equal(p.imageUses[0].opacity, 1);
+  assert.deepEqual([...p.bodyPaths, ...p.images, ...p.imageUses].map((x) => x.order).sort((a, b) => a - b), [0, 1, 2, 3, 4]);
+  const el = pageToElements(p, fullSlideLeaf);
+  assert.equal(el.kind, 'picture');
+  assert.deepEqual(el.images.map((i) => [i.order, i.opacity]), [[2, 0.2], [4, 1]]);
+  assert.deepEqual(el.paths.map((s) => [s.order, s.opacity]), [[0, 0.1], [1, 0.05], [3, undefined]]);
 });

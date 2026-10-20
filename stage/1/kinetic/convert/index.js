@@ -9,7 +9,7 @@ import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LIVE_BASE, loadHeader, loadSlide, fetchAsset } from './kpf.js';
 import { composeLeaves, roundBox } from './layout.js';
-import { parsePage, pageToElements, classifyPage, wordsFromUses, withAdvances, DEFAULT_FILL } from './pdf.js';
+import { parsePage, pageToElements, classifyPage, wordsFromUses, withAdvances, stripOrder, DEFAULT_FILL } from './pdf.js';
 import { planLeaves } from './plan.js';
 import { extractPageImages, placeImage, rasterize, transcodeGif } from './media.js';
 import { collectBuilds, transitionOf } from './effects.js';
@@ -82,6 +82,14 @@ export function visibleImage(rect, clip, imgW, imgH) {
   return { box, crop: { x: r2((box.x - rect.x) * sx), y: r2((box.y - rect.y) * sy), w: r2(box.w * sx), h: r2(box.h * sy) } };
 }
 
+/** The image element fields of a placement: `flip` when the page draws the image upside down, with the crop mirrored to match. */
+export function placementFields(pl, crop, imgH) {
+  if (!pl.flipY) return crop ? { crop } : {};
+  const out = { flip: 'vertical' };
+  if (crop) out.crop = { ...crop, y: Math.round((imgH - crop.y - crop.h) * 100) / 100 };
+  return out;
+}
+
 function kpfRef(uuid, texture, asset, tr) {
   return { slide: uuid, texture, page: asset.index, textureType: tr?.textureType ?? 0, isBackgroundTexture: tr?.isBackgroundTexture ?? false };
 }
@@ -97,6 +105,9 @@ function newReport(index1, uuid) {
     pictures: { stream: 0, raster: 0 },
     mixedPages: 0,
     mixedFallbacks: 0,
+    mixedInterleaved: 0,
+    pictureShapes: { under: 0, over: 0, interleaved: 0 },
+    flippedImages: 0,
     compositeAsContent: false,
     orphans: [],
     stills: [],
@@ -176,6 +187,11 @@ async function convertSlide(ctx, index1, uuid, slide) {
     if (leaf.opacity < 1) o.opacity = Math.round(leaf.opacity * 1000) / 1000;
     return o;
   };
+  // an image placed inside a <g opacity> on its page multiplies that into the element's opacity
+  const withOpacity = (o, a) => {
+    if (a === undefined || a === null || a >= 1) return o;
+    return { ...o, opacity: Math.round((o.opacity ?? 1) * a * 1000) / 1000 };
+  };
   // the element id of a leaf: its texture, or `<texture>~n` for the n-th leaf that repeats a texture
   // (slide 22 places 36 glyph textures more than once for its typewriter build)
   const idFor = (leaf) => {
@@ -234,13 +250,17 @@ async function convertSlide(ctx, index1, uuid, slide) {
       // (the player joins them); writing both doubled deck.json to 20 MB
       const words = content.words.map((w) => (w.chars?.length ? Object.fromEntries(Object.entries(w).filter(([k]) => k !== 'd')) : w));
       const el = { ...common(leaf, baseId), kind: 'text', words, fill: content.fill, text: content.text };
-      if (content.paths.length) el.paths = content.paths;
+      if (content.paths.length) el.paths = content.paths.map(stripOrder);
       el.source = { path: 'pdf', kpf: ref };
       if (keyTokens && content.words.every((w) => keyTokens.has(w.text))) report.keyTextMatched += 1;
-      pushElement(el, texture, leaf);
       if (content.kind === 'mixed') {
-        // one image element per placement, matched to the page's streams by pixel size (D-009 F2)
+        // one image element per placement, matched to the page's streams by pixel size (D-009 F2). The
+        // images draw under the text: on 30 of the 40 mixed pages every image precedes every glyph in the
+        // page's order, on the other 10 each image precedes the glyphs of its own row (slide 12 draws a
+        // bar, then a row of text, then the next bar); `mixedInterleaved` counts the latter
         report.mixedPages += 1;
+        const firstGlyph = Math.min(...(page(texture).uses.map((u) => u.order ?? 0)));
+        if (content.images.some((pl) => (pl.order ?? 0) > firstGlyph)) report.mixedInterleaved += 1;
         const scratch = join(CACHE, 'extract', uuid, texture);
         const { images: streams, fontFilesDeleted } = extractPageImages(pdf, asset.index, scratch);
         report.fontFilesDeleted += fontFilesDeleted;
@@ -258,7 +278,8 @@ async function convertSlide(ctx, index1, uuid, slide) {
             const firstUse = file.endsWith(`-${k}.${img.ext}`);
             if (firstUse) report.bytes.streams += img.bytes;
             report.media.push({ id: `${baseId}-${k}`, kind: 'image', how: 'stream', bytes: firstUse ? img.bytes : 0, width: img.width, height: img.height, scale, cropped: !!crop, reused: !firstUse });
-            pushElement({ ...common(leaf, `${baseId}-${k}`), box, kind: 'image', src: relMedia(file), scale, ...(crop ? { crop } : {}), source: { path: 'texture', kpf: ref } }, `${baseId}-${k}`);
+            if (pl.flipY) report.flippedImages += 1;
+            pushElement({ ...withOpacity(common(leaf, `${baseId}-${k}`), pl.opacity), box, kind: 'image', src: relMedia(file), scale, ...placementFields(pl, crop, img.height), source: { path: 'texture', kpf: ref } }, `${baseId}-${k}`);
           });
         } else {
           report.mixedFallbacks += 1;
@@ -267,11 +288,12 @@ async function convertSlide(ctx, index1, uuid, slide) {
         }
         rmSync(scratch, { recursive: true, force: true });
       }
+      pushElement(el, texture, leaf);
       continue;
     }
 
     if (content.kind === 'shape') {
-      pushElement({ ...common(leaf, baseId), kind: 'shape', paths: content.paths, source: { path: 'pdf', kpf: ref } }, texture, leaf);
+      pushElement({ ...common(leaf, baseId), kind: 'shape', paths: content.paths.map(stripOrder), source: { path: 'pdf', kpf: ref } }, texture, leaf);
       continue;
     }
 
@@ -291,15 +313,26 @@ async function convertSlide(ctx, index1, uuid, slide) {
           report.bytes.streams += img.bytes;
           report.pictures.stream += 1;
           report.media.push({ id: baseId, kind: 'image', how: 'stream', bytes: img.bytes, width: img.width, height: img.height, scale, cropped: !!crop });
-          el = { ...common(leaf, baseId), box, kind: 'image', src: relMedia(file), scale, ...(crop ? { crop } : {}), source: { path: 'texture', kpf: ref } };
+          if (pl.flipY) report.flippedImages += 1;
+          el = { ...withOpacity(common(leaf, baseId), pl.opacity), box, kind: 'image', src: relMedia(file), scale, ...placementFields(pl, crop, img.height), source: { path: 'texture', kpf: ref } };
         }
         rmSync(scratch, { recursive: true, force: true });
       }
       if (!el) {
         report.pictures.raster += 1;
         el = { ...rasterElement(leaf, asset, tr, `${content.images.length} placements`), id: baseId };
+        pushElement(el, texture, leaf);
+        continue;
       }
+      // the body paths of a single-image picture page (six pages deck-wide: a panel background under the
+      // image, or dark bars over its edges) become shape elements under and over the image by page order;
+      // a raster page already carries them
+      const imageOrder = content.images[0].order ?? 0;
+      const under = content.paths.filter((p) => p.order < imageOrder);
+      const over = content.paths.filter((p) => p.order > imageOrder);
+      if (under.length) { report.pictureShapes.under += 1; pushElement({ ...common(leaf, `${baseId}-bg`), kind: 'shape', paths: under.map(stripOrder), source: { path: 'pdf', kpf: ref } }, `${baseId}-bg`); }
       pushElement(el, texture, leaf);
+      if (over.length) { report.pictureShapes.over += 1; pushElement({ ...common(leaf, `${baseId}-fg`), kind: 'shape', paths: over.map(stripOrder), source: { path: 'pdf', kpf: ref } }, `${baseId}-fg`); }
       continue;
     }
     report.skipped.push({ texture, reason: `content ${content.kind}` });

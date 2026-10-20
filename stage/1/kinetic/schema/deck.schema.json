@@ -426,6 +426,12 @@
               "minimum": 0
             }
           }
+        },
+        "flip": {
+          "enum": [
+            "vertical"
+          ],
+          "description": "The page draws the image upside down (a negative height in the PDF). The player mirrors the box vertically; `crop` is in the stored image's pixels."
         }
       }
     },

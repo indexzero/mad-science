@@ -51,7 +51,8 @@ function decodeEntities(s) {
  * `<use xlink:href="#image_N">` for a re-placed raster, which lands in `imageUses`). Group transforms
  * (`<g transform>`) are composed into every placement's `matrix`, so a matrix always maps into page space.
  * `<image>` inside `<defs>` (a mask source) is recorded in `imageDefs` and never in `images`; a `<use>`
- * inside `<defs>` (a mask's content) is not a placement.
+ * inside `<defs>` (a mask's content) is not a placement. A `<g opacity>` multiplies into the `fillOpacity`
+ * of the body paths and the `opacity` of the images under it (66 paths and one image deck-wide).
  */
 export function parseSvg(svgText) {
   const defs = new Map();
@@ -66,8 +67,11 @@ export function parseSvg(svgText) {
   let inClipPath = false;
   let width = null;
   let height = null;
+  let order = 0; // document order of placements, images, and body paths (the page's z-order)
   const stack = [IDENTITY];
+  const alphas = [1]; // <g opacity> composed down the tree (slide 44 draws its boxes inside <g opacity=".1">)
   const ctm = () => stack[stack.length - 1];
+  const alpha = () => alphas[alphas.length - 1];
   const withOwn = (transform) => {
     const own = parseMatrix(transform);
     return own ? multiply(ctm(), own) : ctm();
@@ -89,19 +93,22 @@ export function parseSvg(svgText) {
     } else if (name === 'g' || name === 'mask') {
       if (closing) {
         stack.pop();
+        alphas.pop();
       } else {
         if (name === 'g') groups += 1;
         stack.push(withOwn(a.transform));
-        if (selfClosing) stack.pop();
+        alphas.push(alpha() * (a.opacity !== undefined ? Number(a.opacity) : 1));
+        if (selfClosing) { stack.pop(); alphas.pop(); }
       }
     } else if (name === 'path' && !closing) {
       if (a.id) {
         defs.set(a.id, a.d || '');
       } else if (!inDefs && !inClipPath) {
         bodyPaths.push({
+          order: order++,
           d: a.d || '',
           fill: a.fill ?? null,
-          fillOpacity: a['fill-opacity'] !== undefined ? Number(a['fill-opacity']) : null,
+          fillOpacity: a['fill-opacity'] !== undefined || alpha() < 1 ? (a['fill-opacity'] !== undefined ? Number(a['fill-opacity']) : 1) * alpha() : null,
           stroke: a.stroke ?? null,
           strokeWidth: a['stroke-width'] !== undefined ? Number(a['stroke-width']) : null,
           transform: a.transform ?? null,
@@ -116,6 +123,7 @@ export function parseSvg(svgText) {
       const matrix = withOwn(a.transform);
       if (href.startsWith('font_')) {
         uses.push({
+          order: order++,
           href,
           text: a['data-text'] !== undefined ? decodeEntities(a['data-text']) : null,
           s: Math.abs(matrix[0]),
@@ -129,6 +137,8 @@ export function parseSvg(svgText) {
         const y = Number(a.y || 0);
         const def = imageDefs.get(href) || images.find((i) => i.id === href) || null;
         imageUses.push({
+          order: order++,
+          opacity: alpha(),
           href,
           width: a.width !== undefined ? Number(a.width) : def?.width ?? null,
           height: a.height !== undefined ? Number(a.height) : def?.height ?? null,
@@ -136,9 +146,9 @@ export function parseSvg(svgText) {
         });
       }
     } else if (name === 'image' && !closing) {
-      const img = { id: a.id ?? null, width: Number(a.width), height: Number(a.height), transform: a.transform ?? null, matrix: withOwn(a.transform), inDefs };
+      const img = { id: a.id ?? null, width: Number(a.width), height: Number(a.height), transform: a.transform ?? null, matrix: withOwn(a.transform), inDefs, opacity: alpha() };
       if (inDefs) imageDefs.set(img.id, img);
-      else images.push(img);
+      else images.push({ ...img, order: order++ });
     }
   }
   return { width, height, defs, imageDefs, uses, imageUses, bodyPaths, images, clipPaths, groups };
@@ -341,9 +351,9 @@ export function contentClass(parsed) {
 /** Every raster placement of a page (body images and image uses) with its page matrix and pixel size. */
 export function imagePlacements(parsed) {
   const out = [];
-  for (const i of parsed.images) out.push({ id: i.id, width: i.width, height: i.height, matrix: i.matrix, use: false });
-  for (const u of parsed.imageUses || []) out.push({ id: u.href, width: u.width, height: u.height, matrix: u.matrix, use: true });
-  return out;
+  for (const i of parsed.images) out.push({ id: i.id, width: i.width, height: i.height, matrix: i.matrix, use: false, order: i.order ?? 0, opacity: i.opacity ?? 1 });
+  for (const u of parsed.imageUses || []) out.push({ id: u.href, width: u.width, height: u.height, matrix: u.matrix, use: true, order: u.order ?? 0, opacity: u.opacity ?? 1 });
+  return out.sort((a, b) => a.order - b.order);
 }
 
 /**
@@ -361,7 +371,9 @@ export function pageToElements(parsed, leaf, { gapEm = 0.3, baselineEm = 0.1 } =
   const cls = contentClass(parsed);
   const images = imagePlacements(parsed).map((p) => {
     const m = multiply(pm, p.matrix);
-    return { id: p.id, width: p.width, height: p.height, box: roundBox(boxOf(m, p.width, p.height)), matrix: m.map((v) => Math.round(v * 100000) / 100000), use: p.use };
+    // a negative y scale in the placement is a vertical flip: the PDF draws the image with a negative height
+    // (slide 68's gradient overlay fades at the bottom right; drawn upright it faded at the top right)
+    return { id: p.id, width: p.width, height: p.height, box: roundBox(boxOf(m, p.width, p.height)), matrix: m.map((v) => Math.round(v * 100000) / 100000), use: p.use, order: p.order, opacity: p.opacity, flipY: m[3] < 0 };
   });
   const paths = shapesOf(parsed, pm);
   if (cls === 'picture') return { kind: 'picture', images, paths };
@@ -402,11 +414,19 @@ export function pageToElements(parsed, leaf, { gapEm = 0.3, baselineEm = 0.1 } =
   };
 }
 
-/** Body paths of a page as shape paths in slide space: { d, fill (null for none), opacity?, stroke?, strokeWidth? }. */
+/** A shape path without its `order` (deck.json carries no z-order field; element order is the z-order). */
+export function stripOrder({ order, ...p }) {
+  return p;
+}
+
+/**
+ * Body paths of a page as shape paths in slide space: { order, d, fill (null for none), opacity?, stroke?,
+ * strokeWidth? }. `order` is the document order on the page, comparable with an image placement's.
+ */
 function shapesOf(parsed, pm) {
   return parsed.bodyPaths.map((p) => {
     const m = p.matrix ? multiply(pm, p.matrix) : pm;
-    const s = { d: transformPath(p.d, m) };
+    const s = { order: p.order ?? 0, d: transformPath(p.d, m) };
     if (p.fill === 'none') s.fill = null;
     else s.fill = p.fill || DEFAULT_FILL;
     if (p.fillOpacity !== null && p.fillOpacity !== undefined) s.opacity = p.fillOpacity;
