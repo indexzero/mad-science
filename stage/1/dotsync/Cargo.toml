@@ -1,0 +1,26 @@
+[package]
+name = "dotsync"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+publish = false
+description = "Mirror a dot directory into an object store under a per-machine prefix."
+
+[dependencies]
+notify = "=8.2.0"
+notify-debouncer-full = "=0.7.0"
+object_store = { version = "=0.14.2", features = ["aws"] }
+blake3 = "=1.8.7"
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.154"
+toml = "=1.1.8"
+clap = { version = "=4.6.7", features = ["derive", "env"] }
+tokio = { version = "=1.54.0", features = ["rt-multi-thread", "macros", "fs", "time", "sync", "signal"] }
+thiserror = "=2.0.21"
+gethostname = "=1.1.0"
+globset = "=0.4.20"
+futures = "=0.3.34"
+
+[dev-dependencies]
+tempfile = "=3.27.0"
+tokio = { version = "=1.54.0", features = ["test-util"] }
