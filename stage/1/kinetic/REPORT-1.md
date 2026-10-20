@@ -507,3 +507,25 @@ No replacement is needed. Slide 4's builds are `apple:move in` with directions 1
 | `convert/pdf.js` discovery with the SVG fixture | `convert/pdf.js:50`; `convert/test/fixtures/slide1-p1.svg`; `convert/test/pdf.test.js` |
 | `convert/key.js` | `convert/key.js:96`; `convert/test/key.test.js` |
 | `.gitignore` | `.gitignore:1` |
+
+## Corrections after review
+
+Appended by checkpoint 2 after the G3 reviews of checkpoint 1 (D-008, D-009). The tables above are not edited. Where a number below differs from a table above, the number below is the corrected one.
+
+Texture formats, corrected (D-008 F-01): `mutool` writes `<use xlink:href="#image_N">` for a re-placed raster on 21 of 937 pages. The checkpoint 1 classifier counted every `<use>` as a glyph placement, so 21 picture pages were classed as text. With the rule "a glyph placement is a `<use>` whose href starts with `font_`", the counts are:
+
+| field | checkpoint 1 | corrected |
+|---|---|---|
+| text pages | 415 | 414 |
+| picture pages | 167 | 168 |
+| text pages that also carry an `<image>` | 41 | 40 |
+| glyph placements, text pages | 7,505 | 7,470 |
+| `<image>` on text pages | 99 | 96 |
+
+The fixture `convert/test/fixtures/slide12-p6.svg` (slide 12 `AFB598FC`, texture `C4BF6FDE`, page index 6, 1373x343) holds one image use and zero words; `convert/test/pdf.test.js` asserts it.
+
+Composite pages, corrected rule (D-009 F1): the `textureType` decode above says a `textureType` 0 page is "not an element; the player composites itself". That rule discards slide 1, whose 88 glyph placements live in its only `textureType` 0 page. The rule now: a composite page is a snapshot only when its event has at least one other content leaf (`text`, `picture`, `mixed`, `shape`). When the composite is the event's only content leaf (slides 1, 23, 31, 43, 44, 53, 54, 61, 62, 63) it converts like any page and `Slide.kpf.compositeAsContent` is true. `convert/plan.js` holds the rule and `convert/test/plan.test.js` tests both branches on slides 1 and 4.
+
+Mixed pages, corrected rule (D-009 F2): the line "these keep the outlines and lose the raster in checkpoint 2" is withdrawn. A page with glyph placements and an `<image>` (40 pages; slide 51 page 4 has 215 glyphs and a two-image diagram) is class `mixed`. It becomes a text element from its glyph placements AND one image element per `<image>`, each placed by its SVG transform. Neither part is discarded.
+
+Page classes, final (TECHNICAL.DESIGN.md revision 5): `text`, `picture`, `mixed`, `shape`, `background`, `poster`, `composite`. `convert/pdf.js` `classifyPage` is the one classifier.
