@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { loadHeader, loadSlide, slidePath, assetPath, isUrl, eachSlide } from '../kpf.js';
+import { loadHeader, loadSlide, slidePath, assetPath, isUrl, eachSlide, baseHash, cachePathFor } from '../kpf.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const base = join(here, 'fixtures', 'kpf');
@@ -45,4 +45,17 @@ test('eachSlide yields in header order and stops at a missing fixture', async ()
     assert.match(e.code || '', /ENOENT/);
   }
   assert.deepEqual(seen[0], [1, SLIDE_1]);
+});
+
+test('the cache key includes a sha256-12 of the base, so two exports never share an entry (D-009)', () => {
+  const a = 'https://a.example/deck/';
+  const b = 'https://b.example/deck/';
+  assert.match(baseHash(a), /^[0-9a-f]{12}$/);
+  assert.notEqual(baseHash(a), baseHash(b));
+  assert.equal(baseHash('https://all-docs.talks.charlie.dev/'), 'f169a0095e53');
+  const pa = cachePathFor(a, 'assets/header.json', '/cache');
+  const pb = cachePathFor(b, 'assets/header.json', '/cache');
+  assert.notEqual(pa, pb);
+  assert.equal(pa, join('/cache', baseHash(a), 'assets', 'header.json'));
+  assert.ok(pa.startsWith('/cache/'));
 });

@@ -1,7 +1,9 @@
 // Read a Keynote KPF HTML export: header.json, per-slide JSON, and assets.
 // `base` is the export URL (https://all-docs.talks.charlie.dev/) or a local
 // directory that mirrors it. URL fetches go through a cache under
-// .cache/kpf/ keyed by URL path, so a run is offline after the first fetch.
+// .cache/kpf/<sha256-12 of base>/ keyed by URL path, so a run is offline after
+// the first fetch and two exports never share a cache entry (D-009).
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -37,6 +39,16 @@ export function assetPath(uuid, name) {
   return `assets/${uuid}/${rel}`;
 }
 
+/** The cache directory level for a base: the first 12 hex characters of sha256(base). */
+export function baseHash(base) {
+  return createHash('sha256').update(String(base)).digest('hex').slice(0, 12);
+}
+
+/** Where a fetched path is cached: <cacheDir>/<baseHash>/<relPath>. */
+export function cachePathFor(base, relPath, cacheDir = DEFAULT_CACHE_DIR) {
+  return join(cacheDir, baseHash(base), relPath);
+}
+
 function encodePath(relPath) {
   return relPath.split('/').map(encodeURIComponent).join('/');
 }
@@ -50,8 +62,7 @@ export async function fetchPath(base, relPath, opts = {}) {
     const file = join(base, relPath);
     return { bytes: readFileSync(file), file, fromCache: false };
   }
-  const cacheDir = opts.cacheDir || DEFAULT_CACHE_DIR;
-  const file = join(cacheDir, relPath);
+  const file = cachePathFor(base, relPath, opts.cacheDir || DEFAULT_CACHE_DIR);
   if (existsSync(file) && !opts.refresh) {
     return { bytes: readFileSync(file), file, fromCache: true };
   }
