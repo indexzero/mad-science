@@ -2,7 +2,7 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { Miniflare } from "miniflare";
 import { sign, base64urlEncode, base64urlDecode } from "../src/token.mjs";
 
@@ -85,6 +85,19 @@ test("GET /health returns 200 ok", async () => {
   assert.equal(await res.text(), "ok");
 });
 
+test("/health with POST returns 405 with Allow: GET", async () => {
+  const res = await mf.dispatchFetch("http://localhost/health", { method: "POST" });
+  assert.equal(res.status, 405);
+  assert.equal(res.headers.get("Allow"), "GET");
+  assert.equal(await res.text(), "not saved: method POST is not allowed. fix: use GET");
+});
+
+test("an unknown path returns 404", async () => {
+  const res = await mf.dispatchFetch("http://localhost/no-such-path");
+  assert.equal(res.status, 404);
+  assert.equal(await res.text(), "not found");
+});
+
 test("a valid PUT returns 201 and the object bytes match", async () => {
   const key = keyFor("valid-put");
   const res = await put(mf, await mint({ key }));
@@ -140,6 +153,24 @@ test("a wrong Content-Length returns 400", async () => {
   );
   const bucket = await mf.getR2Bucket("BUNDLES");
   assert.equal(await bucket.head(key), null);
+});
+
+test("a Content-Length above size returns 400 and stores nothing", async () => {
+  const key = keyFor("length-above-size");
+  const res = await put(mf, await mint({ key, size: SIZE - 1 }));
+  assert.equal(res.status, 400);
+  assert.equal(
+    await res.text(),
+    `not saved: Content-Length ${SIZE} is not equal to size ${SIZE - 1}. fix: build the bundle again and mint a new URL`
+  );
+  const bucket = await mf.getR2Bucket("BUNDLES");
+  assert.equal(await bucket.head(key), null);
+});
+
+test("the upload route passes request.body to put() and never buffers it", () => {
+  const source = readFileSync(new URL("../src/worker.mjs", import.meta.url), "utf8");
+  assert.match(source, /\.put\(\s*key\s*,\s*request\.body\s*,/);
+  assert.doesNotMatch(source, /request\s*\.\s*(arrayBuffer|text|blob|json|formData)\s*\(/);
 });
 
 test("an expired token returns 410", async () => {
