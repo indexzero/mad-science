@@ -337,17 +337,23 @@ pub struct Listed {
     pub size: u64,
 }
 
-/// List the meta prefix of the host, read every `manifest.json` under it, and
+/// List the meta prefix of the host, read every snapshot under it, and
 /// return every entry with `deleted == false`, sorted by root then rel.
 pub async fn list_host(
     store: &dyn ObjectStore,
     layout: &Layout,
 ) -> Result<Vec<Listed>, StoreError> {
     let prefix = layout.meta_prefix();
+    // Design 8.5, corrected at review (G3 F-3): only `<meta>/<root>/manifest.json`
+    // is a snapshot. Links and tombstones sit deeper, under `<root>/links/` and
+    // `<root>/tombstones/`, and a rel may end in `manifest.json` too.
+    let depth = prefix.parts().count() + 2;
     let mut stream = store.list(Some(&prefix));
     let mut keys = Vec::new();
     while let Some(meta) = stream.try_next().await? {
-        if meta.location.filename() == Some("manifest.json") {
+        if meta.location.parts().count() == depth
+            && meta.location.filename() == Some("manifest.json")
+        {
             keys.push(meta.location);
         }
     }
@@ -651,6 +657,21 @@ mod tests {
         let mut c = Manifest::new("beta", "claude");
         c.entries.insert("x".to_string(), file_entry(5, "h5"));
         put_manifest(&fx.store, &other, &c).await.unwrap();
+        // A link record and a tombstone whose last segment is `manifest.json` (G3 F-3).
+        fx.store
+            .put(
+                &fx.layout.link_key("claude", "manifest.json"),
+                PutPayload::from(br#"{"target":"x"}"#.to_vec()),
+            )
+            .await
+            .unwrap();
+        fx.store
+            .put(
+                &fx.layout.tombstone_key("claude", "a/manifest.json"),
+                PutPayload::from(br#"{"generation":2}"#.to_vec()),
+            )
+            .await
+            .unwrap();
 
         let listed = list_host(&fx.store, &fx.layout).await.unwrap();
         let summary: Vec<(&str, &str, u64)> = listed
