@@ -1,11 +1,16 @@
 /// The four tracked modifier keys.
 public struct ChordModifiers: OptionSet, Sendable, Hashable {
+    /// The raw bits. One bit per modifier.
     public let rawValue: UInt8
     /// Make a set from its raw bits.
     public init(rawValue: UInt8) { self.rawValue = rawValue }
+    /// The Control key.
     public static let control = ChordModifiers(rawValue: 1 << 0)
+    /// The Option key.
     public static let option  = ChordModifiers(rawValue: 1 << 1)
+    /// The Command key.
     public static let command = ChordModifiers(rawValue: 1 << 2)
+    /// The Shift key.
     public static let shift   = ChordModifiers(rawValue: 1 << 3)
 
     /// "control" "option" "command" "shift" (case-insensitive). nil on any other name.
@@ -22,12 +27,15 @@ public struct ChordModifiers: OptionSet, Sendable, Hashable {
 
 /// One key event as the detector sees it.
 public struct ChordEvent: Sendable, Equatable {
-    /// keyDown or keyUp.
+    /// The two kinds of key event.
     public enum Kind: Sendable { case keyDown, keyUp }
+    /// keyDown or keyUp.
     public var kind: Kind
     /// Seconds of system uptime in production. Tests use any one origin.
     public var timestamp: Double
+    /// The virtual key code. 32 is kVK_ANSI_U.
     public var keyCode: Int64
+    /// The modifier keys held with the key.
     public var modifiers: ChordModifiers
     /// true for an autorepeat keyDown.
     public var isRepeat: Bool
@@ -57,8 +65,11 @@ public enum ChordVerdict: Sendable, Equatable {
 /// The chord state machine. A value type with state. Design section 5.2.
 /// A keyDown matches when the key code and the exact modifier set match.
 public struct ChordDetector: Sendable, Equatable {
+    /// The key code of the chord. Default 32 (kVK_ANSI_U).
     public var keyCode: Int64
+    /// The exact modifier set of the chord.
     public var modifiers: ChordModifiers
+    /// How long the chord must be held before it fires.
     public var holdSeconds: Double
     /// The timestamp of the press that armed the detector. nil when not armed.
     public private(set) var armedAt: Double?

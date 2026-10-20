@@ -81,11 +81,15 @@ public struct RawConfig: Sendable, Equatable {
     public var bedtime: String?
     /// "HH:MM" text.
     public var wake: String?
+    /// Seconds without input before the curtain rises.
     public var idleThresholdSeconds: Double?
+    /// The virtual key code of the chord key.
     public var chordKeyCode: Int?
     /// Modifier names, see `ChordModifiers.named`.
     public var chordModifiers: [String]?
+    /// Seconds the chord must be held.
     public var chordHoldSeconds: Double?
+    /// Seconds between ticks.
     public var tickSeconds: Double?
 
     /// Make an empty raw configuration. Every field is nil.
