@@ -467,6 +467,16 @@ await okv('an unexpected checksum form refuses to write rather than guess', asyn
   assert.equal(groups.plan().length, 1);
   resetServer();
 });
+await okv('messages.load with no IDs exports the loaded parent list', async () => {
+  const fast = chats.create({ delay: 0 });
+  await fast.load();
+  reqs.length = 0;
+  const r = await fast.messages.load();
+  assert.equal(r.failed.length, 0);
+  assert.deepEqual(r.loaded.map(c => c.uuid).sort(), fast.all.map(c => c.uuid).sort());
+  assert.deepEqual(fast.messages.all.map(c => c.uuid).sort(), fast.all.map(c => c.uuid).sort());
+  assert.equal(reqs.filter(x => x.url.includes('/chat_conversations/')).length, fast.all.length, 'one transcript request per chat');
+});
 
 say(failures ? `\n${failures} FAILED` : '\nall passed');
 process.exitCode = failures ? 1 : 0;
