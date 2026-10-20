@@ -2,7 +2,7 @@ import Foundation
 
 /// Wall clock rules. All minutes are minutes past midnight in 0...1439.
 /// Chat fragment, message [11], corrected for Swift 6 and testability.
-public enum Schedule {
+public enum Schedule: Sendable {
     /// All three values are minutes past midnight in 0...1439.
     /// `now` outside the range is wrapped with a positive modulo.
     /// `wake == bed` disables bedtime: the result is always true.

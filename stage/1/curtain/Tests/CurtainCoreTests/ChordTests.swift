@@ -98,4 +98,15 @@ struct ChordTests {
         #expect(ChordModifiers.named("ctrl") == nil)
         #expect(ChordModifiers.named("") == nil)
     }
+
+    /// An autorepeat with drifted modifiers is a wrong chord. It resets the
+    /// detector, so a later full-chord repeat re-arms instead of firing.
+    @Test func repeatWithDriftedModifiersResets() {
+        var detector = ChordDetector()
+        #expect(detector.feed(Self.down(0)) == .armed)
+        #expect(detector.feed(Self.down(1.0, modifiers: [.control, .option], isRepeat: true)) == .ignored)
+        #expect(detector.armedAt == nil)
+        #expect(detector.feed(Self.down(2.5, isRepeat: true)) == .armed)
+        #expect(detector.armedAt == 2.5)
+    }
 }

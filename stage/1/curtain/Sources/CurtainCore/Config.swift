@@ -30,7 +30,9 @@ public struct Config: Sendable, Equatable {
 
     /// Pure parse of raw values read from UserDefaults. A missing or
     /// malformed value falls back to the default for that key alone.
-    /// `tickSeconds` is parsed, then clamped to 0.2...60.
+    /// `tickSeconds` is parsed, then clamped to 0.2...60. A finite value
+    /// outside the range clamps to the nearer bound, so a negative value
+    /// gives 0.2. Only a non-finite value is malformed and gives 1.0.
     public static func parse(_ raw: RawConfig) -> Config {
         var config = defaults
         if let bedtime = raw.bedtime.flatMap(Schedule.parseHHMM) {
@@ -51,7 +53,7 @@ public struct Config: Sendable, Equatable {
         if let hold = raw.chordHoldSeconds, isWellFormedSeconds(hold) {
             config.chordHoldSeconds = hold
         }
-        if let tick = raw.tickSeconds, isWellFormedSeconds(tick) {
+        if let tick = raw.tickSeconds, tick.isFinite {
             config.tickSeconds = min(max(tick, tickRange.lowerBound), tickRange.upperBound)
         }
         return config

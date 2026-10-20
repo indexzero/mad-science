@@ -1,5 +1,5 @@
 /// Idle time rules.
-public enum Idle {
+public enum Idle: Sendable {
     /// true when idleSeconds >= threshold.
     public static func shouldRaise(idleSeconds: Double, threshold: Double) -> Bool {
         idleSeconds >= threshold

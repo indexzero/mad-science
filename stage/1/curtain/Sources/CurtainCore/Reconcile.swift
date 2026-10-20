@@ -32,7 +32,7 @@ public enum ReconcileAction: Sendable, Hashable {
 
 /// The level-triggered decision of one tick. Design section 5.1.
 /// The curtain never drops from a reconcile. Only the chord drops it.
-public enum Reconcile {
+public enum Reconcile: Sendable {
     /// Decide the actions for `state`.
     /// `wantUp = curtainUp || idle`. `wantAssertion = wantUp && awake`.
     public static func decide(_ state: ReconcileState) -> Set<ReconcileAction> {

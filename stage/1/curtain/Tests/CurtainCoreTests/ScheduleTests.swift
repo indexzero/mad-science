@@ -59,6 +59,13 @@ struct ScheduleTests {
         // A window that contains 1439 but not 0 separates the two wraps.
         #expect(Schedule.awake(now: 1440, wake: 1400, bed: 1439) == false)
         #expect(Schedule.awake(now: -1, wake: 1400, bed: 1439) == false)
+        // With defaults, values that a signed % would get wrong.
+        // -1 behaves as 1439 (not awake). -1020 behaves as 420 (awake).
+        // 1860 behaves as 420 (awake). 2610 behaves as 1170 (not awake).
+        #expect(Schedule.awake(now: -1, wake: 420, bed: 1170) == false)
+        #expect(Schedule.awake(now: -1020, wake: 420, bed: 1170) == true)
+        #expect(Schedule.awake(now: 1860, wake: 420, bed: 1170) == true)
+        #expect(Schedule.awake(now: 2610, wake: 420, bed: 1170) == false)
     }
 
     @Test func minutesPastMidnightSpringForward() throws {
@@ -104,5 +111,7 @@ struct ScheduleTests {
         #expect(Schedule.parseHHMM("7") == nil)
         #expect(Schedule.parseHHMM("07:60") == nil)
         #expect(Schedule.parseHHMM("") == nil)
+        #expect(Schedule.parseHHMM("7:5") == nil)
+        #expect(Schedule.parseHHMM("07:00:00") == nil)
     }
 }

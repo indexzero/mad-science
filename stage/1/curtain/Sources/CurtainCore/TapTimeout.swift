@@ -4,7 +4,7 @@ import Foundation
 /// A debug build drops the tap `debugLimit` seconds after install.
 /// A release build never drops it: `isDebug` is false.
 /// This type is pure. The executable passes the `#if DEBUG` value.
-public enum TapTimeout {
+public enum TapTimeout: Sendable {
     /// 60 seconds.
     public static let debugLimit: TimeInterval = 60
 

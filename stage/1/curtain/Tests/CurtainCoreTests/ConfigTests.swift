@@ -52,4 +52,32 @@ struct ConfigTests {
 
         #expect(Config.parse(RawConfig()).tickSeconds == 1.0)
     }
+
+    /// A finite value outside the range clamps to the nearer bound. Only a
+    /// non-finite value or a missing key falls back to the default 1.0.
+    @Test func tickSecondsClampsNegativeAndRejectsNaN() {
+        var negative = RawConfig()
+        negative.tickSeconds = -1
+        #expect(Config.parse(negative).tickSeconds == 0.2)
+
+        var zero = RawConfig()
+        zero.tickSeconds = 0
+        #expect(Config.parse(zero).tickSeconds == 0.2)
+
+        var high = RawConfig()
+        high.tickSeconds = 100
+        #expect(Config.parse(high).tickSeconds == 60)
+
+        var nan = RawConfig()
+        nan.tickSeconds = Double.nan
+        #expect(Config.parse(nan).tickSeconds == 1.0)
+
+        var infinite = RawConfig()
+        infinite.tickSeconds = Double.infinity
+        #expect(Config.parse(infinite).tickSeconds == 1.0)
+
+        var missing = RawConfig()
+        missing.tickSeconds = nil
+        #expect(Config.parse(missing).tickSeconds == 1.0)
+    }
 }

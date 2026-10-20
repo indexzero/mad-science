@@ -1,5 +1,5 @@
 /// Arguments for pmset. The executable runs the process. Design section 5.3.
-public enum Power {
+public enum Power: Sendable {
     /// "07:00" -> ["repeat", "wakeorpoweron", "MTWRFSU", "07:00:00"].
     /// "7:30" -> [..., "07:30:00"]. "07:00:00" passes through.
     /// Any other shape yields the raw text plus ":00" so pmset reports the error.
