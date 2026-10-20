@@ -1,9 +1,9 @@
 ---
-checkpoint: 1
+checkpoint: 2
 date: "2026-10-20"
 deck: "presentations/2025/_all_docs.final.key (268,682,708 bytes, read-only)"
 live_export: "https://all-docs.talks.charlie.dev/"
-design: "orckits indexzero/mad-science/2026-10-kinetic/TECHNICAL.DESIGN.md, DESIGN-FINAL revision 3"
+design: "orckits indexzero/mad-science/2026-10-kinetic/TECHNICAL.DESIGN.md, DESIGN-FINAL revision 5 (checkpoint 1 was written against revision 3)"
 tools:
   node: "v24.16.0"
   pnpm: "10.34.0"
@@ -529,3 +529,100 @@ Composite pages, corrected rule (D-009 F1): the `textureType` decode above says 
 Mixed pages, corrected rule (D-009 F2): the line "these keep the outlines and lose the raster in checkpoint 2" is withdrawn. A page with glyph placements and an `<image>` (40 pages; slide 51 page 4 has 215 glyphs and a two-image diagram) is class `mixed`. It becomes a text element from its glyph placements AND one image element per `<image>`, each placed by its SVG transform. Neither part is discarded.
 
 Page classes, final (TECHNICAL.DESIGN.md revision 5): `text`, `picture`, `mixed`, `shape`, `background`, `poster`, `composite`. `convert/pdf.js` `classifyPage` is the one classifier.
+
+## Checkpoint 2
+
+The spike: `convert/index.js` writes `decks/_all_docs/deck.json` and `media/` for slides 1, 2, and 4, and `player/` plays them. The captures are `e2e/captures/spike-*.{live,new,diff}.png` with a `.json` sidecar each, taken by `pnpm e2e --grep spike` on this Mac with chromium-1248 through Playwright 1.64.1 at 960x540. Every number below comes from that run (two runs gave the same ratios) or from `.cache/convert-summary.json`.
+
+### Captures and tolerance
+
+| capture | state | mismatch ratio | pixels | tolerance | verdict |
+|---|---|---|---|---|---|
+| `spike-4` | slide 4 after its one manual step (the dim overlay dissolves, the two text boxes move in) | 0.00060 | 313 of 518,400 | 0.03 | pass |
+| `spike-2` | slide 2 after settle, video boxes masked on both sides | 0.00000, vacuous | 0 unmasked of 518,400 | 0.03 | pass (vacuous, see below) |
+| `spike-1-2` | 200 ms into the push from slide 1 to slide 2 | 0.00073 | 379 of 518,400 | 0.03 | pass |
+
+`pixelmatch` 8.0.0, threshold 0.1. The default stays 0.03; no per-capture override exists in `e2e/tolerance.json`. The three measured ratios are below 0.001, so checkpoint 3 may tighten the default; this checkpoint does not.
+
+The `spike-2` mask is vacuous: the GIF layer `D97C61E0` is 2118.31x1110.94 at slide (-99, -26), so its box covers the whole frame and the unmasked comparison has no pixels. The design's "450x236, 5.1 percent of the frame" describes the GIF file, not its layer. Two numbers stand in: the video region live versus new is 0.061 and 0.050 on the two runs (against `videoRegion` 0.6, recorded, never asserted; the live `<img>` GIF and the new `<video>` run at different phases), and the final state of slide 2 (the warning text dissolved in at 3.51 s) compared unmasked, live versus new, is 0.00057 (`spike-2.json`, `finalStateUnmaskedRatio`, recorded, not asserted).
+
+The `spike-1-2` capture takes the live side 200 ms after ArrowRight as the design states. Its actual progress is read from the frame: slide 1's black top band ends at column 603 of 960, so the content had moved 714 slide pixels, eased progress 0.372, raw 0.433 on the push curve, about 217 ms of the 500 ms transition once the key and screenshot latency of the live player are counted. The new player is frozen at that raw progress (`window.kinetic.freezeTransition`) and its boundary lands at column 603 too. A first attempt that captured the new side at the same wall-clock 200 ms measured 0.732, because the two players differ in input and screenshot latency by about 160 ms and a push frame moves 3.8 slide pixels per millisecond; the comparison at equal progress is the one that tests rendering. The same capture found a real defect: without clipping each slide to the stage, the full-bleed GIF layer of slide 2 spilled 50 capture pixels over the outgoing slide (`player/draw.js` clips now).
+
+### Word split
+
+| slide | text elements | words recovered | words in the composite snapshot | missing | errors |
+|---|---|---|---|---|---|
+| 1 | 1 (`DD0E5007`, composite as content) | 15: `OCTOBER 16TH, 2025 JSCONF NA CHARLIE ROBBINS Cloud Native Registry _all_docs towards a at edge` | no composite snapshot holds slide 1's glyphs (`4A5B9259` is slide 2's incoming snapshot, one image) | n/a | 0 by inspection of the capture |
+| 2 | 1 (`1A0E3C95`) | 20: `WARNING: THIS TALK CONTAINS MOVING & FLASHING IMAGES. IF YOU ARE SENSITIVE TO THESE IN ANY WAY PLEASE BE ADVISED.` | 28 in `8D717B78` and `20D4F8C6` | 0 | 0 |
+| 4 | 2 (`DCEA9E7D`, `EAA9333C`) | 5: `wisdom The`, `mikeal rogers of` | 5 in `55E6C056` | 0 | 0 |
+
+Every word drawn from a text page on slides 2 and 4 also appears in the slide's composite. Slide 1 has no composite of itself; its only page is the content (D-009 F1).
+
+### Push direction
+
+Slide 1's transition is `apple:push` direction 12. In the live capture at 200 ms the content had moved left by 714 slide pixels (slide 1 exits through the left edge, slide 2 enters from the right). The mapping 12 = left holds. The new player, given `{ kind: "push", direction: "left" }`, draws the same frame within 379 pixels.
+
+### Move-in direction code space
+
+`convert/effects.js` checks every `apple:move in` against its own `position` keyframes. Slide 4 carries 12 move-ins with codes 11, 12, 13, 14; all 12 agree with the push mapping (11 right, 12 left, 13 down, 14 up, as the direction the content moves): code 12 starts at +466 x (content moves left), 13 at -272 y (moves down), 14 at +272 y (moves up), 11 at -472 x (moves right). The code space is the same as the push's. The travel distance is recorded per build (`Build.distance`): a picture travels about its own size (270 for a 223x270 picture), a text box travels until its ink clears the edge (639 and 809 for the two 2071x49x text pages).
+
+Nested effects start when their parent ends. Slide 4's first event chains ten move-ins over four levels of 0.25 s, so the collage arrives over one second (measured on the live player: `sslop/D-010/probe/live/timing2`). `Build.begin` records it: 0, 0, 0.25 x3, 0.5 x3, 0.75 x2.
+
+Slide 4 is not word by word. Every `apple:move in` on it moves a whole picture or a whole text box; the per-word textures the design describes are not on this slide. `Build.unit` is `object` for all 13 builds; the converter sets `word` only when every target is a text element with exactly one word. The player plays `word` and `character` units with a stagger for checkpoint 3.
+
+### Media (Q-005)
+
+| source | pages | bytes |
+|---|---|---|
+| embedded image streams (`mutool extract -a`), slide 4, 10 single-image picture pages | 10 | 1,445,315 (9 JPEG kept as JPEG, 1 PNG) |
+| the same 10 pages as 1x raster (`pdftocairo -png -r 72 -transp`), measured for the comparison | 10 | 2,341,537 |
+| 1x raster, slide 4 page 10 (`C9856CF9`, two images) | 1 | 651,208 |
+| video `c9cced4b0ea5` (`thinking-wilder`, 7,832,519 bytes of GIF): MP4 168,098, WebM 137,722, poster 142,993 | 1 | 448,813 |
+| shape pages as vector `shape` elements (slide 4 overlay `073A0716`, slide 2 rectangle `5DFCB3F7`) | 2 | 0 |
+| total `media/` | | 2,545,336 (2.6 MB on disk) |
+
+Choice: image streams. They are 62 percent of the 1x raster bytes for the same pages, they are Keynote's own bytes with no resampling, and `mutool extract -a` folds the SMask into PNG alpha. The two-image page falls back to the raster as the design says. `pdftocairo` runs with `-transp`; without it the 70 percent black overlay page rasterizes as solid gray on white. A picture page whose image is larger than the page (a Keynote mask: slide 4 `F2BC9C96` is a 652x435 image behind a 223x270 window) keeps the whole stream and records `Element.crop`, the source rectangle the box shows; 6 of the 10 streams are cropped. `mutool extract` wrote 0 font files on these pages (`fontFilesDeleted` 0); the deletion path is unit tested with a stub.
+
+### `source.path`
+
+| slide | `key` | `pdf` | `texture` | elements |
+|---|---|---|---|---|
+| 1 | 0 | 1 | 0 | 1 text |
+| 2 | 0 | 2 | 1 | 1 text, 1 shape, 1 video |
+| 4 | 0 | 3 | 11 | 2 text, 1 shape, 11 image |
+| total | 0 | 6 | 12 | 18 |
+
+`key` is 0. `convert/key.js` harvests strings with no run-to-font association, so the design's condition for `key` (the run's font is on disk) cannot be evaluated; `deck.json` records `source.keyParse.fontCondition: "not evaluable"` and `textMatched: 4 of 4` text elements whose every word is a whole token in a harvested run. The spike fonts (Avenir, Futura, Menlo, Helvetica on slide 1; Helvetica Neue on slide 2; Avenir and Futura on slide 4) are all absent on disk, so the count would be 0 under the design's rule as well. The `.key` parse ran in 548 ms inside a worker with a 600 s guard.
+
+### Benchmark
+
+| side | measure | ms |
+|---|---|---|
+| live | `?currentSlide=2` navigation to the GIF `<img>` decoded (`complete` and `naturalWidth > 0`) | 2,737 |
+| live | navigation to `#waitingIndicator` hidden | 2,737 |
+| new | `goto(2)` to the first drawn frame, slide 2 preloaded, jump from slide 4 (no transition) | 14.4 |
+| new | `goto(2)` to the first drawn frame of the push from slide 1 | 9.6 |
+| new | `goto(2)` to the push landing on slide 2 | 510 |
+| new | largest frame delta during the run | 16.7 |
+
+Source: `e2e/captures/spike-bench.json`, written by `e2e/bench.spec.js`. The live number is one sample on this network; the new number is the preloaded case the design asks for.
+
+### Format additions in this checkpoint
+
+`schema/deck.schema.json` gains: `fill` on a word or glyph when it differs from the element (slide 1 mixes yellow, magenta, white, and dark glyphs on one page); `paths` on a text element for the body paths of its page (the bars and rules of slide 1, the underlines of slide 4, the dark bands of slide 2); the `shape` element; `Build.begin`, `Build.distance`, `Build.automatic`; `Element.crop`; `Slide.kpf` with `snapshots`, `stills`, and `compositeAsContent`. The video element replaces the still picture Keynote draws under the GIF (slide 2 `4D000C59`, listed under `Slide.kpf.stills`). `convertedAt` is the committer date of HEAD, so two runs at one HEAD are byte-identical (verified on all 15 output files).
+
+### Checkpoint 2 Done
+
+| item | where |
+|---|---|
+| `convert/layout.js` with the slide 2 test case and a synthetic nested case | `convert/layout.js:1`; `convert/test/layout.test.js` |
+| `convert/pdf.js` `pageToElements`, glyph href rule, page classes | `convert/pdf.js`; `convert/test/pdf.test.js`; fixture `convert/test/fixtures/slide12-p6.svg` |
+| `convert/plan.js` composite-as-content | `convert/plan.js`; `convert/test/plan.test.js` |
+| `convert/media.js` streams, rasters, GIF transcode, font cleanup | `convert/media.js`; `convert/test/media.test.js` |
+| `convert/effects.js` builds, timing, direction check | `convert/effects.js`; `convert/test/effects.test.js` |
+| `convert/index.js` CLI, idempotent `deck.json`, validation last | `convert/index.js`; `decks/_all_docs/deck.json` (3 slides); `decks/_all_docs/media/` |
+| `player/` | `player/index.html`, `player.js`, `preload.js`, `draw.js`, `effects.js`, `transitions.js` |
+| `e2e/` suite, server, tolerance, captures | `playwright.config.js`; `e2e/serve.js`, `live.js`, `compare.js`, `tolerance.json`, `capture.spec.js`, `fonts.spec.js`, `bench.spec.js`; `e2e/captures/spike-*` |
+| three captures under tolerance | this section, Captures and tolerance |
+| word split error count, push direction, Q-005, `source.path`, benchmark, direction code space | this section |
+| corrections after the CP1 reviews | Corrections after review |
