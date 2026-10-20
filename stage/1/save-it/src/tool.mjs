@@ -1,6 +1,6 @@
 /**
- * The MCP tool `mint_upload_url`. This module never imports
- * `@cloudflare/workers-oauth-provider`, so plain Node can load it.
+ * The MCP tool `mint_upload_url`. This module never imports the OAuth
+ * provider package, so plain Node can load it.
  */
 
 import { getMcpAuthContext } from "agents/mcp/server";
