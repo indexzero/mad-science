@@ -105,6 +105,30 @@ test("size: accepts 1 and MAX_BYTES", () => {
   assert.equal(withField("size", DEFAULT_MAX_BYTES).ok, true);
 });
 
+test("each field: rejects missing, undefined, null, an array, an object, and a wrong type", () => {
+  // A type error must give the same message as a value error.
+  const wrongValue = { date: "x", source: "x", topic: "X", sha256: "x", size: 0 };
+  const wrongType = { date: 20260926, source: 1, topic: 3, sha256: 0, size: "480981" };
+  for (const field of ["date", "source", "topic", "sha256", "size"]) {
+    const expected = withField(field, wrongValue[field]);
+    assert.equal(expected.ok, false, field);
+    const missing = { ...VECTOR };
+    delete missing[field];
+    const cases = [
+      ["missing", validate(missing, OPTIONS)],
+      ["undefined", withField(field, undefined)],
+      ["null", withField(field, null)],
+      ["an array", withField(field, [VECTOR[field]])],
+      ["an object", withField(field, { value: VECTOR[field] })],
+      ["a wrong type", withField(field, wrongType[field])]
+    ];
+    if (field === "size") cases.push(["a boolean", withField(field, true)]);
+    for (const [label, result] of cases) {
+      assert.deepEqual(result, expected, `${field}: ${label}`);
+    }
+  }
+});
+
 test("validate stops at the first failure in field order", () => {
   const bad = { date: "x", source: "x", topic: "X", sha256: "x", size: 0 };
   const order = ["date", "source", "topic", "sha256", "size"];
