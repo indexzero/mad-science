@@ -81,7 +81,13 @@ export function createServer(env, origin) {
   server.registerTool(
     "mint_upload_url",
     {
-      description: "Mints a one-time upload URL for one chat bundle. Give date (YYYY-MM-DD), source (claude-mobile, claude-web, claude-code), topic (lowercase words joined by hyphens, 32 characters at most), sha256 (64 lowercase hex), and size (bytes).",
+      description:
+        "Mints a one-time upload URL for one chat bundle. Give five fields. " +
+        "date is YYYY-MM-DD. " +
+        "source is claude-mobile, claude-web, or claude-code. " +
+        "topic is lowercase words joined by hyphens, 32 characters at most. " +
+        "sha256 is 64 lowercase hex characters. " +
+        "size is the bundle size in bytes.",
       inputSchema: z.object({
         date: z.string().describe("YYYY-MM-DD, the local date of the user"),
         source: z.string().describe("claude-mobile, claude-web, or claude-code"),
