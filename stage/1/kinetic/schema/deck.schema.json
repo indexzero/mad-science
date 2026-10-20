@@ -594,7 +594,16 @@
         },
         "stagger": {
           "type": "number",
-          "minimum": 0
+          "minimum": 0,
+          "description": "Seconds between consecutive units of a per-word or per-character build, derived from the KPF keyframes (0 when one keyframe moves the whole text)."
+        },
+        "offsets": {
+          "type": "array",
+          "description": "Seconds after `begin` at which each target is revealed, one per target, from the per-leaf hidden keyframes (apple:keyboard).",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
         },
         "targets": {
           "type": "array",
