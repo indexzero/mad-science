@@ -57,7 +57,9 @@ impl DenyList {
         })
     }
 
-    /// The default list.
+    /// The default list. The binary builds its list from `Settings.deny`, so
+    /// only the tests call this.
+    #[cfg_attr(not(test), allow(dead_code))]
     pub fn default_list() -> Result<Self, ScanError> {
         Self::new(DEFAULT_DENY)
     }
