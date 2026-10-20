@@ -1,7 +1,7 @@
 ---
 project: curtain
 stage: 1
-status: "dispatch 1 of 4"
+status: "dispatch 2 of 4"
 ---
 
 # curtain
@@ -12,11 +12,14 @@ Read this section before you build or run anything.
 
 curtain installs an input tap that swallows every mouse and keyboard event
 while the curtain is up. A bug in the chord code locks you out of the Mac.
-Three layers get you back in.
+Three layers get you back in. The build of dispatch 2 has no tap yet. Its
+curtain takes the chord from the key window and the keyboard still works.
 
 1. Debug builds drop the tap after 60 seconds. A plain `swift build` is a
    debug build. The curtain window stays up. The mouse and keyboard work
-   again after 60 seconds. The release build has no timeout.
+   again after 60 seconds. A debug build also quits on Command-Q while a
+   curtain window is key. The release build has no timeout and no
+   Command-Q path.
 2. Use SSH from another machine and run `pkill curtain`. Keep Remote Login
    on during the test week. Turn it on in System Settings, General, Sharing.
 3. The LaunchAgent restarts curtain when it exits. Stop the restart first
