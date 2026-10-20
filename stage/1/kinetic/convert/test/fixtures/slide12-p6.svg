@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" version="1.1" width="1373" height="343" viewBox="0 0 1373 343">
+<defs>
+<clipPath id="clip_1">
+<path transform="matrix(1,0,0,-1,0,343)" d="M1.843018 1.977966H1371.015V341.19218H1.843018Z"/>
+</clipPath>
+<mask id="mask_2">
+<g transform="matrix(1.4270834,0,0,-1.4285715,1.843018,341.8078)">
+<image id="image_3" width="960" height="238" xlink:href="data:image/png;base64,STRIPPED"/>
+</g>
+</mask>
+<clipPath id="clip_5">
+<path transform="matrix(1,0,0,-1,0,343)" d="M518.918 31.2218H929.30087V318.3937H518.918Z"/>
+</clipPath>
+<clipPath id="clip_6">
+<path transform="matrix(1,0,0,-1,0,343)" d="M22.69533 31.80774H616.9765V317.80775H22.69533Z"/>
+</clipPath>
+<clipPath id="clip_8">
+<path transform="matrix(1,0,0,-1,0,343)" d="M875 31.80774H1057.6953V317.80775H875Z"/>
+</clipPath>
+</defs>
+<g>
+<g clip-path="url(#clip_1)">
+<g mask="url(#mask_2)">
+<g transform="matrix(1.4270834,0,0,-1.4285715,1.843018,341.8078)">
+<image id="image_4" width="960" height="238" xlink:href="data:image/png;base64,STRIPPED"/>
+</g>
+</g>
+</g>
+<g clip-path="url(#clip_5)">
+<path transform="matrix(1,0,0,-1,0,343)" d="M519.918 32.2218H928.30087V317.3937H519.918Z" fill="#121212"/>
+</g>
+<g clip-path="url(#clip_6)">
+<g transform="matrix(1,0,0,1,22.69533,25.19226)">
+<image id="image_7" width="767" height="286" xlink:href="data:image/png;base64,STRIPPED"/>
+</g>
+</g>
+<g clip-path="url(#clip_8)">
+<g transform="matrix(1,0,0,1,290.6953,25.19226)">
+<use xlink:href="#image_7" x="0" y="0" width="767" height="286"/>
+</g>
+</g>
+</g>
+</svg>

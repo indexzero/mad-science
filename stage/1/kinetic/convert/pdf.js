@@ -5,7 +5,7 @@
 // is one glyph placement. `<path>` in the body without an id is a rectangle or rule. `<image>` is a raster.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { multiply, apply, pageMatrix, roundBox } from './layout.js';
+import { multiply, apply, translate, pageMatrix, roundBox, boxOf, IDENTITY } from './layout.js';
 
 export const MUTOOL = process.env.MUTOOL || 'mutool';
 
@@ -46,11 +46,17 @@ function decodeEntities(s) {
 
 /**
  * Parse a mutool SVG. Returns
- * { width, height, defs: Map<id, d>, uses: [{ href, text, s, tx, ty, fill, matrix }], bodyPaths: [{ d, fill, transform }], images: [{ width, height, transform }], clipPaths, groups }.
+ * { width, height, defs: Map<id, d>, uses, imageUses, bodyPaths, images, imageDefs, clipPaths, groups }.
+ * `uses` are glyph placements: a `<use>` whose href starts with `font_` (D-008 F-01; mutool also writes
+ * `<use xlink:href="#image_N">` for a re-placed raster, which lands in `imageUses`). Group transforms
+ * (`<g transform>`) are composed into every placement's `matrix`, so a matrix always maps into page space.
+ * `<image>` inside `<defs>` (a mask source) is recorded in `imageDefs` and never in `images`.
  */
 export function parseSvg(svgText) {
   const defs = new Map();
+  const imageDefs = new Map();
   const uses = [];
+  const imageUses = [];
   const bodyPaths = [];
   const images = [];
   let clipPaths = 0;
@@ -59,9 +65,16 @@ export function parseSvg(svgText) {
   let inClipPath = false;
   let width = null;
   let height = null;
+  const stack = [IDENTITY];
+  const ctm = () => stack[stack.length - 1];
+  const withOwn = (transform) => {
+    const own = parseMatrix(transform);
+    return own ? multiply(ctm(), own) : ctm();
+  };
 
   for (const m of svgText.matchAll(TAG_RE)) {
     const closing = m[1] === '/';
+    const selfClosing = m[4] === '/';
     const name = m[2];
     const a = closing ? {} : attrs(m[3]);
     if (name === 'svg' && !closing) {
@@ -72,8 +85,14 @@ export function parseSvg(svgText) {
     } else if (name === 'clipPath') {
       if (!closing) clipPaths += 1;
       inClipPath = !closing;
-    } else if (name === 'g') {
-      if (!closing) groups += 1;
+    } else if (name === 'g' || name === 'mask') {
+      if (closing) {
+        stack.pop();
+      } else {
+        if (name === 'g') groups += 1;
+        stack.push(withOwn(a.transform));
+        if (selfClosing) stack.pop();
+      }
     } else if (name === 'path' && !closing) {
       if (a.id) {
         defs.set(a.id, a.d || '');
@@ -85,26 +104,40 @@ export function parseSvg(svgText) {
           stroke: a.stroke ?? null,
           strokeWidth: a['stroke-width'] !== undefined ? Number(a['stroke-width']) : null,
           transform: a.transform ?? null,
-          matrix: parseMatrix(a.transform),
+          matrix: withOwn(a.transform),
         });
       }
     } else if (name === 'use' && !closing) {
-      const href = a['xlink:href'] || a.href || '';
-      const matrix = parseMatrix(a.transform);
-      uses.push({
-        href: href.replace(/^#/, ''),
-        text: a['data-text'] !== undefined ? decodeEntities(a['data-text']) : null,
-        s: matrix ? Math.abs(matrix[0]) : null,
-        tx: matrix ? matrix[4] : null,
-        ty: matrix ? matrix[5] : null,
-        fill: a.fill ?? null,
-        matrix,
-      });
+      const href = (a['xlink:href'] || a.href || '').replace(/^#/, '');
+      const matrix = withOwn(a.transform);
+      if (href.startsWith('font_')) {
+        uses.push({
+          href,
+          text: a['data-text'] !== undefined ? decodeEntities(a['data-text']) : null,
+          s: Math.abs(matrix[0]),
+          tx: matrix[4],
+          ty: matrix[5],
+          fill: a.fill ?? null,
+          matrix,
+        });
+      } else {
+        const x = Number(a.x || 0);
+        const y = Number(a.y || 0);
+        const def = imageDefs.get(href) || images.find((i) => i.id === href) || null;
+        imageUses.push({
+          href,
+          width: a.width !== undefined ? Number(a.width) : def?.width ?? null,
+          height: a.height !== undefined ? Number(a.height) : def?.height ?? null,
+          matrix: x || y ? multiply(matrix, translate(x, y)) : matrix,
+        });
+      }
     } else if (name === 'image' && !closing) {
-      images.push({ width: Number(a.width), height: Number(a.height), transform: a.transform ?? null, matrix: parseMatrix(a.transform) });
+      const img = { id: a.id ?? null, width: Number(a.width), height: Number(a.height), transform: a.transform ?? null, matrix: withOwn(a.transform), inDefs };
+      if (inDefs) imageDefs.set(img.id, img);
+      else images.push(img);
     }
   }
-  return { width, height, defs, uses, bodyPaths, images, clipPaths, groups };
+  return { width, height, defs, imageDefs, uses, imageUses, bodyPaths, images, clipPaths, groups };
 }
 
 /** Glyph defs only (ids that start with `font_`). */
@@ -175,7 +208,7 @@ export function pathBox(d) {
 export function withAdvances(parsed) {
   const cache = new Map();
   for (const u of parsed.uses) {
-    if (!parsed.defs.has(u.href)) continue;
+    if (!u.href?.startsWith('font_') || !parsed.defs.has(u.href)) continue;
     if (!cache.has(u.href)) {
       const box = pathBox(parsed.defs.get(u.href));
       cache.set(u.href, box ? box.maxX : null);
@@ -279,21 +312,57 @@ function mostCommon(values, fallback) {
 export const DEFAULT_FILL = '#000000';
 
 /**
- * Turn a parsed page into element content in slide coordinates. `leaf` is a composed leaf from
- * layout.js (matrix, width, height, contentsRect). Returns one of:
- *   { kind: 'text', box, words, fill, text, shapes, images }   when the page has glyph placements
- *   { kind: 'picture', images, singleStream }                   when it has images and no placements
- *   { kind: 'shape', bodyPaths }                                when it has body paths only
- *   { kind: 'empty' }                                           otherwise
+ * The page class of the design (revision 5, "Approaches evaluated" item 4). `info` carries the leaf's
+ * `textureType`, `isBackgroundTexture`, `isPoster` (the texture of an `isVideoLayer` layer), `width` and
+ * `height` (the asset size). Order: poster, background, composite, then the content classes by placements.
+ */
+export function classifyPage(parsed, info = {}) {
+  if (info.isPoster) return 'poster';
+  if (info.textureType === 1) return 'background';
+  if (info.textureType === 0 && info.isBackgroundTexture === false && info.width === 1920 && info.height === 1080) return 'composite';
+  return contentClass(parsed);
+}
+
+/** The content class by placements alone: text, picture, mixed, shape, or empty. */
+export function contentClass(parsed) {
+  const glyphs = parsed.uses.length > 0;
+  const rasters = parsed.images.length + (parsed.imageUses?.length ?? 0) > 0;
+  if (glyphs && rasters) return 'mixed';
+  if (glyphs) return 'text';
+  if (rasters) return 'picture';
+  if (parsed.bodyPaths.length) return 'shape';
+  return 'empty';
+}
+
+/** Every raster placement of a page (body images and image uses) with its page matrix and pixel size. */
+export function imagePlacements(parsed) {
+  const out = [];
+  for (const i of parsed.images) out.push({ id: i.id, width: i.width, height: i.height, matrix: i.matrix, use: false });
+  for (const u of parsed.imageUses || []) out.push({ id: u.href, width: u.width, height: u.height, matrix: u.matrix, use: true });
+  return out;
+}
+
+/**
+ * `leaf` is a composed leaf from layout.js (matrix, width, height, contentsRect). Returns one of:
+ *   { kind: 'text',    box, words, fill, text, paths, images: [] }        glyph placements, no raster
+ *   { kind: 'mixed',   box, words, fill, text, paths, images: [...] }     glyph placements and rasters
+ *   { kind: 'picture', images: [{ box, width, height, matrix, id }] }      rasters, no glyph placement
+ *   { kind: 'shape',   paths: [{ d, fill, opacity?, stroke?, strokeWidth? }] }  body paths only
+ *   { kind: 'empty' }
  * `box` is the leaf box (from the layer tree, never from the page). Word and glyph boxes come from the ink.
+ * Image boxes come from the SVG transform of each placement.
  */
 export function pageToElements(parsed, leaf, { gapEm = 0.3, baselineEm = 0.1 } = {}) {
   const pm = pageMatrix(leaf, parsed.width, parsed.height);
-  if (!parsed.uses.length) {
-    if (parsed.images.length) return { kind: 'picture', images: parsed.images.length, singleStream: parsed.images.length === 1 };
-    if (parsed.bodyPaths.length) return { kind: 'shape', bodyPaths: parsed.bodyPaths.length };
-    return { kind: 'empty' };
-  }
+  const cls = contentClass(parsed);
+  const images = imagePlacements(parsed).map((p) => {
+    const m = multiply(pm, p.matrix);
+    return { id: p.id, width: p.width, height: p.height, box: roundBox(boxOf(m, p.width, p.height)), matrix: m.map((v) => Math.round(v * 100000) / 100000), use: p.use };
+  });
+  const paths = shapesOf(parsed, pm);
+  if (cls === 'picture') return { kind: 'picture', images, paths };
+  if (cls === 'shape') return { kind: 'shape', paths };
+  if (cls === 'empty') return { kind: 'empty' };
   withAdvances(parsed);
   const words = [];
   for (const w of wordsFromUses(parsed.uses, { gapEm, baselineEm })) {
@@ -317,7 +386,21 @@ export function pageToElements(parsed, leaf, { gapEm = 0.3, baselineEm = 0.1 } =
       chars: chars.map((c) => (c.fill === fill ? { d: c.d, box: c.box, text: c.text } : c)),
     });
   }
-  const shapes = parsed.bodyPaths.map((p) => {
+  const fill = mostCommon(words.map((w) => w.fill), DEFAULT_FILL);
+  return {
+    kind: cls,
+    box: roundBox(leaf.box),
+    words: words.map((w) => (w.fill === fill ? { d: w.d, box: w.box, text: w.text, chars: w.chars } : w)),
+    fill,
+    text: words.map((w) => w.text).join(' '),
+    paths,
+    images,
+  };
+}
+
+/** Body paths of a page as shape paths in slide space: { d, fill (null for none), opacity?, stroke?, strokeWidth? }. */
+function shapesOf(parsed, pm) {
+  return parsed.bodyPaths.map((p) => {
     const m = p.matrix ? multiply(pm, p.matrix) : pm;
     const s = { d: transformPath(p.d, m) };
     if (p.fill === 'none') s.fill = null;
@@ -329,14 +412,4 @@ export function pageToElements(parsed, leaf, { gapEm = 0.3, baselineEm = 0.1 } =
     }
     return s;
   });
-  const fill = mostCommon(words.map((w) => w.fill), DEFAULT_FILL);
-  return {
-    kind: 'text',
-    box: roundBox(leaf.box),
-    words: words.map((w) => (w.fill === fill ? { d: w.d, box: w.box, text: w.text, chars: w.chars } : w)),
-    fill,
-    text: words.map((w) => w.text).join(' '),
-    shapes,
-    images: parsed.images.length,
-  };
 }

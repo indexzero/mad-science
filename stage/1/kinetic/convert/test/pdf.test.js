@@ -63,7 +63,7 @@ test('a space placement splits words and a baseline change splits words', () => 
 });
 
 // ---------- checkpoint 2 ----------
-import { transformPath, pageToElements } from '../pdf.js';
+import { transformPath, pageToElements, classifyPage, contentClass } from '../pdf.js';
 import { IDENTITY } from '../layout.js';
 
 const fullSlideLeaf = { matrix: IDENTITY, width: 1920, height: 1080, contentsRect: { x: 0, y: 0, width: 1, height: 1 }, box: { x: 0, y: 0, w: 1920, h: 1080 } };
@@ -102,18 +102,55 @@ test('slide 1 page 1 as a full-slide leaf: 88 placements become words whose boxe
   const fills = new Set([el.fill, ...el.words.map((w) => w.fill).filter(Boolean)]);
   assert.ok(fills.size >= 3, [...fills].join(','));
   // body paths become shapes with fills, strokes, and the SVG default black
-  assert.equal(el.shapes.length, 12);
-  assert.equal(el.shapes[0].fill, '#000000');
-  assert.ok(el.shapes.some((s) => s.fill === '#fefc41'));
-  assert.ok(el.shapes.some((s) => s.stroke === '#ecedee' && s.strokeWidth === 6 && s.fill === null));
-  assert.equal(el.images, 0);
+  assert.equal(el.paths.length, 12);
+  assert.equal(el.paths[0].fill, '#000000');
+  assert.ok(el.paths.some((s) => s.fill === '#fefc41'));
+  assert.ok(el.paths.some((s) => s.stroke === '#ecedee' && s.strokeWidth === 6 && s.fill === null));
+  assert.deepEqual(el.images, []);
 });
 
-test('a page with images and no placements is a picture; body paths only is a shape', () => {
-  const pic = pageToElements({ width: 10, height: 10, uses: [], images: [{}], bodyPaths: [], defs: new Map() }, fullSlideLeaf);
-  assert.deepEqual(pic, { kind: 'picture', images: 1, singleStream: true });
-  const two = pageToElements({ width: 10, height: 10, uses: [], images: [{}, {}], bodyPaths: [], defs: new Map() }, fullSlideLeaf);
-  assert.equal(two.singleStream, false);
-  const shape = pageToElements({ width: 10, height: 10, uses: [], images: [], bodyPaths: [{ d: 'M0 0H10V10Z' }], defs: new Map() }, fullSlideLeaf);
-  assert.deepEqual(shape, { kind: 'shape', bodyPaths: 1 });
+test('a page with images and no placements is a picture; body paths only is a shape with paths', () => {
+  const img = { id: 'image_1', width: 10, height: 5, matrix: [1, 0, 0, 1, 2, 3] };
+  const pic = pageToElements({ width: 10, height: 10, uses: [], imageUses: [], images: [img], bodyPaths: [], defs: new Map() }, fullSlideLeaf);
+  assert.equal(pic.kind, 'picture');
+  assert.equal(pic.images.length, 1);
+  assert.deepEqual(pic.images[0].box, { x: 384, y: 324, w: 1920, h: 540 });
+  const shape = pageToElements({ width: 10, height: 10, uses: [], imageUses: [], images: [], bodyPaths: [{ d: 'M0 0H10V10Z', fill: '#1b1b1b', matrix: null }], defs: new Map() }, fullSlideLeaf);
+  assert.deepEqual(shape, { kind: 'shape', paths: [{ d: 'M0 0L1920 0L1920 1080Z', fill: '#1b1b1b' }] });
+});
+
+test('slide 12 texture C4BF6FDE page 6: a <use href="#image_7"> is an image placement, never a word (D-008 F-01)', () => {
+  const p = parseSvg(readFileSync(join(here, 'fixtures', 'slide12-p6.svg'), 'utf8'));
+  assert.equal(p.width, 1373);
+  assert.equal(p.height, 343);
+  assert.equal(p.uses.length, 0, 'zero glyph placements');
+  assert.equal(p.imageUses.length, 1, 'one image use');
+  assert.equal(p.imageUses[0].href, 'image_7');
+  assert.deepEqual(p.imageUses[0].matrix, [1, 0, 0, 1, 290.6953, 25.19226], 'the group transform places the use');
+  assert.equal(p.images.length, 2, 'two body images; the mask source in defs is not one');
+  assert.equal(p.imageDefs.size, 1);
+  assert.equal(p.images[0].id, 'image_4');
+  assert.deepEqual(p.images[0].matrix, [1.4270834, 0, 0, -1.4285715, 1.843018, 341.8078]);
+  assert.equal(p.images[1].id, 'image_7');
+  withAdvances(p);
+  assert.deepEqual(wordsFromUses(p.uses), [], 'zero words');
+  assert.equal(contentClass(p), 'picture');
+  assert.equal(classifyPage(p, { textureType: 5, isBackgroundTexture: true, width: 1373, height: 343 }), 'picture');
+  const leaf = { matrix: [1, 0, 0, 1, 100, 200], width: 1373, height: 343, contentsRect: { x: 0, y: 0, width: 1, height: 1 }, box: { x: 100, y: 200, w: 1373, h: 343 } };
+  const el = pageToElements(p, leaf);
+  assert.equal(el.kind, 'picture');
+  assert.equal(el.images.length, 3);
+  assert.deepEqual(el.images[2].box, { x: 390.695, y: 225.192, w: 767, h: 286 });
+  assert.equal(el.images[0].box.w.toFixed(0), '1370');
+});
+
+test('classifyPage orders poster, background, composite ahead of the content classes', () => {
+  const blank = { uses: [], imageUses: [], images: [], bodyPaths: [{ d: 'M0 0Z' }] };
+  assert.equal(classifyPage(blank, { isPoster: true }), 'poster');
+  assert.equal(classifyPage(blank, { textureType: 1, isBackgroundTexture: true }), 'background');
+  assert.equal(classifyPage(blank, { textureType: 0, isBackgroundTexture: false, width: 1920, height: 1080 }), 'composite');
+  assert.equal(classifyPage(blank, { textureType: 5 }), 'shape');
+  assert.equal(classifyPage({ ...blank, uses: [{}], images: [{}] }, { textureType: 5 }), 'mixed');
+  assert.equal(classifyPage({ ...blank, uses: [{}] }, { textureType: 6 }), 'text');
+  assert.equal(classifyPage({ uses: [], imageUses: [], images: [], bodyPaths: [] }, { textureType: 5 }), 'empty');
 });
