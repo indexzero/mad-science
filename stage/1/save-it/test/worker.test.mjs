@@ -203,3 +203,28 @@ test("a PUT with a short UPLOAD_SIGNING_KEY returns 500 with the no signing key 
     await short.dispose();
   }
 });
+
+test("/mcp without authorization returns 401 with WWW-Authenticate", async () => {
+  const res = await mf.dispatchFetch("http://localhost/mcp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" })
+  });
+  assert.equal(res.status, 401);
+  assert.equal(
+    res.headers.get("WWW-Authenticate"),
+    'Bearer realm="OAuth", resource_metadata="http://localhost/.well-known/oauth-protected-resource/mcp"'
+  );
+  await res.arrayBuffer();
+});
+
+test("/authorize without Access returns 403", async () => {
+  const res = await mf.dispatchFetch(
+    "http://localhost/authorize?response_type=code&client_id=x&redirect_uri=https%3A%2F%2Fclaude.ai%2Fapi%2Fmcp%2Fauth_callback&state=s"
+  );
+  assert.equal(res.status, 403);
+  assert.equal(
+    await res.text(),
+    "not saved: Cloudflare Access did not authenticate this request. fix: protect localhost/authorize with an Access application (SETUP.md step 5)"
+  );
+});
