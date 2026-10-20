@@ -246,7 +246,48 @@ test("/mcp without authorization returns 401 with WWW-Authenticate", async () =>
     res.headers.get("WWW-Authenticate"),
     'Bearer realm="OAuth", resource_metadata="http://localhost/.well-known/oauth-protected-resource/mcp"'
   );
-  await res.arrayBuffer();
+  assert.equal(await res.text(), "");
+});
+
+/**
+ * Registers a client with the given redirect URIs.
+ * @param {string[]} redirectUris
+ */
+function register(redirectUris) {
+  return mf.dispatchFetch("http://localhost/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      redirect_uris: redirectUris,
+      grant_types: ["authorization_code"],
+      response_types: ["code"],
+      token_endpoint_auth_method: "none"
+    })
+  });
+}
+
+test("POST /register with a redirect URI that is not claude.ai returns 400", async () => {
+  const cases = [
+    ["https://attacker.example/callback"],
+    ["https://claude.ai/api/mcp/auth_callback", "https://attacker.example/callback"],
+    ["https://claude.ai/api/mcp/auth_callback/"],
+    ["https://claude.ai.attacker.example/api/mcp/auth_callback"],
+    ["https://claude.ai/api/mcp/auth_callback?x=1"]
+  ];
+  for (const uris of cases) {
+    const res = await register(uris);
+    assert.equal(res.status, 400, uris.join(" "));
+    const body = await res.json();
+    assert.equal(body.error, "invalid_redirect_uri", uris.join(" "));
+  }
+});
+
+test("POST /register with the two claude.ai callback URIs returns 201", async () => {
+  const uris = ["https://claude.ai/api/mcp/auth_callback", "https://claude.com/api/mcp/auth_callback"];
+  const res = await register(uris);
+  assert.equal(res.status, 201);
+  const body = await res.json();
+  assert.deepEqual(body.redirect_uris, uris);
 });
 
 test("/authorize without Access returns 403", async () => {

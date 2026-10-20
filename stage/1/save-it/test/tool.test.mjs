@@ -79,6 +79,27 @@ test("mintUploadUrl mints when ALLOWED_EMAIL has a trailing space", async () => 
   assert.equal(JSON.parse(result.content[0].text).key, KEY);
 });
 
+test("mintUploadUrl refuses when ALLOWED_EMAIL is unset and the token has no email", async () => {
+  const unset = { ...ENV };
+  delete unset.ALLOWED_EMAIL;
+  const result = await mint(VECTOR, { env: unset, props: {} });
+  assert.equal(result.isError, true);
+  assert.equal(
+    result.content[0].text,
+    "not saved: this token is not for the allowed email. fix: add the connector again"
+  );
+});
+
+test("mintUploadUrl reads MAX_BYTES and UPLOAD_TTL_SECONDS from env", async () => {
+  const env = { ...ENV, MAX_BYTES: "100", UPLOAD_TTL_SECONDS: "120" };
+  const big = await mint({ ...VECTOR, size: 101 }, { env });
+  assert.equal(big.isError, true);
+  assert.equal(big.content[0].text, "not valid: size: must be a positive integer not more than 100");
+  const ok = await mint({ ...VECTOR, size: 100 }, { env });
+  assert.equal(ok.isError, undefined, ok.content[0].text);
+  assert.equal(JSON.parse(ok.content[0].text).expires_at, "2026-09-26T12:02:00.000Z");
+});
+
 test("mintUploadUrl refuses when UPLOAD_SIGNING_KEY is missing or shorter than 32 bytes", async () => {
   const missing = { ...ENV };
   delete missing.UPLOAD_SIGNING_KEY;
