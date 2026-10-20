@@ -26,7 +26,7 @@ public struct Config: Sendable, Equatable {
         tickSeconds: 1.0)
 
     /// The range that `tickSeconds` is clamped to.
-    public static let tickRange: ClosedRange<Double> = 0.2...60
+    static let tickRange: ClosedRange<Double> = 0.2...60
 
     /// Pure parse of raw values read from UserDefaults. A missing or
     /// malformed value falls back to the default for that key alone.

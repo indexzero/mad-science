@@ -27,10 +27,8 @@ Three layers get you back in.
    pkill curtain
    ```
 
-In a debug build, Command-Q on the curtain window also quits the process.
-
 No agent installs or runs curtain on the development machine. The owner
-runs it on the family Mac after the checklist in a later section.
+runs it on the family Mac. The owner checklist lands in a later dispatch.
 
 ## What it does
 

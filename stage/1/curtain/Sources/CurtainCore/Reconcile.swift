@@ -1,5 +1,5 @@
 /// The inputs of one tick.
-public struct ReconcileState: Sendable, Equatable, Hashable {
+public struct ReconcileState: Sendable, Equatable {
     /// `Schedule.awake` for this tick.
     public var awake: Bool
     /// `Idle.shouldRaise` for this tick.

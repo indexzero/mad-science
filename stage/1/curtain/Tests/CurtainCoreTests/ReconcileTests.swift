@@ -47,6 +47,7 @@ struct ReconcileTests {
 
     @Test func tableHasSixteenDistinctRows() {
         #expect(Self.rows.count == 16)
-        #expect(Set(Self.rows.map(\.state)).count == 16)
+        let keys = Self.rows.map { [$0.awake, $0.idle, $0.curtainUp, $0.assertionHeld] }
+        #expect(Set(keys).count == 16)
     }
 }
