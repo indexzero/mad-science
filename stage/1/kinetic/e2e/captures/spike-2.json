@@ -1,0 +1,17 @@
+{
+  "name": "spike-2",
+  "ratio": 0,
+  "mismatched": 0,
+  "unmasked": 0,
+  "masked": 518400,
+  "vacuous": true,
+  "regions": [
+    {
+      "id": "D97C61E084CEC103AC9FC2EFB49B4E37",
+      "ratio": 0.05001736111111111,
+      "pixels": 518400
+    }
+  ],
+  "finalStateUnmaskedRatio": 0.0005748456790123456,
+  "finalStateMismatched": 298
+}
