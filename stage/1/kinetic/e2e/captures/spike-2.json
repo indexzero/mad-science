@@ -8,10 +8,18 @@
   "regions": [
     {
       "id": "D97C61E084CEC103AC9FC2EFB49B4E37",
-      "ratio": 0.05001736111111111,
+      "ratio": 0.06106867283950617,
       "pixels": 518400
     }
   ],
-  "finalStateUnmaskedRatio": 0.0005748456790123456,
-  "finalStateMismatched": 298
+  "finalStateUnmaskedRatio": 0.0006057098765432098,
+  "finalStateMismatched": 314,
+  "videoTimes": [
+    {
+      "D97C61E084CEC103AC9FC2EFB49B4E37": 1.2221
+    },
+    {
+      "D97C61E084CEC103AC9FC2EFB49B4E37": 1.7269
+    }
+  ]
 }

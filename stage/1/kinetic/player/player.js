@@ -236,6 +236,8 @@ window.kinetic = {
   goto,
   preloaded: () => preloader.preloaded(),
   frameTimes: () => frameDeltas.slice(),
+  // the playback position of every video started on the current slide, by element id (the suite asserts it grows)
+  videoTimes: () => Object.fromEntries([...state.playing].map(([id, v]) => [id, v.currentTime])),
   // extras for the suite: the step state and a next/prev without a key press
   state: () => ({ slide: state.slide, done: state.done, animating: state.stepStart !== null, transition: state.transition ? { from: state.transition.from, to: state.transition.to } : null }),
   next,

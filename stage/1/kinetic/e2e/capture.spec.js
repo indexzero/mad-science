@@ -1,6 +1,7 @@
 // The three spike captures: live export and new player side by side at 960x540.
 //   spike-4   slide 4 at its final build state (live: one ArrowRight per manual step)
-//   spike-2   slide 2 after settle, video boxes masked on both sides
+//   spike-2   slide 2 after settle, video boxes masked on both sides (vacuous: the GIF layer covers the frame),
+//             then its final state unmasked as spike-2-final, asserted; the video position must grow
 //   spike-1-2 200 ms into the push from slide 1 to slide 2
 import { test, expect } from '@playwright/test';
 import { gotoLive, advanceLive, SETTLE_MS } from './live.js';
@@ -64,18 +65,29 @@ test.describe('spike captures', () => {
     const masked = r.masked / (960 * 540);
     console.log(`spike-2 mismatch ratio ${r.ratio.toFixed(5)} over ${r.unmasked} unmasked pixels (video mask covers ${(masked * 100).toFixed(1)} percent of the frame${r.vacuous ? ', vacuous' : ''}); video region live vs new ${r.regions.map((x) => x.ratio.toFixed(3)).join(',')} against videoRegion ${TOLERANCE.videoRegion} (recorded, not asserted)`);
 
-    // recorded, not asserted: the final state (the warning text dissolves in at 3.51 s) without any mask,
-    // so the GIF phase difference is inside the number
-    await page.waitForTimeout(4500);
+    // the video plays: its position grows between two reads 500 ms apart (CP2-F1)
+    const t1 = await fresh.evaluate(() => window.kinetic.videoTimes());
+    await fresh.waitForTimeout(500);
+    const t2 = await fresh.evaluate(() => window.kinetic.videoTimes());
+    const videoIds = Object.keys(t1);
+    expect(videoIds.length).toBeGreaterThan(0);
+    for (const id of videoIds) expect(t2[id]).toBeGreaterThan(t1[id]);
+
+    // the mask is vacuous on this slide (the GIF layer covers the frame), so the asserted comparison is the
+    // final state (the warning text dissolves in at 3.51 s) without any mask; the GIF phase difference is
+    // inside the number and the capture set is committed as spike-2-final.* (CP2-F1)
+    await page.waitForTimeout(4000);
     await fresh.waitForFunction(() => window.kinetic.state().done === 1 && !window.kinetic.state().animating, null, { timeout: 30000 });
     await fresh.waitForTimeout(SETTLE_MS);
     const liveFinal = await page.screenshot();
     const mineFinal = await fresh.screenshot();
     await fresh.close();
-    const f = compareCaptures('extra-2-final', liveFinal, mineFinal, []);
-    recordExtra('spike-2', { finalStateUnmaskedRatio: f.ratio, finalStateMismatched: f.mismatched });
-    console.log(`spike-2 final state, unmasked, live vs new: mismatch ratio ${f.ratio.toFixed(5)} (recorded in spike-2.json, not asserted; the GIF phase differs)`);
+    const f = compareCaptures('spike-2-final', liveFinal, mineFinal, []);
+    recordExtra('spike-2', { finalStateUnmaskedRatio: f.ratio, finalStateMismatched: f.mismatched, videoTimes: [t1, t2] });
+    console.log(`spike-2 final state, unmasked, live vs new: mismatch ratio ${f.ratio.toFixed(5)} (${f.mismatched} of ${f.unmasked} pixels), tolerance ${toleranceFor('spike-2')}; video ${videoIds[0]} advanced ${(t2[videoIds[0]] - t1[videoIds[0]]).toFixed(3)} s in 500 ms`);
     expect(r.ratio).toBeLessThan(toleranceFor('spike-2'));
+    expect(f.unmasked).toBeGreaterThan(0);
+    expect(f.ratio).toBeLessThan(toleranceFor('spike-2'));
   });
 
   test('spike-1-2: 200 ms into the push from slide 1 to slide 2', async ({ page, browser }) => {
