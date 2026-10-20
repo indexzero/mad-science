@@ -95,4 +95,8 @@ old entry and add the binary again.
 
 When the tap is installed the log says `tap installed at HID` or
 `tap installed at session`. When the tap drops it says `tap uninstalled`.
-A debug build logs `tap dropped by debug timeout` after 60 seconds.
+When the curtain is down and the tap is still installed, for example
+after a screen change that left no screen, the next tick uninstalls it
+and the log also says `tap uninstalled: curtain is down`. A debug build
+logs `tap dropped by debug timeout` 60 seconds after install, whether
+the curtain is up or down.

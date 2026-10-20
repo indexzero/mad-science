@@ -37,7 +37,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// `Schedule.awake` of the last tick, for the wake handler.
     private var lastAwake = false
     /// true after the debug timeout dropped the tap. The tick does not
-    /// install the tap again until the curtain drops. Cleared on `.fired`.
+    /// install the tap again until the curtain drops. Cleared on `.fired`
+    /// and on every tick that sees the curtain down.
     private var tapTimedOut = false
     private var timer: Timer?
     private var keyMonitor: Any?
@@ -136,7 +137,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let actions = Reconcile.decide(state)
         if actions.contains(.raiseCurtain) {
             curtain.raise()
-            if curtain.isUp { tap.install() }
         }
         if actions.contains(.holdAssertion) {
             power.holdAssertion()
@@ -148,20 +148,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             curtain.raise()
         }
         apply(detector.poll(now: uptime), from: .tickPoll)
-        // dispatch 3: InputTap install, retry, timeout
-        if curtain.isUp {
-            if !tap.isInstalled && !tapTimedOut {
-                tap.install()
-            }
-            if let startedAt = tap.startedAt,
-               TapTimeout.shouldDrop(
-                   startedAt: startedAt, now: Date(),
-                   limit: TapTimeout.debugLimit, isDebug: isDebugBuild) {
-                tap.uninstall()
-                tapTimedOut = true
-                log("tap dropped by debug timeout")
-            }
+        // dispatch 3: InputTap install, retry, timeout. The rule runs on
+        // every tick, up or down, so a drop without a chord (a screen
+        // change with no screens, rider B3-F1) still uninstalls the tap
+        // and the debug timeout never waits on `isUp`.
+        let shouldDrop = tap.startedAt.map { startedAt in
+            TapTimeout.shouldDrop(
+                startedAt: startedAt, now: Date(),
+                limit: TapTimeout.debugLimit, isDebug: isDebugBuild)
+        } ?? false
+        let decision = TapLifecycle.decide(
+            curtainUp: curtain.isUp, tapInstalled: tap.isInstalled,
+            timedOut: tapTimedOut, shouldDrop: shouldDrop)
+        switch decision.action {
+        case .uninstallCurtainDown:
+            tap.uninstall()
+            log("tap uninstalled: curtain is down")
+        case .uninstallTimeout:
+            tap.uninstall()
+            log("tap dropped by debug timeout")
+        case .install:
+            tap.install()
+        case .none:
+            break
         }
+        tapTimedOut = decision.timedOut
     }
 
     /// Both feeds call this: the window feed (dispatch 2) and the tap
