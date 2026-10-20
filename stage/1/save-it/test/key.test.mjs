@@ -47,8 +47,9 @@ test("compose equals the [25] key", () => {
 
 test("date: rejects a malformed string, a non-calendar date (2026-02-30), and a date two days away", () => {
   assertFails(withField("date", "2026-9-26"), "date", "malformed");
+  // 2026-02-30 rolls over to 2026-03-02. That is one day from this clock, so only the calendar check rejects it.
   assertFails(
-    validate({ ...VECTOR, date: "2026-02-30" }, { ...OPTIONS, now: new Date("2026-02-28T12:00:00Z") }),
+    validate({ ...VECTOR, date: "2026-02-30" }, { ...OPTIONS, now: new Date("2026-03-01T12:00:00Z") }),
     "date",
     "non-calendar"
   );
