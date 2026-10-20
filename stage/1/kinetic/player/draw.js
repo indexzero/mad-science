@@ -19,10 +19,43 @@ function drawPaths(ctx, list, alpha) {
   }
 }
 
+/**
+ * Line-draw: stroke each path by length. `p.line` (preload.js) is the stroke geometry: the centerline of a
+ * thin filled rectangle with its thickness as the line width, else the path itself. `setLineDash` with a
+ * dash of `length * fraction` and a gap of `length` draws the first `fraction` of the path.
+ */
+function drawLines(ctx, list, alpha, fraction) {
+  for (const p of list) {
+    const line = p.line;
+    if (!line) continue;
+    ctx.globalAlpha = alpha * (p.opacity ?? 1);
+    ctx.strokeStyle = p.stroke || p.fill || '#000000';
+    ctx.lineWidth = line.width;
+    ctx.lineCap = 'butt';
+    ctx.setLineDash([line.length * fraction, line.length]);
+    ctx.lineDashOffset = 0;
+    ctx.stroke(line.path);
+    ctx.setLineDash([]);
+  }
+}
+
 function drawImage(ctx, handle, el) {
   const b = el.box;
   if (el.crop) ctx.drawImage(handle, el.crop.x, el.crop.y, el.crop.w, el.crop.h, b.x, b.y, b.w, b.h);
   else ctx.drawImage(handle, b.x, b.y, b.w, b.h);
+}
+
+/** Clip to the part of `box` a wipe has revealed: a rectangle that grows along `direction`. */
+function clipWipe(ctx, box, clip) {
+  const { direction, p } = clip;
+  let { x, y, w, h } = box;
+  if (direction === 'right') w *= p;
+  else if (direction === 'left') { x += w * (1 - p); w *= p; }
+  else if (direction === 'down') h *= p;
+  else if (direction === 'up') { y += h * (1 - p); h *= p; }
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip();
 }
 
 /**
@@ -45,6 +78,7 @@ export function drawSlide(ctx, deck, slide, preloader, done, t, videoControl) {
     if (!st.visible) continue;
     ctx.save();
     ctx.translate(st.dx, st.dy);
+    if (st.clip) clipWipe(ctx, el.box, st.clip);
     ctx.globalAlpha = st.alpha;
     if (el.kind === 'image') {
       const h = preloader.get(`img:${el.src}`);
@@ -56,7 +90,8 @@ export function drawSlide(ctx, deck, slide, preloader, done, t, videoControl) {
       if (src) ctx.drawImage(src, el.box.x, el.box.y, el.box.w, el.box.h);
     } else if (el.kind === 'shape') {
       const h = preloader.get(`paths:${slide.id}:${el.id}`);
-      if (h) drawPaths(ctx, h.paths, st.alpha);
+      if (h && st.draw !== null && st.draw < 1) drawLines(ctx, h.paths, st.alpha, st.draw);
+      else if (h) drawPaths(ctx, h.paths, st.alpha);
     } else if (el.kind === 'text') {
       const h = preloader.get(`paths:${slide.id}:${el.id}`);
       if (!h) { ctx.restore(); continue; }
