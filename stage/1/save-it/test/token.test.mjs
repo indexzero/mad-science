@@ -95,8 +95,13 @@ test("a token with one part fails with malformed", async () => {
   assert.deepEqual(await verify(`${token}.AA`, SECRET, NOW), { ok: false, kind: "malformed" });
 });
 
-test("a payload that is not JSON fails with malformed", async () => {
-  const payloadBytes = new TextEncoder().encode("not json");
+/**
+ * Signs arbitrary payload text with the right secret.
+ * @param {string} text
+ * @returns {Promise<string>}
+ */
+async function signText(text) {
+  const payloadBytes = new TextEncoder().encode(text);
   const cryptoKey = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(SECRET),
@@ -105,6 +110,44 @@ test("a payload that is not JSON fails with malformed", async () => {
     ["sign"]
   );
   const hmac = new Uint8Array(await crypto.subtle.sign("HMAC", cryptoKey, payloadBytes));
-  const token = `${base64urlEncode(payloadBytes)}.${base64urlEncode(hmac)}`;
+  return `${base64urlEncode(payloadBytes)}.${base64urlEncode(hmac)}`;
+}
+
+test("a payload that is not JSON fails with malformed", async () => {
+  const token = await signText("not json");
   assert.deepEqual(await verify(token, SECRET, NOW), { ok: false, kind: "malformed" });
+});
+
+test("an expired token with a wrong secret fails with bad-signature", async () => {
+  const { token, exp } = await sign(INPUT, "another-signing-key-32-bytes-000", NOW);
+  const later = new Date((exp + 1) * 1000);
+  assert.deepEqual(await verify(token, SECRET, later), { ok: false, kind: "bad-signature" });
+});
+
+test("a signed payload with a missing or wrongly typed field fails with malformed", async () => {
+  const exp = Math.floor(NOW.getTime() / 1000) + 60;
+  const good = { key: INPUT.key, sha256: INPUT.sha256, size: INPUT.size, exp };
+  const { key, ...noKey } = good;
+  const { sha256, ...noSha256 } = good;
+  const { size, ...noSize } = good;
+  const { exp: _exp, ...noExp } = good;
+  const cases = [
+    ["no key", noKey],
+    ["no sha256", noSha256],
+    ["no size", noSize],
+    ["no exp", noExp],
+    ["key is a number", { ...good, key: 1 }],
+    ["sha256 is null", { ...good, sha256: null }],
+    ["size is a string", { ...good, size: String(size) }],
+    ["size is a float", { ...good, size: 1.5 }],
+    ["exp is a string", { ...good, exp: String(exp) }],
+    ["null", null],
+    ["an array", [key, sha256, size, exp]],
+    ["a string", "payload"]
+  ];
+  assert.equal((await verify(await signText(JSON.stringify(good)), SECRET, NOW)).ok, true);
+  for (const [label, value] of cases) {
+    const token = await signText(JSON.stringify(value));
+    assert.deepEqual(await verify(token, SECRET, NOW), { ok: false, kind: "malformed" }, label);
+  }
 });
