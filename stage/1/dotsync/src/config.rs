@@ -385,4 +385,18 @@ quiet_secs = 7
         assert_eq!(file.state_dir.as_deref(), Some("/h/.local/state/dotsync"));
         assert_eq!(file.roots.unwrap()[0].path, "/h/.claude");
     }
+
+    #[test]
+    fn config_readme_example_parses() {
+        let readme = include_str!("../README.md");
+        let start = readme
+            .find("```toml\n")
+            .expect("a toml block in the README")
+            + 8;
+        let len = readme[start..].find("\n```").expect("a closing fence");
+        let file = FileConfig::parse(&readme[start..start + len]).unwrap();
+        assert_eq!(file.ceiling_secs, Some(300));
+        assert_eq!(file.deny_extra, Some(vec!["**/*.key".to_string()]));
+        assert_eq!(file.roots.map(|r| r.len()), Some(1));
+    }
 }

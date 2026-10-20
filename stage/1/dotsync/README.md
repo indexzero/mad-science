@@ -78,10 +78,6 @@ store = "s3://example-bucket/dotsync"
 endpoint = "https://ACCOUNT_ID.r2.cloudflarestorage.com"  # R2 or MinIO only.
 state_dir = "~/.local/state/dotsync" # A leading ~ is expanded.
 
-[[roots]]
-path = "~/.claude"                   # The only v1 root. A second root is ask-first.
-name = "claude"                      # Optional. Default: the final component without leading dots.
-
 deny_extra = ["**/*.key"]            # Appended to the default list.
 # deny = [...]                       # Replaces the whole default list.
 
@@ -89,6 +85,11 @@ quiet_secs = 2
 ceiling_secs = 300
 rescan_secs = 1800
 debounce_ms = 500
+
+# A [[roots]] table ends the top-level keys, so it comes last.
+[[roots]]
+path = "~/.claude"                   # The only v1 root. A second root is ask-first.
+name = "claude"                      # Optional. Default: the final component without leading dots.
 ```
 
 Set `host` in the config file to pin the prefix. When the computed hostname changes, the daemon writes under the new prefix with a fresh manifest, and the old prefix stays untouched.
