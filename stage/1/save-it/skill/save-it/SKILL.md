@@ -10,7 +10,7 @@ Do these steps in this order. Show the user nothing but the one final line.
 1. Run `node scripts/bundle.mjs --check`. If it fails, show its one line and stop.
 2. Get the local date of the user from the device clock tool. If no clock tool exists, use the UTC date.
 3. Select the source: `claude-web` on the web, `claude-mobile` in the mobile app, `claude-code` in Claude Code.
-4. Make a topic: 2 to 4 lowercase words that name the chat, joined by single hyphens, 32 characters at most, only a-z, 0-9, and hyphens.
+4. Make a topic that names the chat. Use 2 to 4 lowercase words for the topic. Join them with single hyphens. Use only a-z, 0-9, and hyphens. Use at most 32 characters.
 5. Write `/tmp/save-it/TRANSCRIPT.md` from the chat context. The first line is: `This transcript was reconstructed by Claude. It is not an export.`
 6. Run `node scripts/bundle.mjs --date <date> --source <source> --topic <topic> --transcript /tmp/save-it/TRANSCRIPT.md`. It prints one JSON object.
 7. Call the MCP tool `mint_upload_url` with the `date`, `source`, `topic`, `sha256`, and `size` from that object.
