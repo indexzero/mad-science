@@ -120,6 +120,7 @@ pub fn resolve(
     if host.is_empty() {
         return Err(ConfigError::EmptyHost);
     }
+    check_name("host", &host)?;
 
     let store = flags
         .store
@@ -192,8 +193,11 @@ fn resolve_roots(
         for root in list {
             let path = absolute(PathBuf::from(&root.path))?;
             let name = match &root.name {
-                Some(name) if !name.is_empty() => name.clone(),
-                _ => root_name(&path)?,
+                Some(name) => {
+                    check_name("root", name)?;
+                    name.clone()
+                }
+                None => root_name(&path)?,
             };
             roots.push((name, path));
         }
@@ -208,6 +212,18 @@ fn resolve_roots(
         }
     }
     Ok(roots)
+}
+
+/// Section 5: a host or root name is one key segment and one state path segment.
+/// It must not be empty, start with `.`, or hold `/` or `\`.
+fn check_name(what: &'static str, name: &str) -> Result<(), ConfigError> {
+    if name.is_empty() || name.starts_with('.') || name.contains(['/', '\\']) {
+        return Err(ConfigError::BadName {
+            what,
+            name: name.to_string(),
+        });
+    }
+    Ok(())
 }
 
 /// `path` unchanged when absolute, else `ConfigError::NotAbsolute`.
@@ -251,6 +267,10 @@ pub enum ConfigError {
     DuplicateRoot(String),
     #[error("host name is empty")]
     EmptyHost,
+    /// A host or an explicit root name that is empty, starts with `.`, or holds
+    /// `/` or `\`. Such a name would leave its key or state segment (section 5).
+    #[error("{what} name {name:?} is empty, starts with a dot, or contains a slash")]
+    BadName { what: &'static str, name: String },
     #[error("path is not absolute: {0}")]
     NotAbsolute(PathBuf),
 }
@@ -373,6 +393,36 @@ quiet_secs = 7
         };
         let err = resolve(&flags, &PolicyArgs::default(), None, &d).unwrap_err();
         assert!(matches!(err, ConfigError::DuplicateRoot(ref n) if n == "x"));
+    }
+
+    #[test]
+    fn config_rejects_bad_host_and_root_names() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let d = defaults(dir.path());
+        for host in [".dotsync", "../x", "a/b", "a\\b"] {
+            let flags = Common {
+                store: Some("memory:".to_string()),
+                host: Some(host.to_string()),
+                ..Common::default()
+            };
+            let err = resolve(&flags, &PolicyArgs::default(), None, &d).unwrap_err();
+            assert!(
+                matches!(err, ConfigError::BadName { ref name, .. } if name == host),
+                "host {host}: {err}"
+            );
+        }
+        let root = dir.path().join("r").display().to_string();
+        for name in ["", ".dotsync", "a/b", "a\\b"] {
+            let text =
+                format!("store = \"memory:\"\n[[roots]]\npath = {root:?}\nname = {name:?}\n");
+            let file = FileConfig::parse(&text).unwrap();
+            let err =
+                resolve(&Common::default(), &PolicyArgs::default(), Some(&file), &d).unwrap_err();
+            assert!(
+                matches!(err, ConfigError::BadName { name: ref n, .. } if n == name),
+                "root name {name:?}: {err}"
+            );
+        }
     }
 
     #[test]

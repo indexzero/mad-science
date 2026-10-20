@@ -8,13 +8,15 @@ Stage 1 on entry. Stage 2 when `check.sh` passes. Stage 3 when the owner runs th
 
 ## Install
 
-1. Run `cargo build --release`.
-2. Copy `target/release/dotsync` to `/usr/local/bin/dotsync`, or to another path.
-3. Copy `launchd/com.indexzero.dotsync.plist` to `~/Library/LaunchAgents/`.
-4. In that copy, change the two placeholders: the binary path `/usr/local/bin/dotsync` and the log path `/usr/local/var/log/dotsync.log`.
-5. In that copy, set `DOTSYNC_STORE` to your bucket URL.
-6. In that copy only, add `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` to `EnvironmentVariables`. The repository copy never carries a credential.
-7. Run `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.indexzero.dotsync.plist`.
+1. Install Rust 1.88 or later, for example with `rustup`. Check it with `rustc --version`.
+2. Change to `stage/1/dotsync/`, the directory that holds `Cargo.toml`. Run `cargo build --release` there.
+3. Copy `target/release/dotsync` to `/usr/local/bin/dotsync`, or to another path. A copy to `/usr/local/bin` can need `sudo`.
+4. Copy `launchd/com.indexzero.dotsync.plist` to `~/Library/LaunchAgents/`.
+5. In that copy, change the two placeholders: the binary path `/usr/local/bin/dotsync` and the log path `/usr/local/var/log/dotsync.log`.
+6. In that copy, set `DOTSYNC_STORE` to your bucket URL.
+7. In that copy only, add `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` to `EnvironmentVariables`. The repository copy never carries a credential.
+8. Create the directory of the log path in the plist, for example `mkdir -p /usr/local/var/log`. launchd does not create it. This can need `sudo` too.
+9. Run `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.indexzero.dotsync.plist`. On an older macOS, `launchctl load` does the same.
 
 For R2 or MinIO, set `DOTSYNC_ENDPOINT` to the endpoint URL. The tool reads no `~/.aws/credentials` file. Export the variables, for example with `aws configure export-credentials --format env`, and put them into the installed plist copy.
 

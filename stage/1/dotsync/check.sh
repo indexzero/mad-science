@@ -7,13 +7,16 @@
 # and this design name, all controlled by the wrapper.
 set -euo pipefail
 cd "$(dirname "$0")"
+# Cargo builds into CARGO_TARGET_DIR when it is set. A relative value resolves
+# from this directory, the same way cargo resolves it after the cd above.
+TARGET_DIR="${CARGO_TARGET_DIR:-target}"
 
 step() { printf 'ok: %s\n' "$1"; }
 
 cargo build
 step "cargo build"
 
-cargo test 2>&1 | tee target/check-cargo-test.log
+cargo test 2>&1 | tee "$TARGET_DIR/check-cargo-test.log"
 step "cargo test"
 
 n="$(cargo test -- --list 2>/dev/null | grep -cE '(^|::)(fm_1|fm_2|fm_3|fm_4|dl_1)_' || true)"
@@ -23,7 +26,7 @@ if [ "$n" != "5" ]; then
 fi
 step "five named tests listed"
 
-passed="$(grep -cE '^test ([a-z0-9_]+::)*(fm_1|fm_2|fm_3|fm_4|dl_1)_[a-z0-9_]+ \.\.\. ok$' target/check-cargo-test.log || true)"
+passed="$(grep -cE '^test ([a-z0-9_]+::)*(fm_1|fm_2|fm_3|fm_4|dl_1)_[a-z0-9_]+ \.\.\. ok$' "$TARGET_DIR/check-cargo-test.log" || true)"
 if [ "$passed" != "5" ]; then
   echo "fail: expected 5 named tests to run and pass, found $passed" >&2
   exit 1
@@ -51,7 +54,7 @@ printf 'blob\n' > "$TMP/root/cache/blob.bin"
 ln -s ../CLAUDE.md "$TMP/root/skills/link.md"
 step "synthetic root created"
 
-BIN="./target/debug/dotsync"
+BIN="$TARGET_DIR/debug/dotsync"
 # run <subcommand> [flags]: the subcommand comes first, because --config and
 # --state-dir are subcommand flags (section 9), not global flags.
 run() {
