@@ -72,6 +72,19 @@
             },
             "reason": {
               "type": "string"
+            },
+            "strings": {
+              "type": "integer"
+            },
+            "textMatched": {
+              "type": "integer",
+              "description": "Text elements whose every word is a whole token in a harvested run."
+            },
+            "textTotal": {
+              "type": "integer"
+            },
+            "fontCondition": {
+              "type": "string"
             }
           }
         }
@@ -181,6 +194,10 @@
         "text": {
           "type": "string",
           "minLength": 1
+        },
+        "fill": {
+          "$ref": "#/$defs/hex6",
+          "description": "Set only when it differs from the word's fill."
         }
       }
     },
@@ -209,6 +226,10 @@
           "items": {
             "$ref": "#/$defs/glyph"
           }
+        },
+        "fill": {
+          "$ref": "#/$defs/hex6",
+          "description": "Set only when it differs from the element's fill."
         }
       }
     },
@@ -334,7 +355,8 @@
         },
         "scale": {
           "type": "number",
-          "exclusiveMinimum": 0
+          "exclusiveMinimum": 0,
+          "description": "Image pixels per slide pixel of the image's full rectangle: imageWidth / rect.w. 1 for a page raster."
         },
         "source": {
           "type": "object",
@@ -349,6 +371,35 @@
             },
             "kpf": {
               "$ref": "#/$defs/kpfRef"
+            }
+          }
+        },
+        "crop": {
+          "type": "object",
+          "description": "The source rectangle in image pixels that `box` shows, when the page clips the image (a Keynote image mask). Absent when the whole image is visible.",
+          "required": [
+            "x",
+            "y",
+            "w",
+            "h"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "x": {
+              "type": "number",
+              "minimum": 0
+            },
+            "y": {
+              "type": "number",
+              "minimum": 0
+            },
+            "w": {
+              "type": "number",
+              "minimum": 0
+            },
+            "h": {
+              "type": "number",
+              "minimum": 0
             }
           }
         }
@@ -565,8 +616,30 @@
             },
             "attributes": {
               "type": "object"
+            },
+            "objectID": {
+              "type": [
+                "string",
+                "null"
+              ]
             }
           }
+        },
+        "begin": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Seconds after the step starts. Nested KPF effects begin when their parent ends.",
+          "default": 0
+        },
+        "distance": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Pixels a move-in travels along its direction, from the KPF keyframes."
+        },
+        "automatic": {
+          "type": "boolean",
+          "description": "True when the KPF event has automaticPlay: the step plays on arrival or after the previous step.",
+          "default": false
         }
       }
     },

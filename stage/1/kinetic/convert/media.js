@@ -60,33 +60,52 @@ export function pageImageObjects(pdfPath, pageIndex) {
 }
 
 /**
- * Extract the one embedded image stream of a picture page. Runs `mutool extract -a <pdf> <object>` in
- * `scratchDir` (SMask folded in as alpha), deletes every font file written there, and copies the image to
- * `outDir/<name>.<png|jpg>`. Returns { file, ext, width, height, bytes, fontFilesDeleted, object } or null
- * when the page has no single image object.
+ * Extract every image stream of a page into `scratchDir` with `mutool extract -a` (SMask folded in as
+ * alpha), then delete every font file written there. Returns { images: [{ object, file, ext, width,
+ * height, bytes }], fontFilesDeleted }. The caller copies what it needs and removes the scratch.
+ */
+export function extractPageImages(pdfPath, pageIndex, scratchDir) {
+  const objects = pageImageObjects(pdfPath, pageIndex);
+  rmSync(scratchDir, { recursive: true, force: true });
+  mkdirSync(scratchDir, { recursive: true });
+  if (!objects.length) return { images: [], fontFilesDeleted: 0 };
+  run(MUTOOL, ['extract', '-a', pdfPath, ...objects.map(String)], { cwd: scratchDir });
+  const fontFilesDeleted = deleteFontFiles(scratchDir);
+  const images = [];
+  for (const f of readdirSync(scratchDir)) {
+    const m = /^image-(\d+)\.(png|jpg|jpeg)$/i.exec(f);
+    if (!m) continue;
+    const file = join(scratchDir, f);
+    const buf = readFileSync(file);
+    const size = imageSize(buf);
+    images.push({ object: Number(m[1]), file, ext: /^png$/i.test(m[2]) ? 'png' : 'jpg', width: size?.width ?? null, height: size?.height ?? null, bytes: buf.length });
+  }
+  images.sort((a, b) => a.object - b.object);
+  return { images, fontFilesDeleted };
+}
+
+/** Copy an extracted image to `outDir/<name>.<ext>`. Returns the destination path. */
+export function placeImage(img, outDir, name) {
+  mkdirSync(outDir, { recursive: true });
+  const file = join(outDir, `${name}.${img.ext}`);
+  copyFileSync(img.file, file);
+  return file;
+}
+
+/**
+ * Extract the one embedded image stream of a picture page to `outDir/<name>.<png|jpg>`. Returns
+ * { file, ext, width, height, bytes, fontFilesDeleted, object } or null when the page has no single image.
  */
 export function extractImage(pdfPath, pageIndex, outDir, name, { scratchDir } = {}) {
-  const objects = pageImageObjects(pdfPath, pageIndex);
-  if (objects.length !== 1) return null;
   const scratch = scratchDir || join(outDir, '.extract');
-  rmSync(scratch, { recursive: true, force: true });
-  mkdirSync(scratch, { recursive: true });
-  run(MUTOOL, ['extract', '-a', pdfPath, String(objects[0])], { cwd: scratch });
-  const fontFilesDeleted = deleteFontFiles(scratch);
-  const files = readdirSync(scratch).filter((f) => /^image-\d+\.(png|jpg|jpeg)$/i.test(f));
-  if (files.length !== 1) {
-    rmSync(scratch, { recursive: true, force: true });
-    return null;
+  const { images, fontFilesDeleted } = extractPageImages(pdfPath, pageIndex, scratch);
+  let out = null;
+  if (images.length === 1) {
+    const img = images[0];
+    out = { file: placeImage(img, outDir, name), ext: img.ext, width: img.width, height: img.height, bytes: img.bytes, fontFilesDeleted, object: img.object };
   }
-  const src = join(scratch, files[0]);
-  const ext = /\.png$/i.test(files[0]) ? 'png' : 'jpg';
-  const buf = readFileSync(src);
-  const size = imageSize(buf);
-  mkdirSync(outDir, { recursive: true });
-  const file = join(outDir, `${name}.${ext}`);
-  copyFileSync(src, file);
   rmSync(scratch, { recursive: true, force: true });
-  return { file, ext, width: size?.width ?? null, height: size?.height ?? null, bytes: buf.length, fontFilesDeleted, object: objects[0] };
+  return out;
 }
 
 /**

@@ -122,7 +122,9 @@ export function collectBuilds(slide, targetsOf, { unitOf = null } = {}) {
         const leaves = effectLeaves(e);
         const targets = targetsOf(e, leaves);
         if (targets.length) {
-          const key = `${e.name}|${targets.join(',')}`;
+          // one build per (effect kind, targets) per step: apple:movie-start and its nested renderMovie
+          // both start the same video
+          const key = `${(EFFECT_MAP[e.name] || ['appear'])[0]}|${targets.join(',')}`;
           if (!seen.has(key)) {
             seen.add(key);
             const unit = unitOf ? unitOf(e, targets) : null;
