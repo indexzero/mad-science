@@ -141,7 +141,8 @@ pub async fn run_plan(settings: &Settings, out: &mut dyn Write) -> Result<(), Cl
     for (name, path) in &settings.roots {
         let manifest = load_manifest(settings, name)?;
         let snap = scan::scan(path, &deny, Scope::Full, now_ns())?;
-        let plan = manifest.diff(path, &snap)?;
+        let mut plan = manifest.diff(path, &snap)?;
+        drop_denied(&mut plan, &deny);
         for action in &plan.actions {
             if let Some(line) = action.display_line(name) {
                 lines.push((format!("{name}/{}", action.rel()), line));
@@ -427,6 +428,7 @@ impl Engine {
         let state = &mut self.roots[root];
         let snap = scan::scan(&state.path, &self.deny, scope, now_ns)?;
         let mut plan = state.manifest.diff(&state.path, &snap)?;
+        drop_denied(&mut plan, &self.deny);
         drop_conflicts(
             &state.manifest,
             &mut plan,
@@ -553,6 +555,13 @@ impl Engine {
         self.deferred = later;
         due.into_iter().map(|(_, c)| c).collect()
     }
+}
+
+/// Decision 4.2: a denied path never enters the plan. A live manifest entry that a
+/// later deny pattern matches is absent from the scan, so `diff` plans a tombstone
+/// for it. Drop that action. The object and the manifest entry stay as they are.
+fn drop_denied(plan: &mut Plan, deny: &DenyList) {
+    plan.actions.retain(|a| !deny.is_denied(a.rel()));
 }
 
 /// Section 6: an `Upload` whose `rel` has a proper prefix that is a live `File`
@@ -796,6 +805,39 @@ mod tests {
         let mut out = Vec::new();
         run_ls(&s, &mut out).await.unwrap();
         assert!(out.is_empty());
+    }
+
+    #[tokio::test]
+    async fn sync_drops_a_path_denied_after_its_upload() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let s = settings(dir.path());
+        let root = &s.roots[0].1;
+        fs::write(root.join("notes.key"), b"k").unwrap();
+        fs::write(root.join("ok.txt"), b"one").unwrap();
+        let mut out = Vec::new();
+        run_sync(&s, &mut out).await.unwrap();
+
+        let mut denied = s.clone();
+        denied.deny.push("**/*.key".to_string());
+        fs::write(root.join("ok.txt"), b"two").unwrap();
+        let mut out = Vec::new();
+        run_plan(&denied, &mut out).await.unwrap();
+        assert_eq!(String::from_utf8(out).unwrap(), "upload root/ok.txt\n");
+        let mut out = Vec::new();
+        run_sync(&denied, &mut out).await.unwrap();
+        let text = String::from_utf8(out).unwrap();
+        assert!(text.contains(" tombstones=0 "), "{text}");
+        assert!(text.contains(" uploads=1 "), "{text}");
+        assert_eq!(
+            fs::read(dir.path().join("store/alpha/root/ok.txt")).unwrap(),
+            b"two"
+        );
+        assert!(dir.path().join("store/alpha/root/notes.key").is_file());
+        assert!(
+            !dir.path()
+                .join("store/alpha/.dotsync/root/tombstones/notes.key")
+                .exists()
+        );
     }
 
     #[test]

@@ -100,6 +100,7 @@ The manifest records size, mtime in nanoseconds, inode, and a blake3 hash for ev
 ## Limits of v1
 
 - No remote delete. A removed file gets a tombstone and the object stays.
+- A path added to the deny list after its upload keeps its object in the store. dotsync writes no tombstone for it. Remove the object by hand.
 - No convergence. Each machine writes under its own prefix.
 - One root, `~/.claude`. A second root is an ask-first change.
 - One daemon per state directory. Two daemons on one state directory corrupt the manifest.
