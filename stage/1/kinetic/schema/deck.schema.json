@@ -1,0 +1,647 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://charlie.dev/kinetic/deck.schema.json",
+  "title": "kinetic deck",
+  "description": "A declarative deck. A slide is a list of elements and a list of build steps. A text element is a list of words, each word a vector outline. Draft of checkpoint 1; checkpoint 3 edits it.",
+  "type": "object",
+  "required": [
+    "format",
+    "id",
+    "title",
+    "width",
+    "height",
+    "source",
+    "slides"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "kinetic/1"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string"
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "kpf",
+        "convertedAt",
+        "converter"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kpf": {
+          "type": "string",
+          "minLength": 1
+        },
+        "key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "convertedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "converter": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{7,40}$"
+        },
+        "keyParse": {
+          "type": "object",
+          "description": "Why the .key parse returned nothing, when it did.",
+          "properties": {
+            "attempted": {
+              "type": "boolean"
+            },
+            "stage": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "slides": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/slide"
+      }
+    }
+  },
+  "$defs": {
+    "hex6": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    },
+    "direction": {
+      "enum": [
+        "left",
+        "right",
+        "up",
+        "down"
+      ]
+    },
+    "box": {
+      "type": "object",
+      "description": "Slide coordinates: 1920x1080, origin top left, y down.",
+      "required": [
+        "x",
+        "y",
+        "w",
+        "h"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number",
+          "minimum": 0
+        },
+        "h": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "mediaPath": {
+      "type": "string",
+      "description": "Relative to deck.json. Never a font file, never a GIF, never a space or a parenthesis.",
+      "minLength": 1,
+      "pattern": "^(?![/])(?!.*[ ()])(?!.*\\.(ttf|otf|woff|woff2|gif)$).+$"
+    },
+    "kpfRef": {
+      "type": "object",
+      "required": [
+        "slide",
+        "texture",
+        "page",
+        "textureType",
+        "isBackgroundTexture"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "slide": {
+          "type": "string",
+          "minLength": 1
+        },
+        "texture": {
+          "type": "string",
+          "minLength": 1
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "textureType": {
+          "type": "integer"
+        },
+        "isBackgroundTexture": {
+          "type": "boolean"
+        }
+      }
+    },
+    "glyph": {
+      "type": "object",
+      "required": [
+        "d",
+        "box",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "d": {
+          "type": "string",
+          "minLength": 1
+        },
+        "box": {
+          "$ref": "#/$defs/box"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "word": {
+      "type": "object",
+      "required": [
+        "d",
+        "box",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "d": {
+          "type": "string",
+          "minLength": 1
+        },
+        "box": {
+          "$ref": "#/$defs/box"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "chars": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/glyph"
+          }
+        }
+      }
+    },
+    "elementCommon": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "box",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "box": {
+          "$ref": "#/$defs/box"
+        },
+        "hidden": {
+          "type": "boolean",
+          "default": false
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 1
+        },
+        "kind": {
+          "enum": [
+            "text",
+            "image",
+            "video"
+          ]
+        },
+        "source": {
+          "type": "object"
+        }
+      }
+    },
+    "textElement": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/elementCommon"
+        }
+      ],
+      "required": [
+        "words",
+        "fill",
+        "text"
+      ],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": {
+          "const": "text"
+        },
+        "words": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/word"
+          }
+        },
+        "fill": {
+          "$ref": "#/$defs/hex6"
+        },
+        "text": {
+          "type": "string"
+        },
+        "font": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "object",
+          "required": [
+            "path",
+            "kpf"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "enum": [
+                "key",
+                "pdf"
+              ]
+            },
+            "kpf": {
+              "$ref": "#/$defs/kpfRef"
+            }
+          }
+        }
+      }
+    },
+    "imageElement": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/elementCommon"
+        }
+      ],
+      "required": [
+        "src",
+        "scale"
+      ],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": {
+          "const": "image"
+        },
+        "src": {
+          "$ref": "#/$defs/mediaPath"
+        },
+        "scale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "source": {
+          "type": "object",
+          "required": [
+            "path",
+            "kpf"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "const": "texture"
+            },
+            "kpf": {
+              "$ref": "#/$defs/kpfRef"
+            }
+          }
+        }
+      }
+    },
+    "videoElement": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/elementCommon"
+        }
+      ],
+      "required": [
+        "src",
+        "poster",
+        "loop"
+      ],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": {
+          "const": "video"
+        },
+        "src": {
+          "type": "object",
+          "required": [
+            "mp4",
+            "webm"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "mp4": {
+              "$ref": "#/$defs/mediaPath"
+            },
+            "webm": {
+              "$ref": "#/$defs/mediaPath"
+            }
+          }
+        },
+        "poster": {
+          "$ref": "#/$defs/mediaPath"
+        },
+        "loop": {
+          "type": "boolean"
+        },
+        "source": {
+          "type": "object",
+          "required": [
+            "path",
+            "kpf",
+            "originalGif",
+            "originalBytes",
+            "transparent"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "const": "texture"
+            },
+            "kpf": {
+              "$ref": "#/$defs/kpfRef"
+            },
+            "originalGif": {
+              "type": "string",
+              "minLength": 1
+            },
+            "originalBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "transparent": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "element": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "text",
+            "image",
+            "video"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "text"
+              }
+            }
+          },
+          "then": {
+            "$ref": "#/$defs/textElement"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "image"
+              }
+            }
+          },
+          "then": {
+            "$ref": "#/$defs/imageElement"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "video"
+              }
+            }
+          },
+          "then": {
+            "$ref": "#/$defs/videoElement"
+          }
+        }
+      ]
+    },
+    "build": {
+      "type": "object",
+      "required": [
+        "step",
+        "effect",
+        "unit",
+        "direction",
+        "duration",
+        "targets",
+        "kpf"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "step": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "effect": {
+          "enum": [
+            "move-in",
+            "dissolve",
+            "wipe",
+            "keyboard",
+            "appear",
+            "line-draw",
+            "fade-and-move",
+            "movie-start"
+          ]
+        },
+        "unit": {
+          "enum": [
+            "object",
+            "word",
+            "character"
+          ]
+        },
+        "direction": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/direction"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stagger": {
+          "type": "number",
+          "minimum": 0
+        },
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "kpf": {
+          "type": "object",
+          "required": [
+            "name",
+            "attributes"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "attributes": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "transition": {
+      "type": "object",
+      "required": [
+        "kind",
+        "duration"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "push",
+            "dissolve",
+            "none"
+          ]
+        },
+        "direction": {
+          "$ref": "#/$defs/direction"
+        },
+        "duration": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "push"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "direction": {
+            "$ref": "#/$defs/direction"
+          }
+        },
+        "required": [
+          "direction"
+        ]
+      }
+    },
+    "slide": {
+      "type": "object",
+      "required": [
+        "id",
+        "index",
+        "background",
+        "elements",
+        "builds",
+        "transition"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "background": {
+          "type": "object",
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "color"
+            },
+            "value": {
+              "$ref": "#/$defs/hex6"
+            }
+          }
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/element"
+          }
+        },
+        "builds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/build"
+          }
+        },
+        "transition": {
+          "$ref": "#/$defs/transition"
+        }
+      }
+    }
+  }
+}
