@@ -29,10 +29,10 @@ const KEY = "2026-09-26-claude-mobile-3coin-in-3d-a9b7df43aa05a12f3f7c4265fd61a8
 /**
  * Calls mintUploadUrl with the test defaults.
  * @param {unknown} args
- * @param {{ env?: object, email?: string }} [overrides]
+ * @param {{ env?: object, email?: string, props?: Record<string, unknown> }} [overrides]
  */
-function mint(args, { env = ENV, email = EMAIL } = {}) {
-  return mintUploadUrl(args, { env, origin: ORIGIN, now: NOW, authContext: { props: { email } } });
+function mint(args, { env = ENV, email = EMAIL, props = { email } } = {}) {
+  return mintUploadUrl(args, { env, origin: ORIGIN, now: NOW, authContext: { props } });
 }
 
 test("mintUploadUrl returns key, url, expires_at for the [25] vector", async () => {
@@ -71,6 +71,12 @@ test("mintUploadUrl refuses a different email", async () => {
     result.content[0].text,
     "not saved: this token is not for the allowed email. fix: add the connector again"
   );
+});
+
+test("mintUploadUrl mints when ALLOWED_EMAIL has a trailing space", async () => {
+  const result = await mint(VECTOR, { env: { ...ENV, ALLOWED_EMAIL: `${EMAIL} ` } });
+  assert.equal(result.isError, undefined, result.content[0].text);
+  assert.equal(JSON.parse(result.content[0].text).key, KEY);
 });
 
 test("mintUploadUrl refuses when UPLOAD_SIGNING_KEY is missing or shorter than 32 bytes", async () => {

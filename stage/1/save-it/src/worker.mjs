@@ -8,6 +8,7 @@ import { OAuthProvider, AuthorizationError } from "@cloudflare/workers-oauth-pro
 import { createMcpHandler } from "agents/mcp/server";
 import { createServer } from "./tool.mjs";
 import { verify } from "./token.mjs";
+import { isAllowedEmail } from "./email.mjs";
 
 const ALLOWED_REDIRECT_URIS = [
   "https://claude.ai/api/mcp/auth_callback",
@@ -132,11 +133,10 @@ async function authorize(request, env, ctx) {
     );
   }
   const identity = await ctx.access.getIdentity();
-  const email = typeof identity?.email === "string" ? identity.email.trim() : undefined;
-  const allowed = typeof env.ALLOWED_EMAIL === "string" ? env.ALLOWED_EMAIL.trim() : undefined;
-  if (email === undefined || allowed === undefined || email !== allowed) {
+  if (!isAllowedEmail(identity?.email, env.ALLOWED_EMAIL)) {
     return text("not saved: this account is not allowed. fix: sign in as the allowed email", 403);
   }
+  const email = identity.email.trim();
   let authRequest;
   try {
     authRequest = await env.OAUTH_PROVIDER.parseAuthRequest(request);

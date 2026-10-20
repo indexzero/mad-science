@@ -8,6 +8,7 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { validate, compose, DEFAULT_MAX_BYTES } from "./key.mjs";
 import { sign } from "./token.mjs";
+import { isAllowedEmail } from "./email.mjs";
 
 /**
  * @typedef {object} ToolEnv
@@ -48,7 +49,7 @@ function hasSigningKey(secret) {
  */
 export async function mintUploadUrl(args, { env, origin, now, authContext }) {
   const email = (authContext ?? getMcpAuthContext())?.props?.email;
-  if (email !== env.ALLOWED_EMAIL) {
+  if (!isAllowedEmail(email, env.ALLOWED_EMAIL)) {
     return failure("not saved: this token is not for the allowed email. fix: add the connector again");
   }
   if (!hasSigningKey(env.UPLOAD_SIGNING_KEY)) {
