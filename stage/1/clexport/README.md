@@ -18,8 +18,13 @@ risky below. The export paths only read.
 ## DevTools steps
 
 1. Open https://claude.ai in a browser and log in.
-2. Open DevTools and select the Console tab.
+2. Open DevTools. On macOS press Cmd+Option+I. On Windows or Linux press
+   F12 or Ctrl+Shift+I. Select the Console tab.
 3. Paste the whole content of `clexport.js` into the console. Press Enter.
+   On the first paste the browser can refuse it and print a warning about
+   pasting code. If it does, type `allow pasting` and press Enter, then
+   paste again. The console then prints an object with `chats` and
+   `groups`. That is the loaded client.
 4. Make sure that `clexport.orgId` prints a uuid. If it throws, set
    `clexport.orgId = '<your org uuid>'`. The org uuid is in the path of
    any request on the Network tab.
@@ -62,6 +67,12 @@ times at most. The full API is in `clexport.d.ts`.
 The script writes three files. The date in each name is the local date of
 the download. The shapes below are synthetic examples. The real files
 carry every field the API returns.
+
+The chat and transcript commands start browser downloads. If the browser
+asks for a destination, choose one. Otherwise the files land in the
+download folder of the browser, usually `Downloads`. The sidebar command
+copies JSON to the clipboard. Paste it into a text editor. Save it beside
+the downloads as `claude-settings-<date>.json` with the local date.
 
 `claude-chats-<date>.json` is one JSON array of chat list entries:
 
@@ -124,12 +135,13 @@ from the clipboard in step 7. It is one JSON array of rows:
     "name": "A chat title",
     "project": "A project",
     "group": "A group name",
-    "updated": "2026-01-03T04:05:06Z"
+    "updated": "2026-01-03"
   }
 ]
 ```
 
-A `group` of `null` means the chat is in no group.
+A `group` of `null` means the chat is in no group. `updated` is the local
+date of the last update, `YYYY-MM-DD`.
 
 ### Groups write path (risky)
 
@@ -137,8 +149,20 @@ A `group` of `null` means the chat is in no group.
 risky half of the script. It writes to your account settings.
 
 1. `await clexport.groups.load()` reads the chats and the group blob.
-2. `clexport.groups.all.where({ group: null }).show()` lists the ungrouped chats.
-3. `clexport.groups.all.pick(0, 4).to('A group name')` stages two moves.
+2. Save and show the ungrouped view:
+
+   ```js
+   const ungrouped = clexport.groups.all.where({ group: null }).show()
+   ```
+
+3. Choose rows from that table. The `index` column of a view counts
+   from zero inside that view. If rows 0 and 4 are the chats you want,
+   stage them into an existing group:
+
+   ```js
+   ungrouped.pick(0, 4).to('A group name')
+   ```
+
 4. `clexport.groups.plan()` shows the staged moves. Nothing is written yet.
 5. `await clexport.groups.commit()` writes the plan.
 6. `await clexport.groups.undo()` reverses the last commit.
