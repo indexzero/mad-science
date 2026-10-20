@@ -1,9 +1,12 @@
 // Best-effort .key reader: zip central directory, IWA snappy frames, protobuf wire walk,
 // UTF-8 string and font name harvest. No dependencies. On any failure it reports the stage
-// reached and returns what it has. The dispatch enforces the wall budget with `timeout`;
-// `--budget-ms` is a soft stop so the summary is written before the kill.
+// reached. When the budget is exhausted or an error occurs it returns `strings: []` and the verdict
+// `key path unavailable` (D-009): the harvest is never partial. The budget is checked between entries,
+// between archives, and inside the IWA chunk loop. `parseKeyGuarded` runs the parse in a worker thread with
+// a hard timeout for the converter.
 // CLI: node convert/key.js <deck.key> [--fonts header.json] [--words words.json] [--budget-ms 540000] [--out summary.json] [--dump strings.txt]
 import { closeSync, openSync, readSync, fstatSync, writeFileSync, readFileSync } from 'node:fs';
+import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 
@@ -149,11 +152,13 @@ export function snappyUncompress(src) {
 }
 
 /** Decode the IWA framing: chunks of 1 byte type 0x00, 3 byte little-endian length, then a raw snappy block. Returns { data, chunks }. */
-export function decodeIwa(buf) {
+export function decodeIwa(buf, deadline = Infinity) {
   const parts = [];
   let p = 0;
   let chunks = 0;
+  let exhausted = false;
   while (p + 4 <= buf.length) {
+    if (Date.now() >= deadline) { exhausted = true; break; }
     const type = buf[p];
     const len = buf[p + 1] | (buf[p + 2] << 8) | (buf[p + 3] << 16);
     p += 4;
@@ -163,7 +168,7 @@ export function decodeIwa(buf) {
     p += len;
     chunks += 1;
   }
-  return { data: Buffer.concat(parts), chunks };
+  return { data: Buffer.concat(parts), chunks, exhausted };
 }
 
 // ---------- protobuf wire walk ----------
@@ -340,22 +345,26 @@ export function parseKey(keyPath, { fonts = [], words = [], budgetMs = 540000, o
     summary.iwaEntries = iwa.length;
     summary.iwaNames = iwa.map((e) => e.name);
     summary.stage = 'iwa decode';
+    const deadline = t0 + budgetMs;
     for (const e of iwa) {
-      if (Date.now() - t0 > budgetMs) { summary.budgetExhausted = true; break; }
+      if (Date.now() >= deadline) { summary.budgetExhausted = true; break; }
       const raw = readZipEntry(fd, e);
       summary.compressedBytes += raw.length;
       summary.stage = `iwa decode ${e.name}`;
-      const { data, chunks } = decodeIwa(raw);
+      const { data, chunks, exhausted } = decodeIwa(raw, deadline);
       summary.chunks += chunks;
       summary.decompressedBytes += data.length;
+      if (exhausted) { summary.budgetExhausted = true; break; }
       summary.stage = `protobuf walk ${e.name}`;
       for (const archive of iwaArchives(data)) {
+        if (Date.now() >= deadline) { summary.budgetExhausted = true; break; }
         summary.archives += 1;
         for (const payload of archive.payloads) {
           summary.payloads += 1;
           harvestStrings(payload.bytes, strings);
         }
       }
+      if (summary.budgetExhausted) break;
       summary.iwaEntriesRead += 1;
       if (onProgress) onProgress(e.name, summary);
     }
@@ -389,8 +398,37 @@ export function parseKey(keyPath, { fonts = [], words = [], budgetMs = 540000, o
     summary.fontsFoundAsSubstring = fonts.filter((f) => [...distinct].some((s) => s !== f && s.includes(f))).sort();
   }
   summary.wallMs = Date.now() - t0;
-  summary.verdict = summary.error === null && summary.strings > 0 ? 'key path available' : 'key path unavailable';
-  return { summary, strings: [...distinct] };
+  const usable = summary.error === null && !summary.budgetExhausted && summary.strings > 0;
+  summary.verdict = usable ? 'key path available' : 'key path unavailable';
+  return { summary, strings: usable ? [...distinct] : [] };
+}
+
+/**
+ * parseKey in a worker thread with a hard wall-clock guard. Resolves to the parse result, or to an
+ * unavailable result with `stage: 'timeout'` when `timeoutMs` passes first (the worker is terminated).
+ */
+export function parseKeyGuarded(keyPath, opts = {}, { timeoutMs = 600000 } = {}) {
+  return new Promise((resolveP) => {
+    const worker = new Worker(fileURLToPath(import.meta.url), { workerData: { keyPath, opts } });
+    let done = false;
+    const finish = (result) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      resolveP(result);
+    };
+    const timer = setTimeout(() => {
+      worker.terminate();
+      finish({ summary: { attempted: true, key: keyPath, stage: 'timeout', error: `timeout after ${timeoutMs} ms`, budgetExhausted: true, strings: 0, wallMs: timeoutMs, verdict: 'key path unavailable' }, strings: [] });
+    }, timeoutMs);
+    worker.once('message', (m) => finish(m));
+    worker.once('error', (err) => finish({ summary: { attempted: true, key: keyPath, stage: 'worker error', error: `${err.name}: ${err.message}`, strings: 0, wallMs: 0, verdict: 'key path unavailable' }, strings: [] }));
+    worker.once('exit', (code) => { if (!done) finish({ summary: { attempted: true, key: keyPath, stage: 'worker exit', error: `exit ${code}`, strings: 0, wallMs: 0, verdict: 'key path unavailable' }, strings: [] }); });
+  });
+}
+
+if (!isMainThread && workerData && workerData.keyPath) {
+  parentPort.postMessage(parseKey(workerData.keyPath, workerData.opts || {}));
 }
 
 export function main(argv) {
@@ -410,6 +448,6 @@ export function main(argv) {
   return summary.error ? 1 : 0;
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (isMainThread && process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   process.exit(main(process.argv.slice(2)));
 }
