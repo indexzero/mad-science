@@ -68,6 +68,16 @@ test("source: rejects claude-desktop and an empty string", () => {
   assertFails(withField("source", ""), "source", "empty");
 });
 
+test("source: rejects claude-web-foo", () => {
+  assertFails(withField("source", "claude-web-foo"), "source", "claude-web-foo");
+});
+
+test("source: accepts each member of SOURCES", () => {
+  for (const source of SOURCES) {
+    assert.equal(withField("source", source).ok, true, source);
+  }
+});
+
 test("topic: rejects uppercase, a leading hyphen, a double hyphen, a 33-character value, and an empty string", () => {
   assertFails(withField("topic", "Coin"), "topic", "uppercase");
   assertFails(withField("topic", "-coin"), "topic", "leading hyphen");
@@ -103,6 +113,14 @@ test("size: rejects 0, a negative, a float, a numeric string, and MAX_BYTES + 1"
 test("size: accepts 1 and MAX_BYTES", () => {
   assert.equal(withField("size", 1).ok, true);
   assert.equal(withField("size", DEFAULT_MAX_BYTES).ok, true);
+});
+
+test("size: an injected maxBytes of 3 accepts 3 and rejects 4", () => {
+  const options = { ...OPTIONS, maxBytes: 3 };
+  assert.equal(validate({ ...VECTOR, size: 3 }, options).ok, true);
+  const result = validate({ ...VECTOR, size: 4 }, options);
+  assertFails(result, "size", "4");
+  assert.equal(!result.ok && result.message, "size: must be a positive integer not more than 3");
 });
 
 test("each field: rejects missing, undefined, null, an array, an object, and a wrong type", () => {
