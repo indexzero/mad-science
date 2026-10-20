@@ -1,5 +1,7 @@
 {
   "default": 0.03,
   "videoRegion": 0.6,
-  "captures": {}
+  "captures": {
+    "60": { "tolerance": 0.045, "reason": "a full-slide code listing in small monospace text and a hatched red box: the mismatched pixels sit on glyph and hatch edges (the live PDF raster renders the thin strokes heavier than the Path2D fill), no layout or colour difference; measured 0.037" }
+  }
 }

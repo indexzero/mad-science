@@ -1,8 +1,8 @@
 // Benchmark for REPORT-1.md (design, Performance analysis): slide 2 with the 7.8 MB GIF.
 //   live: ms from the ?currentSlide=2 navigation to the first video frame (the GIF <img> decoded) and to
 //         the waiting indicator hiding
-//   new:  ms from goto(2) to the first drawn frame of slide 2 with slide 2 preloaded (a jump from slide 4,
-//         no transition), and the same through the push from slide 1
+//   new:  ms from goto(2) to the first drawn frame of slide 2 with slide 2 preloaded (a jump from slide 3,
+//         whose preload holds 4, 5, and 2; no transition), and the same through the push from slide 1
 // Writes e2e/captures/spike-bench.json.
 import { test, expect } from '@playwright/test';
 import { writeFileSync, mkdirSync } from 'node:fs';
@@ -23,8 +23,8 @@ test('spike benchmark: slide 2 first video frame, live and new', async ({ page, 
   });
 
   const fresh = await browser.newPage({ viewport: { width: 960, height: 540 } });
-  await fresh.goto(PLAYER(4));
-  await fresh.waitForFunction(() => window.kinetic && window.kinetic.current() === 4 && window.kinetic.isReady(2), null, { timeout: 60000 });
+  await fresh.goto(PLAYER(3));
+  await fresh.waitForFunction(() => window.kinetic && window.kinetic.current() === 3 && window.kinetic.isReady(2), null, { timeout: 60000 });
   const jump = await fresh.evaluate(async () => {
     const t0 = performance.now();
     await window.kinetic.goto(2);

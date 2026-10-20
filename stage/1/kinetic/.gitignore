@@ -4,3 +4,6 @@ test-results/
 playwright-report/
 e2e/captures/*
 !e2e/captures/spike-*
+!e2e/captures/ratios.json
+!e2e/captures/preload.json
+!e2e/captures/word-build*

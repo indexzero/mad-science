@@ -94,6 +94,72 @@ export function compareCaptures(name, liveBuf, newBuf, masks = []) {
   return result;
 }
 
+/**
+ * The pixels that move on either side: a Uint8Array (1 per moving pixel) over `width` x `height`, from two
+ * or more frames per side taken at the same build state. A pixel moves when pixelmatch flags it between
+ * any two consecutive frames of one side. The mask is dilated by `dilate` pixels so the fringe of a moving
+ * region is masked too. Used where a video box covers the frame: the GIF phase cannot be aligned between
+ * the two players, so the moving pixels are excluded and the still content is compared.
+ */
+export function animatedMask(liveFrames, newFrames, width, height, dilate = 2) {
+  const mask = new Uint8Array(width * height);
+  for (const frames of [liveFrames, newFrames]) {
+    for (let i = 1; i < frames.length; i++) {
+      const a = decode(frames[i - 1]);
+      const b = decode(frames[i]);
+      const d = new PNG({ width, height });
+      pixelmatch(a.data, b.data, d.data, width, height, { threshold: THRESHOLD, diffMask: true });
+      for (let p = 0; p < width * height; p++) if (d.data[p * 4 + 3] > 0) mask[p] = 1;
+    }
+  }
+  if (!dilate) return mask;
+  const out = new Uint8Array(mask);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (!mask[y * width + x]) continue;
+      for (let dy = -dilate; dy <= dilate; dy++) {
+        for (let dx = -dilate; dx <= dilate; dx++) {
+          const yy = y + dy;
+          const xx = x + dx;
+          if (yy >= 0 && yy < height && xx >= 0 && xx < width) out[yy * width + xx] = 1;
+        }
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Compare a live and a new capture with a per-pixel mask (1 masks the pixel out on both sides). Writes the
+ * capture set like compareCaptures. Returns { ratio, mismatched, unmasked, masked, vacuous }.
+ */
+export function compareCapturesMasked(name, liveBuf, newBuf, pixelMask) {
+  mkdirSync(CAPTURES, { recursive: true });
+  const live = decode(liveBuf);
+  const fresh = decode(newBuf);
+  const { width, height } = live;
+  let masked = 0;
+  for (let p = 0; p < width * height; p++) {
+    if (!pixelMask[p]) continue;
+    masked += 1;
+    const i = p * 4;
+    live.data[i] = fresh.data[i] = 0;
+    live.data[i + 1] = fresh.data[i + 1] = 0;
+    live.data[i + 2] = fresh.data[i + 2] = 0;
+    live.data[i + 3] = fresh.data[i + 3] = 255;
+  }
+  writeFileSync(join(CAPTURES, `${name}.live.png`), liveBuf);
+  writeFileSync(join(CAPTURES, `${name}.new.png`), newBuf);
+  const diff = new PNG({ width, height });
+  const mismatched = pixelmatch(live.data, fresh.data, diff.data, width, height, { threshold: THRESHOLD });
+  const unmasked = width * height - masked;
+  writeFileSync(join(CAPTURES, `${name}.diff.png`), PNG.sync.write(diff));
+  const ratio = unmasked > 0 ? mismatched / unmasked : 0;
+  const result = { name, ratio, mismatched, unmasked, masked, vacuous: unmasked === 0, regions: [] };
+  writeFileSync(join(CAPTURES, `${name}.json`), JSON.stringify(result, null, 2) + '\n');
+  return result;
+}
+
 export function toleranceFor(name) {
   const o = TOLERANCE.captures?.[name];
   if (o && typeof o.tolerance === 'number') return o.tolerance;
