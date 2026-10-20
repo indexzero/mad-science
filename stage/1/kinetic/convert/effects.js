@@ -147,10 +147,13 @@ function idsOf(entry) {
  * event order. `targetsOf(effect, leaves)` returns, aligned with `leaves`, the element id (or id list)
  * each leaf maps to; a null entry means no element. Ids are deduplicated in leaf order and each keeps the
  * reveal offset of its first leaf (`Build.offsets`).
- * Returns { builds, steps, unknown: { name: count }, directionChecks: [{ name, code, check }], skipped }.
+ * Returns { builds, steps, mapped: { name: count }, unknown: { name: count }, directionChecks: [{ name,
+ * code, check }], skipped }. `mapped` counts every buildIn effect visited by KPF name, before the
+ * deduplication and the skips, so it matches the recursive census.
  */
 export function collectBuilds(slide, targetsOf, { unitOf = null } = {}) {
   const builds = [];
+  const mapped = {};
   const unknown = {};
   const directionChecks = [];
   const skipped = [];
@@ -164,12 +167,13 @@ export function collectBuilds(slide, targetsOf, { unitOf = null } = {}) {
     const walk = (effects, parentBegin) => {
       for (const e of effects || []) {
         if (e.type !== 'buildIn') continue;
+        mapped[e.name] = (mapped[e.name] || 0) + 1;
         const begin = parentBegin + (e.beginTime ?? 0);
         const leaves = effectLeaves(e);
-        const mapped = targetsOf(e, leaves);
+        const entries = targetsOf(e, leaves);
         const targets = [];
         const offsets = [];
-        mapped.forEach((entry, i) => {
+        entries.forEach((entry, i) => {
           const off = leaves[i] ? revealOffset(leaves[i]) : 0;
           for (const id of idsOf(entry)) {
             if (targets.includes(id)) continue;
@@ -197,7 +201,7 @@ export function collectBuilds(slide, targetsOf, { unitOf = null } = {}) {
     };
     walk(top, 0);
   }
-  return { builds, steps: step, unknown, directionChecks, skipped };
+  return { builds, steps: step, mapped, unknown, directionChecks, skipped };
 }
 
 /** The slide transition from its last event: { kind, direction?, duration }. */

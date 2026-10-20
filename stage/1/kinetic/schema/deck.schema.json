@@ -204,7 +204,6 @@
     "word": {
       "type": "object",
       "required": [
-        "d",
         "box",
         "text"
       ],
@@ -231,7 +230,32 @@
           "$ref": "#/$defs/hex6",
           "description": "Set only when it differs from the element's fill."
         }
-      }
+      },
+      "description": "A word of a text element. `d` is its outline; a word with `chars` carries no `d` of its own (its outline is the characters' outlines in order), so one of the two is required.",
+      "anyOf": [
+        {
+          "required": [
+            "d"
+          ],
+          "properties": {
+            "d": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "required": [
+            "chars"
+          ],
+          "properties": {
+            "chars": {
+              "type": "array",
+              "minItems": 1
+            }
+          }
+        }
+      ]
     },
     "elementCommon": {
       "type": "object",

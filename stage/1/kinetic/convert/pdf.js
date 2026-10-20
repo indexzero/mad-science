@@ -50,7 +50,8 @@ function decodeEntities(s) {
  * `uses` are glyph placements: a `<use>` whose href starts with `font_` (D-008 F-01; mutool also writes
  * `<use xlink:href="#image_N">` for a re-placed raster, which lands in `imageUses`). Group transforms
  * (`<g transform>`) are composed into every placement's `matrix`, so a matrix always maps into page space.
- * `<image>` inside `<defs>` (a mask source) is recorded in `imageDefs` and never in `images`.
+ * `<image>` inside `<defs>` (a mask source) is recorded in `imageDefs` and never in `images`; a `<use>`
+ * inside `<defs>` (a mask's content) is not a placement.
  */
 export function parseSvg(svgText) {
   const defs = new Map();
@@ -108,6 +109,9 @@ export function parseSvg(svgText) {
         });
       }
     } else if (name === 'use' && !closing) {
+      // a <use> inside <defs> is the content of a <mask> (mutool masks a re-placed raster with a copy of
+      // itself), never a placement on the page (slide 39: four mask uses over two body placements)
+      if (inDefs) continue;
       const href = (a['xlink:href'] || a.href || '').replace(/^#/, '');
       const matrix = withOwn(a.transform);
       if (href.startsWith('font_')) {

@@ -16,6 +16,7 @@ test('slide 4: ten automatic move-ins in step 1 chained by nesting, then a disso
   assert.equal(r.steps, 2);
   assert.deepEqual(r.unknown, {});
   assert.deepEqual(r.skipped, []);
+  assert.deepEqual(r.mapped, { 'apple:move in': 12, 'apple:dissolve character': 1 }, 'every visited effect is counted by name');
   const s1 = r.builds.filter((b) => b.step === 1);
   const s2 = r.builds.filter((b) => b.step === 2);
   assert.equal(s1.length, 10);

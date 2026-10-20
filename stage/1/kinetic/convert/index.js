@@ -4,7 +4,7 @@
 // second run at the same HEAD writes byte-identical output. Validation runs last and sets the exit code.
 // A run summary for REPORT-1.md goes to .cache/convert-summary.json.
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, rmdirSync, unlinkSync, writeFileSync, rmSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LIVE_BASE, loadHeader, loadSlide, fetchAsset } from './kpf.js';
@@ -99,6 +99,9 @@ function newReport(index1, uuid) {
     mixedFallbacks: 0,
     compositeAsContent: false,
     orphans: [],
+    stills: [],
+    textTextureFallbacks: 0,
+    repeatedTextures: 0,
     skipped: [],
     composite: null,
     keyTextMatched: 0,
@@ -124,20 +127,27 @@ async function convertSlide(ctx, index1, uuid, slide) {
     return pageCache.get(textureId);
   };
 
-  // video placements: a renderMovie effect names the GIF; its baseLayer holds the video layer and the still
-  const videos = new Map(); // still texture -> { movieAsset, posterTexture, loopMode }
+  // video placements: an `apple:movie-start` effect targets the one leaf the video replaces (the still
+  // Keynote draws under the GIF, visible in the first event); its nested `renderMovie` names the GIF asset
+  // and holds the video layer, whose texture is the poster page. On 7 of the 90 placements the renderMovie
+  // carries a second still that is not in the first event; it is listed under `kpf.stills` and never drawn.
+  const videos = new Map(); // movie-start leaf texture -> { movieAsset, posterTexture, loopMode, still }
   const posterTextures = new Set();
   for (const ev of slide.events) {
     walkEffects(ev.effects, (e) => {
-      if (!e.movie?.asset || !assets[e.movie.asset]) return;
+      if (e.name !== 'apple:movie-start') return;
+      const own = [];
+      walkLayers(e.baseLayer, (l) => { if (l.texturedRectangle && l.texture) own.push(l); });
+      const rm = (e.effects || []).find((x) => x.movie?.asset && assets[x.movie.asset]);
+      if (!rm || own.length !== 1) return;
       let videoLeaf = null;
-      const stills = [];
-      walkLayers(e.baseLayer, (l) => {
+      let still = null;
+      walkLayers(rm.baseLayer, (l) => {
         if (l.isVideoLayer) videoLeaf = l;
-        else if (l.texturedRectangle && l.texture) stills.push(l);
+        else if (l.texturedRectangle && l.texture && l.texture !== own[0].texture) still = l.texture;
       });
       if (videoLeaf?.texture) posterTextures.add(videoLeaf.texture);
-      for (const s of stills) videos.set(s.texture, { movieAsset: e.movie.asset, posterTexture: videoLeaf?.texture ?? null, loopMode: e.movie.loopMode });
+      videos.set(own[0].texture, { movieAsset: rm.movie.asset, posterTexture: videoLeaf?.texture ?? null, loopMode: rm.movie.loopMode, still });
     });
   }
 
@@ -155,7 +165,9 @@ async function convertSlide(ctx, index1, uuid, slide) {
   for (const l of plan.empty) report.skipped.push({ texture: l.texture, reason: `class ${l.cls}` });
 
   const elements = [];
-  const idOfTexture = new Map();
+  const idOfTexture = new Map(); // texture -> the id of its first element
+  const elementsOfTexture = new Map(); // texture -> [{ id, leaf }], one per leaf that carries it
+  const occurrences = new Map(); // texture -> leaves seen so far (a repeated texture gets a `~n` suffix)
   const slideMediaDir = join(outDir, 'media', uuid);
   const relMedia = (p) => relative(outDir, p).split('\\').join('/');
   const common = (leaf, id) => {
@@ -164,15 +176,24 @@ async function convertSlide(ctx, index1, uuid, slide) {
     if (leaf.opacity < 1) o.opacity = Math.round(leaf.opacity * 1000) / 1000;
     return o;
   };
+  // the element id of a leaf: its texture, or `<texture>~n` for the n-th leaf that repeats a texture
+  // (slide 22 places 36 glyph textures more than once for its typewriter build)
+  const idFor = (leaf) => {
+    const n = (occurrences.get(leaf.texture) || 0) + 1;
+    occurrences.set(leaf.texture, n);
+    if (n > 1) report.repeatedTextures = (report.repeatedTextures || 0) + 1;
+    return n === 1 ? leaf.texture : `${leaf.texture}~${n}`;
+  };
   const rasterElement = (leaf, asset, tr, note) => {
     const media = rasterize(pdf, asset.index, join(slideMediaDir, `${leaf.texture}.png`));
     report.bytes.rasters += media.bytes;
     report.media.push({ id: leaf.texture, kind: 'image', how: 'raster', note, bytes: media.bytes, width: media.width, height: media.height, scale: 1 });
     return { ...common(leaf, leaf.texture), kind: 'image', src: relMedia(media.file), scale: 1, source: { path: 'texture', kpf: kpfRef(uuid, leaf.texture, asset, tr) } };
   };
-  const pushElement = (el, texture) => {
+  const pushElement = (el, texture, leaf = null) => {
     elements.push(el);
-    idOfTexture.set(texture, el.id);
+    if (!idOfTexture.has(texture)) idOfTexture.set(texture, el.id);
+    if (leaf) elementsOfTexture.set(texture, [...(elementsOfTexture.get(texture) || []), { id: el.id, leaf }]);
     report.elements[el.kind] += 1;
     report.sourcePath[el.source.path] += 1;
   };
@@ -181,6 +202,7 @@ async function convertSlide(ctx, index1, uuid, slide) {
     const texture = leaf.texture;
     const asset = assets[texture];
     const tr = leaf.layer.texturedRectangle;
+    const baseId = idFor(leaf);
 
     if (videos.has(texture)) {
       const v = videos.get(texture);
@@ -189,15 +211,16 @@ async function convertSlide(ctx, index1, uuid, slide) {
       const t = transcodeGif(gif.file, join(outDir, 'media', 'shared'));
       const posterAsset = v.posterTexture ? assets[v.posterTexture] : asset;
       const el = {
-        ...common(leaf, v.posterTexture || texture),
+        ...common(leaf, v.posterTexture || baseId),
         kind: 'video',
         src: { mp4: relMedia(t.mp4), webm: relMedia(t.webm) },
         poster: relMedia(t.poster),
         loop: v.loopMode !== 'none',
         source: { path: 'texture', kpf: kpfRef(uuid, v.posterTexture || texture, posterAsset, tr), originalGif: basename(movie.url.native), originalBytes: t.originalBytes, transparent: t.transparent },
       };
-      pushElement(el, texture);
+      pushElement(el, texture, leaf);
       if (v.posterTexture) idOfTexture.set(v.posterTexture, el.id);
+      if (v.still) report.stills.push(v.still);
       if (!t.reused) report.bytes.video += t.bytes.mp4 + t.bytes.webm + t.bytes.poster;
       report.media.push({ id: el.id, kind: 'video', sha12: t.sha12, originalBytes: t.originalBytes, mp4: t.bytes.mp4, webm: t.bytes.webm, poster: t.bytes.poster, transparent: t.transparent, reused: t.reused, gif: basename(movie.url.native) });
       continue;
@@ -207,35 +230,40 @@ async function convertSlide(ctx, index1, uuid, slide) {
     const ref = kpfRef(uuid, texture, asset, tr);
 
     if (content.kind === 'text' || content.kind === 'mixed') {
-      const el = { ...common(leaf, texture), kind: 'text', words: content.words, fill: content.fill, text: content.text };
+      // a word with characters carries no `d` of its own: its outline is the characters' outlines in order
+      // (the player joins them); writing both doubled deck.json to 20 MB
+      const words = content.words.map((w) => (w.chars?.length ? Object.fromEntries(Object.entries(w).filter(([k]) => k !== 'd')) : w));
+      const el = { ...common(leaf, baseId), kind: 'text', words, fill: content.fill, text: content.text };
       if (content.paths.length) el.paths = content.paths;
       el.source = { path: 'pdf', kpf: ref };
       if (keyTokens && content.words.every((w) => keyTokens.has(w.text))) report.keyTextMatched += 1;
-      pushElement(el, texture);
+      pushElement(el, texture, leaf);
       if (content.kind === 'mixed') {
         // one image element per placement, matched to the page's streams by pixel size (D-009 F2)
         report.mixedPages += 1;
         const scratch = join(CACHE, 'extract', uuid, texture);
         const { images: streams, fontFilesDeleted } = extractPageImages(pdf, asset.index, scratch);
         report.fontFilesDeleted += fontFilesDeleted;
-        const pool = [...streams];
-        const matched = content.images.map((pl) => {
-          const i = pool.findIndex((s) => s.width === pl.width && s.height === pl.height);
-          return i < 0 ? null : pool.splice(i, 1)[0];
-        });
+        // a stream may be placed more than once on a page (slide 39 draws each badge twice), so the match
+        // never consumes a stream; the file of the first placement is reused by the later ones
+        const matched = content.images.map((pl) => streams.find((s) => s.width === pl.width && s.height === pl.height) || null);
         if (matched.every(Boolean)) {
+          const placed = new Map(); // stream object -> file
           content.images.forEach((pl, k) => {
             const img = matched[k];
-            const file = placeImage(img, slideMediaDir, `${texture}-${k}`);
+            if (!placed.has(img.object)) placed.set(img.object, placeImage(img, slideMediaDir, `${baseId.replace('~', '-')}-${k}`));
+            const file = placed.get(img.object);
             const scale = Math.round((img.width / pl.box.w) * 10000) / 10000;
             const { box, crop } = visibleImage(pl.box, leaf.box, img.width, img.height);
-            report.bytes.streams += img.bytes;
-            report.media.push({ id: `${texture}-${k}`, kind: 'image', how: 'stream', bytes: img.bytes, width: img.width, height: img.height, scale, cropped: !!crop });
-            pushElement({ ...common(leaf, `${texture}-${k}`), box, kind: 'image', src: relMedia(file), scale, ...(crop ? { crop } : {}), source: { path: 'texture', kpf: ref } }, `${texture}-${k}`);
+            const firstUse = file.endsWith(`-${k}.${img.ext}`);
+            if (firstUse) report.bytes.streams += img.bytes;
+            report.media.push({ id: `${baseId}-${k}`, kind: 'image', how: 'stream', bytes: firstUse ? img.bytes : 0, width: img.width, height: img.height, scale, cropped: !!crop, reused: !firstUse });
+            pushElement({ ...common(leaf, `${baseId}-${k}`), box, kind: 'image', src: relMedia(file), scale, ...(crop ? { crop } : {}), source: { path: 'texture', kpf: ref } }, `${baseId}-${k}`);
           });
         } else {
           report.mixedFallbacks += 1;
-          pushElement({ ...rasterElement(leaf, asset, tr, 'mixed page: streams did not match the placements'), id: `${texture}-raster` }, `${texture}-raster`);
+          report.textTextureFallbacks += 1;
+          pushElement({ ...rasterElement(leaf, asset, tr, 'mixed page: streams did not match the placements'), id: `${baseId}-raster` }, `${baseId}-raster`);
         }
         rmSync(scratch, { recursive: true, force: true });
       }
@@ -243,7 +271,7 @@ async function convertSlide(ctx, index1, uuid, slide) {
     }
 
     if (content.kind === 'shape') {
-      pushElement({ ...common(leaf, texture), kind: 'shape', paths: content.paths, source: { path: 'pdf', kpf: ref } }, texture);
+      pushElement({ ...common(leaf, baseId), kind: 'shape', paths: content.paths, source: { path: 'pdf', kpf: ref } }, texture, leaf);
       continue;
     }
 
@@ -257,21 +285,21 @@ async function convertSlide(ctx, index1, uuid, slide) {
         if (streams.length === 1) {
           const img = streams[0];
           const pl = content.images[0];
-          const file = placeImage(img, slideMediaDir, texture);
+          const file = placeImage(img, slideMediaDir, baseId.replace('~', '-'));
           const scale = Math.round((img.width / pl.box.w) * 10000) / 10000;
           const { box, crop } = visibleImage(pl.box, leaf.box, img.width, img.height);
           report.bytes.streams += img.bytes;
           report.pictures.stream += 1;
-          report.media.push({ id: texture, kind: 'image', how: 'stream', bytes: img.bytes, width: img.width, height: img.height, scale, cropped: !!crop });
-          el = { ...common(leaf, texture), box, kind: 'image', src: relMedia(file), scale, ...(crop ? { crop } : {}), source: { path: 'texture', kpf: ref } };
+          report.media.push({ id: baseId, kind: 'image', how: 'stream', bytes: img.bytes, width: img.width, height: img.height, scale, cropped: !!crop });
+          el = { ...common(leaf, baseId), box, kind: 'image', src: relMedia(file), scale, ...(crop ? { crop } : {}), source: { path: 'texture', kpf: ref } };
         }
         rmSync(scratch, { recursive: true, force: true });
       }
       if (!el) {
         report.pictures.raster += 1;
-        el = rasterElement(leaf, asset, tr, `${content.images.length} placements`);
+        el = { ...rasterElement(leaf, asset, tr, `${content.images.length} placements`), id: baseId };
       }
-      pushElement(el, texture);
+      pushElement(el, texture, leaf);
       continue;
     }
     report.skipped.push({ texture, reason: `content ${content.kind}` });
@@ -279,16 +307,29 @@ async function convertSlide(ctx, index1, uuid, slide) {
 
   // builds
   const textOf = new Map(elements.filter((e) => e.kind === 'text').map((e) => [e.id, e]));
-  const targetsOf = (effect, effLeaves) => {
-    const ids = [];
-    for (const l of effLeaves) {
-      const id = idOfTexture.get(l.texture);
-      if (id && !ids.includes(id)) ids.push(id);
-      // a mixed page's images share the texture: they build with the text
-      for (const [t, eid] of idOfTexture) if (t.startsWith(`${l.texture}-`) && !ids.includes(eid)) ids.push(eid);
-    }
-    return ids;
-  };
+  // the element ids an effect leaf targets, aligned with the leaves. A leaf matches the elements of its
+  // texture; when the texture repeats in the first event, the nearest by local position (ties keep all:
+  // slide 25 places one glyph twice at one point). A mixed page's images share the texture and build with
+  // its text.
+  const localPos = (l) => [l.initialState?.position?.pointX ?? 0, l.initialState?.position?.pointY ?? 0];
+  const targetsOf = (effect, effLeaves) =>
+    effLeaves.map((l) => {
+      const owners = elementsOfTexture.get(l.texture) || [];
+      if (!owners.length) return null;
+      let picked = owners;
+      if (owners.length > 1) {
+        const [x, y] = localPos(l);
+        const dist = owners.map((o) => { const [ox, oy] = localPos(o.leaf.layer); return Math.hypot(ox - x, oy - y); });
+        const best = Math.min(...dist);
+        picked = owners.filter((_, i) => dist[i] - best < 1);
+      }
+      const ids = [];
+      for (const o of picked) {
+        ids.push(o.id);
+        for (const [t, eid] of idOfTexture) if (t.startsWith(`${o.id}-`) && !ids.includes(eid)) ids.push(eid);
+      }
+      return ids;
+    });
   const unitOf = (effect, targets) => {
     if (effect.name !== 'apple:move in') return null;
     return targets.every((id) => textOf.has(id) && textOf.get(id).words.length === 1) ? 'word' : null;
@@ -297,6 +338,7 @@ async function convertSlide(ctx, index1, uuid, slide) {
   report.builds = b.builds.length;
   report.steps = b.steps;
   report.unknownEffects = b.unknown;
+  report.mappedEffects = b.mapped;
   report.directionChecks = b.directionChecks;
   report.skippedEffects = b.skipped;
   const built = new Set(b.builds.flatMap((x) => x.targets));
@@ -314,7 +356,7 @@ async function convertSlide(ctx, index1, uuid, slide) {
     walkLayers(ev.baseLayer, noteSnapshot);
     walkEffects(ev.effects, (e) => walkLayers(e.baseLayer, noteSnapshot));
   }
-  const stills = [...videos.keys()].filter((t) => idOfTexture.has(t) && idOfTexture.get(t) !== t);
+  const stills = [...new Set([...[...videos.keys()].filter((t) => idOfTexture.has(t) && idOfTexture.get(t) !== t), ...report.stills])];
 
   // composite check: every word drawn from a text page also appears in a composite snapshot of this slide
   const elementWords = elements.filter((e) => e.kind === 'text').flatMap((e) => e.words.map((w) => w.text));
@@ -345,6 +387,39 @@ async function convertSlide(ctx, index1, uuid, slide) {
   }
   log(`slide ${index1} ${uuid.slice(0, 8)}: ${elements.length} elements (${report.elements.text} text, ${report.elements.image} image, ${report.elements.video} video, ${report.elements.shape} shape), ${b.builds.length} builds in ${b.steps} steps, transition ${out.transition.kind}${out.transition.direction ? ' ' + out.transition.direction : ''}${plan.compositeAsContent ? ', composite as content' : ''}`);
   return { slide: out, report };
+}
+
+/** Every media path deck.json references, relative to its directory. */
+export function referencedMedia(deck) {
+  const out = new Set();
+  for (const s of deck.slides) {
+    for (const e of s.elements) {
+      if (e.kind === 'image') out.add(e.src);
+      else if (e.kind === 'video') { out.add(e.src.mp4); out.add(e.src.webm); out.add(e.poster); }
+    }
+  }
+  return out;
+}
+
+/** Delete every file under `outDir/media` that `deck` does not reference, and empty directories. Returns the paths deleted. */
+export function pruneMedia(outDir, deck) {
+  const keep = referencedMedia(deck);
+  const deleted = [];
+  const walk = (dir) => {
+    for (const name of readdirSync(dir, { withFileTypes: true })) {
+      const file = join(dir, name.name);
+      if (name.isDirectory()) {
+        walk(file);
+        if (!readdirSync(file).length) rmdirSync(file);
+      } else if (!keep.has(relative(outDir, file).split('\\').join('/'))) {
+        unlinkSync(file);
+        deleted.push(relative(outDir, file));
+      }
+    }
+  };
+  const mediaDir = join(outDir, 'media');
+  try { walk(mediaDir); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+  return deleted;
 }
 
 export async function main(argv) {
@@ -408,8 +483,12 @@ export async function main(argv) {
   };
   const deckPath = join(outDir, 'deck.json');
   writeFileSync(deckPath, JSON.stringify(deck, null, 2) + '\n');
+  // a full run owns media/: files of an earlier run that no element references are removed (a partial
+  // run keeps them, since its deck.json lists only the selected slides)
+  const pruned = o.slides ? [] : pruneMedia(outDir, deck);
+  if (pruned.length) log(`pruned ${pruned.length} unreferenced media file(s)`);
   const summaryPath = join(CACHE, 'convert-summary.json');
-  writeFileSync(summaryPath, JSON.stringify({ deck: deckPath, keyParse, slides: reports }, null, 2) + '\n');
+  writeFileSync(summaryPath, JSON.stringify({ deck: deckPath, keyParse, pruned, slides: reports }, null, 2) + '\n');
   log(`wrote ${deckPath} (${slides.length} slides); summary in ${relative(PROJECT, summaryPath)}`);
 
   const { ok, errors } = validateDeck(JSON.parse(readFileSync(deckPath, 'utf8')));
