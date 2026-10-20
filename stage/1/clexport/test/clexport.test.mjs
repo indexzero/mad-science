@@ -6,12 +6,12 @@ const KEY = 'ccd/dframe-store';
 let failures = 0;
 const ok = (name, fn) => fn().then(() => console.log('PASS', name), e => { failures++; console.log('FAIL', name, '\n   ', e.message); });
 
-// ---------- fixtures: shaped like Charlie's real list and blob ----------
+// ---------- fixtures: shaped like a real list and blob, synthetic names ----------
 const chatList = [
-  { uuid: 'c-spa', name: 'Tree layout notes', summary: 'tree layouts, spacing, nesting', created_at: '2026-10-07T19:49:40Z', updated_at: '2026-10-08T15:18:15Z', project: { uuid: 'p-dl', name: 'Data Liberation' } },
-  { uuid: 'c-wf', name: 'Exporting a grocery order history on a schedule', summary: 'one-file export script', created_at: '2026-10-04T16:55:08Z', updated_at: '2026-10-04T16:56:04Z', project: { uuid: 'p-dl', name: 'Data Liberation' } },
-  { uuid: 'c-tmp', name: 'Draft license terms for shared model files', summary: '', created_at: '2026-07-30T17:00:54Z', updated_at: '2026-10-08T15:51:03Z', project: { uuid: 'p-dl', name: 'Data Liberation' } },
-  { uuid: 'c-bldg', name: 'Exporting thermostat temperature readings', summary: 'CSV download', created_at: '2026-06-15T23:53:25Z', updated_at: '2026-06-16T00:01:09Z', project: { uuid: 'p-549', name: '549 Building Science ' } },
+  { uuid: 'c-spa', name: 'Tree layout notes', summary: 'tree layouts, spacing, nesting', created_at: '2026-10-07T19:49:40Z', updated_at: '2026-10-08T15:18:15Z', project: { uuid: 'p-dl', name: 'Alpha Archive' } },
+  { uuid: 'c-wf', name: 'Exporting a grocery order history on a schedule', summary: 'one-file export script', created_at: '2026-10-04T16:55:08Z', updated_at: '2026-10-04T16:56:04Z', project: { uuid: 'p-dl', name: 'Alpha Archive' } },
+  { uuid: 'c-tmp', name: 'Draft license terms for shared model files', summary: '', created_at: '2026-07-30T17:00:54Z', updated_at: '2026-10-08T15:51:03Z', project: { uuid: 'p-dl', name: 'Alpha Archive' } },
+  { uuid: 'c-bldg', name: 'Exporting thermostat temperature readings', summary: 'CSV download', created_at: '2026-06-15T23:53:25Z', updated_at: '2026-06-16T00:01:09Z', project: { uuid: 'p-549', name: '101 Sample Science ' } },
   { uuid: 'c-who', name: 'Reading the output of a login list', summary: 'counting unwashed dishes', created_at: '2026-08-11T14:21:37Z', updated_at: '2026-08-11T14:21:47Z', project: null },
   { uuid: 'c-blind', name: '', summary: 'blinds for the office window', created_at: '2026-08-02T00:57:25Z', updated_at: '2026-08-02T01:00:13Z', project: null },
   { uuid: 'c-meta', name: 'Tracing the history of an idea through citations', summary: 'three early authors', created_at: '2026-07-26T05:39:54Z', updated_at: '2026-10-09T14:30:38Z', project: null },
@@ -21,13 +21,13 @@ const makeBlob = () => ({
     pinnedOrder: [], groupByByMode: { cowork: 'custom' }, navPinV: 2,
     sidebarSections: [
       { id: 'pinned', kind: 'pinned', name: '', order: 0, sortBy: 'recency', ascending: false, show: { metadata: true, emptyGroups: false }, collapsed: false, shown: true },
-      { id: 'cg-dl', kind: 'manual', name: 'Data Liberation', order: 2, sortBy: 'recency', ascending: false, show: { metadata: false, emptyGroups: false }, collapsed: false, shown: true, members: ['chat:c-tmp'] },
-      { id: 'cg-cdev', kind: 'manual', name: 'charlie.dev', order: 3, sortBy: 'recency', ascending: false, show: { metadata: false, emptyGroups: false }, collapsed: false, shown: true, members: ['chat:c-spa'] },
-      { id: 'cg-cf', kind: 'manual', name: 'computing.family', order: 1, sortBy: 'recency', ascending: false, show: { metadata: false, emptyGroups: false }, collapsed: false, shown: true, members: ['chat:c-wf'] },
-      { id: 'cg-meta', kind: 'manual', name: 'metacog', order: 4, members: ['chat:c-meta'], sortBy: 'recency', ascending: false, show: { metadata: true, emptyGroups: false }, collapsed: false, shown: true },
+      { id: 'cg-dl', kind: 'manual', name: 'Alpha Archive', order: 2, sortBy: 'recency', ascending: false, show: { metadata: false, emptyGroups: false }, collapsed: false, shown: true, members: ['chat:c-tmp'] },
+      { id: 'cg-cdev', kind: 'manual', name: 'beta.site', order: 3, sortBy: 'recency', ascending: false, show: { metadata: false, emptyGroups: false }, collapsed: false, shown: true, members: ['chat:c-spa'] },
+      { id: 'cg-cf', kind: 'manual', name: 'gamma.home', order: 1, sortBy: 'recency', ascending: false, show: { metadata: false, emptyGroups: false }, collapsed: false, shown: true, members: ['chat:c-wf'] },
+      { id: 'cg-meta', kind: 'manual', name: 'deltacog', order: 4, members: ['chat:c-meta'], sortBy: 'recency', ascending: false, show: { metadata: true, emptyGroups: false }, collapsed: false, shown: true },
       { id: 'sessions', kind: 'sessions', name: '', order: 5, sortBy: 'recency', ascending: false, show: { metadata: true, emptyGroups: false }, collapsed: false, shown: true },
     ],
-    customGroups: [{ id: 'cg-dl', name: 'Data Liberation' }, { id: 'cg-cdev', name: 'charlie.dev' }, { id: 'cg-cf', name: 'computing.family' }, { id: 'cg-meta', name: 'metacog' }],
+    customGroups: [{ id: 'cg-dl', name: 'Alpha Archive' }, { id: 'cg-cdev', name: 'beta.site' }, { id: 'cg-cf', name: 'gamma.home' }, { id: 'cg-meta', name: 'deltacog' }],
     customGroupAssignments: { 'chat:c-tmp': 'cg-dl', 'chat:c-spa': 'cg-cdev', 'chat:c-wf': 'cg-cf', 'chat:c-meta': 'cg-meta' },
     customGroupOrder: { 'cg-dl': ['chat:c-tmp'], 'cg-cdev': ['chat:c-spa'], 'cg-cf': ['chat:c-wf'], 'cg-meta': ['chat:c-meta'] },
   },
@@ -181,18 +181,18 @@ let store = fixtureStore();
 await okv('groups.load joins chats and blob, returns counts in sidebar order', async () => {
   const counts = await groups.load({ chats: source, settings: store });
   assert.deepEqual(counts, [
-    { name: 'computing.family', count: 1 }, { name: 'Data Liberation', count: 1 },
-    { name: 'charlie.dev', count: 1 }, { name: 'metacog', count: 1 },
+    { name: 'gamma.home', count: 1 }, { name: 'Alpha Archive', count: 1 },
+    { name: 'beta.site', count: 1 }, { name: 'deltacog', count: 1 },
   ]);
   assert.equal(groups.all.length, chatList.length);
 });
 await okv('where: group null, project with stray whitespace, regex over summary (/g stays stable), predicate', async () => {
   assert.deepEqual(groups.all.where({ group: null }).map(r => r.uuid), ['c-bldg', 'c-who', 'c-blind']);
-  assert.deepEqual(groups.all.where({ project: '549 Building Science' }).map(r => r.uuid), ['c-bldg']);
+  assert.deepEqual(groups.all.where({ project: '101 Sample Science' }).map(r => r.uuid), ['c-bldg']);
   const g = /washe|blinds/gi;
   assert.equal(groups.all.where(g).length, 2);
   assert.equal(groups.all.where(g).length, 2);
-  assert.deepEqual(groups.all.where({ project: /liberation/i, group: 'charlie.dev' }).map(r => r.uuid), ['c-spa']);
+  assert.deepEqual(groups.all.where({ project: /archive/i, group: 'beta.site' }).map(r => r.uuid), ['c-spa']);
   assert.deepEqual(groups.all.where((c, group) => group === null && !c.name).map(r => r.uuid), ['c-blind']);
   assert.deepEqual(groups.all.where({ after: '2026-10-08', before: '2026-10-09' }).map(r => r.uuid).sort(), ['c-spa', 'c-tmp']);
   assert.throws(() => groups.all.where({ projet: 'x' }), /unknown query key projet/);
@@ -213,21 +213,21 @@ await okv('views reindex, pick refers to its own view, show prints and returns i
 });
 await okv('to: unknown name throws, grouped chats skipped unless move, same group is a no-op', async () => {
   assert.throws(() => groups.all.pick(0).to('Bear & Pear'), /no group named "Bear & Pear"/);
-  const r = groups.all.where({ project: 'Data Liberation' }).to('Data Liberation');
+  const r = groups.all.where({ project: 'Alpha Archive' }).to('Alpha Archive');
   assert.deepEqual(r.staged.map(m => m.uuid), []);
   assert.deepEqual(r.skipped.map(m => m.uuid).sort(), ['c-spa', 'c-tmp', 'c-wf']);
-  const r2 = groups.all.where({ project: 'Data Liberation' }).to('Data Liberation', { move: true });
+  const r2 = groups.all.where({ project: 'Alpha Archive' }).to('Alpha Archive', { move: true });
   assert.deepEqual(r2.staged.map(m => m.uuid).sort(), ['c-spa', 'c-wf']);
   groups.clear();
   assert.deepEqual(groups.plan(), []);
 });
 await okv('plan round-trips through stage; stage is all-or-nothing on unknown names', async () => {
-  groups.all.where({ group: null }).pick(0, 1).to('charlie.dev');
-  groups.all.where({ uuid: undefined }.uuid ? 0 : { group: 'metacog' }).ungroup();
+  groups.all.where({ group: null }).pick(0, 1).to('beta.site');
+  groups.all.where({ uuid: undefined }.uuid ? 0 : { group: 'deltacog' }).ungroup();
   const plan = JSON.parse(JSON.stringify(groups.plan()));
-  assert.deepEqual(plan.map(m => [m.uuid, m.from, m.to]), [['c-bldg', null, 'charlie.dev'], ['c-who', null, 'charlie.dev'], ['c-meta', 'metacog', null]]);
+  assert.deepEqual(plan.map(m => [m.uuid, m.from, m.to]), [['c-bldg', null, 'beta.site'], ['c-who', null, 'beta.site'], ['c-meta', 'deltacog', null]]);
   groups.clear();
-  assert.throws(() => groups.stage([{ uuid: 'c-bldg', to: 'charlie.dev' }, { uuid: 'c-who', to: 'nope' }]), /no group named "nope"; nothing staged/);
+  assert.throws(() => groups.stage([{ uuid: 'c-bldg', to: 'beta.site' }, { uuid: 'c-who', to: 'nope' }]), /no group named "nope"; nothing staged/);
   assert.equal(groups.plan().length, 0);
   const s = groups.stage(plan);
   assert.equal(s.staged.length, 3);
@@ -247,7 +247,7 @@ await okv('commit: one write, three structures in step, emptied group mirrors th
   assert.deepEqual(st.sidebarSections.find(x => x.id === 'cg-meta').members, []);
   assert.deepEqual(Object.keys(st).sort(), keysBefore);
   assert.ok(store.blob.updatedAt > t0);
-  assert.deepEqual(groups.all.where({ group: 'charlie.dev' }).map(r => r.uuid).sort(), ['c-bldg', 'c-spa', 'c-who']);
+  assert.deepEqual(groups.all.where({ group: 'beta.site' }).map(r => r.uuid).sort(), ['c-bldg', 'c-spa', 'c-who']);
   assert.deepEqual(groups.plan(), []);
 });
 await okv('commit with an empty plan writes nothing', async () => {
@@ -265,7 +265,7 @@ await okv('undo applies the inverse to a fresh read and restores every assignmen
   await assert.rejects(groups.undo(), /nothing to undo/);
 });
 await okv('sidebar changes between stage and commit come back as dropped, not forced', async () => {
-  groups.all.where({ group: null }).to('computing.family');                 // c-bldg, c-who, c-blind
+  groups.all.where({ group: null }).to('gamma.home');                 // c-bldg, c-who, c-blind
   store.blob.state.customGroupAssignments['chat:c-who'] = 'cg-dl';           // someone filed it meanwhile
   store.blob.state.customGroupOrder['cg-dl'].push('chat:c-who');
   store.blob.state.sidebarSections.find(x => x.id === 'cg-dl').members.push('chat:c-who');
@@ -277,15 +277,15 @@ await okv('sidebar changes between stage and commit come back as dropped, not fo
 });
 await okv('a group renamed between stage and commit drops its moves', async () => {
   await groups.undo();
-  groups.all.pick(groups.all.findIndex(r => r.uuid === 'c-blind')).to('metacog');
-  store.blob.state.customGroups.find(g => g.id === 'cg-meta').name = 'metacognition';
+  groups.all.pick(groups.all.findIndex(r => r.uuid === 'c-blind')).to('deltacog');
+  store.blob.state.customGroups.find(g => g.id === 'cg-meta').name = 'deltacognition';
   const w = store.writes;
   const r = await groups.commit();
   assert.equal(r.applied.length, 0); assert.equal(r.dropped.length, 1);
   assert.equal(store.writes, w, 'nothing applied, nothing written');
 });
 await okv('a failed write keeps the plan staged and the undo history intact', async () => {
-  groups.all.where({ group: null }).pick(0).to('charlie.dev');
+  groups.all.where({ group: null }).pick(0).to('beta.site');
   store.failNext = true;
   await assert.rejects(groups.commit(), /boom/);
   assert.equal(groups.plan().length, 1);
@@ -293,7 +293,7 @@ await okv('a failed write keeps the plan staged and the undo history intact', as
   assert.equal(r.applied.length, 1);
 });
 await okv('load starts a new session: staged moves and undo history cleared', async () => {
-  groups.all.where({ group: null }).pick(0).to('charlie.dev');
+  groups.all.where({ group: null }).pick(0).to('beta.site');
   await groups.load({ chats: source, settings: store });
   assert.equal(groups.plan().length, 0);
   await assert.rejects(groups.undo(), /nothing to undo/);
@@ -304,7 +304,7 @@ await okv('default store reads entries[KEY], writes the same envelope, syncs loc
   reqs.length = 0;
   await groups.load({ chats: source });
   assert.ok(reqs.some(r => r.method === 'GET' && r.url === `/api/claude_code/organizations/${ORG}/user_settings`));
-  groups.all.where({ group: null }).pick(0).to('metacog');
+  groups.all.where({ group: null }).pick(0).to('deltacog');
   await groups.commit();
   const w = reqs.find(r => r.method === 'PUT');
   const body = JSON.parse(w.body);
@@ -405,7 +405,7 @@ await okv('a groups session reads and writes the org its chats came from, even a
   await groups.load({ chats: chats.create({ org: ORG_C }) });
   assert.ok(reqs.some(r => r.method === 'GET' && r.url === `/api/claude_code/organizations/${ORG_C}/user_settings`));
   clexport.orgId = ORG_B; reqs.length = 0;
-  groups.all.pick(0).to('metacog', { move: true });
+  groups.all.pick(0).to('deltacog', { move: true });
   await groups.commit();
   const io = reqs.filter(r => r.url.includes('user_settings'));
   assert.ok(io.length === 2 && io.every(r => r.url === `/api/claude_code/organizations/${ORG_C}/user_settings`), io.map(r => r.method + ' ' + r.url).join('\n'));
@@ -420,7 +420,7 @@ await okv('reads bypass the cache; the write is a PUT with if-match from the rea
   assert.equal(read.cache, 'no-store');
   const before = checksumOf();
   reqs.length = 0;
-  groups.all.where({ group: null }).pick(0).to('metacog');
+  groups.all.where({ group: null }).pick(0).to('deltacog');
   await groups.commit();
   const io = reqs.filter(r => r.url.includes('user_settings'));
   assert.deepEqual(io.map(r => r.method), ['GET', 'PUT']);
@@ -433,7 +433,7 @@ await okv('reads bypass the cache; the write is a PUT with if-match from the rea
 await okv('a conflict re-reads and re-applies, checking every move against the newer state', async () => {
   resetServer();
   await groups.load({ chats: source });
-  groups.all.where({ group: null }).to('computing.family');     // c-bldg, c-who, c-blind
+  groups.all.where({ group: null }).to('gamma.home');     // c-bldg, c-who, c-blind
   server.interfere = 1;                                          // c-blind gets filed elsewhere mid-commit
   warnings = []; reqs.length = 0;
   const r = await groups.commit();
@@ -448,7 +448,7 @@ await okv('a conflict re-reads and re-applies, checking every move against the n
 await okv('persistent conflict gives up after 3 attempts, writes nothing, keeps the plan', async () => {
   resetServer();
   await groups.load({ chats: source });
-  groups.all.where({ group: null }).pick(0).to('charlie.dev');
+  groups.all.where({ group: null }).pick(0).to('beta.site');
   const original = server.entries[KEY];
   server.interfere = 3;
   await assert.rejects(groups.commit(), /settings changed since the read \(412\); nothing written/);
@@ -459,7 +459,7 @@ await okv('persistent conflict gives up after 3 attempts, writes nothing, keeps 
 await okv('an unexpected checksum form refuses to write rather than guess', async () => {
   resetServer();
   await groups.load({ chats: source });
-  groups.all.where({ group: null }).pick(0).to('charlie.dev');
+  groups.all.where({ group: null }).pick(0).to('beta.site');
   server.override = { userId: 'u', version: 1, checksum: 'fcc660d8', content: { entries: { ...server.entries } } };
   reqs.length = 0;
   await assert.rejects(groups.commit(), /refusing to write: checksum from the read is "fcc660d8"/);

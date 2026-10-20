@@ -3,7 +3,7 @@
 //   await clexport.chats.load(); clexport.chats.download()
 //   await clexport.chats.messages.load(); clexport.chats.messages.download()
 //   await clexport.groups.load()
-//   clexport.groups.all.where({ group: null }).show().pick(0, 4).to('charlie.dev')
+//   clexport.groups.all.where({ group: null }).show().pick(0, 4).to('Group name')
 //   clexport.groups.plan(); await clexport.groups.commit(); await clexport.groups.undo()
 globalThis.clexport = (() => {
   const KEY = 'ccd/dframe-store';
