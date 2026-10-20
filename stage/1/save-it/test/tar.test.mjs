@@ -42,6 +42,26 @@ function names(tar) {
   return out;
 }
 
+/**
+ * Reads every entry of a USTAR archive: the UTF-8 name and the data bytes.
+ * @param {Uint8Array} tar
+ * @returns {Array<{ name: string, data: Buffer }>}
+ */
+function read(tar) {
+  const buf = Buffer.from(tar);
+  const out = [];
+  let offset = 0;
+  while (offset + 512 <= buf.length && buf[offset] !== 0) {
+    const raw = buf.subarray(offset, offset + 100);
+    const end = raw.indexOf(0);
+    const name = raw.subarray(0, end === -1 ? 100 : end).toString("utf8");
+    const size = parseInt(field(buf, offset + 124, 12), 8);
+    out.push({ name, data: Buffer.from(buf.subarray(offset + 512, offset + 512 + size)) });
+    offset += 512 + Math.ceil(size / 512) * 512;
+  }
+  return out;
+}
+
 let hasTar = true;
 try {
   execFileSync("tar", ["--version"], { stdio: "ignore" });
@@ -60,6 +80,31 @@ test("entries are sorted by byte order", () => {
   assert.deepEqual(names(tar), ["a", "b/c", "z"]);
   assert.equal(tar.length % 512, 0);
   assert.deepEqual(Buffer.from(tar.subarray(tar.length - 1024)), Buffer.alloc(1024));
+});
+
+test("entries are sorted by UTF-8 byte order, not locale order", () => {
+  const mixed = ["é", "z", "a", "Z"].map((path) => ({ path, data: Buffer.from(path) }));
+  const expected = ["Z", "a", "z", "é"];
+  assert.deepEqual(read(createTar(mixed)).map((entry) => entry.name), expected);
+  assert.deepEqual(read(createTar([...mixed].reverse())).map((entry) => entry.name), expected);
+  assert.deepEqual(Buffer.from(createTar(mixed)), Buffer.from(createTar([...mixed].reverse())));
+});
+
+test("each file body is archived byte for byte", () => {
+  const binary = Buffer.alloc(700);
+  for (let i = 0; i < binary.length; i++) binary[i] = (i * 7 + 1) % 256;
+  const backing = new Uint8Array([9, 9, 9, 0x41, 0x42, 0x43, 0xff, 9, 9]);
+  const sliced = backing.subarray(3, 7);
+  const tar = createTar([
+    { path: "bin", data: binary },
+    { path: "slice", data: sliced },
+    { path: "empty", data: new Uint8Array(0) }
+  ]);
+  assert.deepEqual(read(tar), [
+    { name: "bin", data: binary },
+    { name: "empty", data: Buffer.alloc(0) },
+    { name: "slice", data: Buffer.from([0x41, 0x42, 0x43, 0xff]) }
+  ]);
 });
 
 test("the header carries mtime 0, uid 0, gid 0, mode 0644", () => {
@@ -88,6 +133,17 @@ test("a path over 100 bytes throws with the path in the message", () => {
     message: `path is too long for USTAR (100 bytes): ${path}`
   });
   assert.doesNotThrow(() => createTar([{ path: "a".repeat(100), data: Buffer.from("") }]));
+});
+
+test("the 100-byte limit counts UTF-8 bytes, not characters", () => {
+  const fits = "é".repeat(50);
+  assert.equal(read(createTar([{ path: fits, data: Buffer.from("") }]))[0].name, fits);
+  for (const path of ["é".repeat(51), "a".repeat(99) + "é"]) {
+    assert.ok(path.length <= 100);
+    assert.throws(() => createTar([{ path, data: Buffer.from("") }]), {
+      message: `path is too long for USTAR (100 bytes): ${path}`
+    });
+  }
 });
 
 test("a path with .. throws", () => {
