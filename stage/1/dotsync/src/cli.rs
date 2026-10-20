@@ -5,19 +5,25 @@
 //! `main.rs` resolves everything else into `Defaults`. `run_plan` opens no
 //! store and writes no manifest.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
+use std::future::Future;
 use std::io::Write;
 use std::path::PathBuf;
+use std::pin::Pin;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use clap::{Args, Parser, Subcommand};
 use object_store::ObjectStore;
+use tokio::sync::mpsc;
+use tokio::time::Instant;
 
+use crate::batch::{Batcher, Closed};
 use crate::config::{self, FileConfig, Settings};
 use crate::manifest::{Action, Kind, Manifest, Plan};
 use crate::scan::{self, DenyList, Scope};
 use crate::store::{self, Layout, StoreUrl, UploadReport};
+use crate::watch::{Hint, Watcher};
 
 #[derive(Debug, Parser)]
 #[command(
@@ -195,12 +201,99 @@ pub async fn run_ls(settings: &Settings, out: &mut dyn Write) -> Result<(), CliE
     Ok(())
 }
 
-/// Section 7 loop until a signal. The next commit fills it. This stub opens
-/// the store and the manifests, then returns.
+/// Section 7 loop until a signal. A startup full scan reconciles first (section 16).
+/// Prints nothing to `out`. Logs to stderr.
 pub async fn run_daemon(settings: &Settings, _out: &mut dyn Write) -> Result<(), CliError> {
-    let _engine = Engine::open(settings)?;
-    log("warn", "the daemon loop is not built yet");
+    let mut engine = Engine::open(settings)?;
+    let roots: Vec<PathBuf> = engine.roots.iter().map(|r| r.path.clone()).collect();
+    let (tx, mut rx) = mpsc::unbounded_channel::<Hint>();
+    let watcher = Watcher::start(&roots, settings.debounce, tx)?;
+    let mut shutdown = shutdown_signal()?;
+    let mut batcher = Batcher::new(settings.policy, Instant::now());
+    log(
+        "info",
+        &format!(
+            "daemon start roots={} deny={}",
+            roots.len(),
+            engine.deny.patterns().len()
+        ),
+    );
+
+    for root in 0..roots.len() {
+        engine
+            .run_closed(full(root), &mut batcher, Instant::now())
+            .await;
+    }
+
+    loop {
+        let now = Instant::now();
+        let deadline = match engine.deferred_deadline() {
+            Some(d) => batcher.next_deadline(now).min(d),
+            None => batcher.next_deadline(now),
+        };
+        tokio::select! {
+            hint = rx.recv() => match hint {
+                Some(h) => batcher.hint(h.root, &h.folder, h.full, Instant::now()),
+                None => break,
+            },
+            _ = tokio::time::sleep_until(deadline) => {},
+            _ = &mut shutdown => break,
+        }
+        let now = Instant::now();
+        for closed in batcher.take_closed(now) {
+            engine.run_closed(closed, &mut batcher, now).await;
+        }
+        for closed in engine.take_deferred(now) {
+            engine.run_closed(closed, &mut batcher, now).await;
+        }
+        if batcher.full_due(now) {
+            for root in 0..roots.len() {
+                engine.run_closed(full(root), &mut batcher, now).await;
+            }
+        }
+    }
+
+    log(
+        "info",
+        &format!("daemon stop dirty={}", batcher.dirty_count()),
+    );
+    let now = Instant::now();
+    for closed in batcher.take_closed(now + settings.policy.ceiling) {
+        engine.run_closed(closed, &mut batcher, now).await;
+    }
+    watcher.stop();
     Ok(())
+}
+
+/// A future that completes on SIGINT or SIGTERM. On other targets, SIGINT alone.
+/// This is the one `cfg` gate of this module.
+fn shutdown_signal() -> Result<Pin<Box<dyn Future<Output = ()>>>, CliError> {
+    #[cfg(unix)]
+    {
+        use tokio::signal::unix::{SignalKind, signal};
+        let mut term = signal(SignalKind::terminate())?;
+        Ok(Box::pin(async move {
+            tokio::select! {
+                _ = tokio::signal::ctrl_c() => {},
+                _ = term.recv() => {},
+            }
+        }))
+    }
+    #[cfg(not(unix))]
+    {
+        Ok(Box::pin(async {
+            let _ = tokio::signal::ctrl_c().await;
+        }))
+    }
+}
+
+/// A `Closed` for a full rescan of one root.
+fn full(root: usize) -> Closed {
+    Closed {
+        root,
+        full: true,
+        folders: Vec::new(),
+    }
 }
 
 /// The deny list from the resolved patterns.
@@ -273,9 +366,14 @@ struct Engine {
     layout: Layout,
     deny: DenyList,
     roots: Vec<RootState>,
+    policy: crate::batch::Policy,
     /// File-to-directory conflicts detected from the plan (section 6). Kept for
     /// the life of the process.
     skipped_prefixes: BTreeSet<String>,
+    /// Consecutive failures per `(root, full, folders)` batch (section 7).
+    failures: BTreeMap<(usize, bool, Vec<String>), u32>,
+    /// Batches held back to the ceiling rate after three failures.
+    deferred: Vec<(Instant, Closed)>,
 }
 
 /// The counts of one pass, from the actions the report lists as done.
@@ -314,7 +412,10 @@ impl Engine {
             layout,
             deny,
             roots,
+            policy: settings.policy,
             skipped_prefixes: BTreeSet::new(),
+            failures: BTreeMap::new(),
+            deferred: Vec::new(),
         })
     }
 
@@ -356,7 +457,104 @@ impl Engine {
         store::put_manifest(self.store.as_ref(), &self.layout, &state.manifest).await?;
         Ok(counts(&plan, &report, state.manifest.generation))
     }
+
+    /// One batch of the daemon: run the cycle, log one line, and schedule the retry
+    /// on failure (section 7).
+    async fn run_closed(&mut self, closed: Closed, batcher: &mut Batcher, now: Instant) {
+        let started = Instant::now();
+        let name = self.roots[closed.root].name.clone();
+        let scope = if closed.full {
+            Scope::Full
+        } else {
+            Scope::Folders(closed.folders.clone())
+        };
+        let scope_text = if closed.full {
+            "full".to_string()
+        } else {
+            format!("folders:{}", closed.folders.len())
+        };
+        let key = (closed.root, closed.full, closed.folders.clone());
+        match self.cycle(closed.root, scope).await {
+            Ok(c) => {
+                log(
+                    "info",
+                    &format!(
+                        "cycle root={name} scope={scope_text} uploads={} links={} tombstones={} touches={} bytes={} ms={}",
+                        c.uploads,
+                        c.links,
+                        c.tombstones,
+                        c.touches,
+                        c.bytes,
+                        started.elapsed().as_millis()
+                    ),
+                );
+                match c.failed {
+                    Some((rel, text)) => {
+                        log("error", &format!("upload root={name} rel={rel}: {text}"));
+                        self.retry(key, closed, batcher, now);
+                    }
+                    None => {
+                        self.failures.remove(&key);
+                    }
+                }
+            }
+            Err(e) => {
+                log(
+                    "error",
+                    &format!("cycle root={name} scope={scope_text}: {e}"),
+                );
+                self.retry(key, closed, batcher, now);
+            }
+        }
+    }
+
+    /// Re-mark the folders so they retry after one quiet window. From the third
+    /// consecutive failure on, log a warning and hold the batch to the ceiling rate.
+    fn retry(
+        &mut self,
+        key: (usize, bool, Vec<String>),
+        closed: Closed,
+        batcher: &mut Batcher,
+        now: Instant,
+    ) {
+        let count = self.failures.entry(key).or_insert(0);
+        *count += 1;
+        if *count >= 3 {
+            if *count == 3 {
+                log(
+                    "warn",
+                    &format!(
+                        "root={} failed {} times in a row, retrying at the ceiling rate",
+                        self.roots[closed.root].name, *count
+                    ),
+                );
+            }
+            self.deferred.push((now + self.policy.ceiling, closed));
+            return;
+        }
+        if closed.full {
+            batcher.hint(closed.root, "", true, now);
+        } else {
+            for folder in &closed.folders {
+                batcher.hint(closed.root, folder, false, now);
+            }
+        }
+    }
+
+    /// The earliest deferred retry, if any.
+    fn deferred_deadline(&self) -> Option<Instant> {
+        self.deferred.iter().map(|(at, _)| *at).min()
+    }
+
+    /// The deferred batches whose retry time has come.
+    fn take_deferred(&mut self, now: Instant) -> Vec<Closed> {
+        let (due, later): (Vec<_>, Vec<_>) =
+            self.deferred.drain(..).partition(|(at, _)| *at <= now);
+        self.deferred = later;
+        due.into_iter().map(|(_, c)| c).collect()
+    }
 }
+
 /// Section 6: an `Upload` whose `rel` has a proper prefix that is a live `File`
 /// entry marks a file-to-directory conflict. Log each new prefix once. Drop every
 /// action under a skipped prefix before `store::upload`.

@@ -3,19 +3,15 @@
 //! This is the only module that reads the process environment. It resolves
 //! `HOME`, the hostname, the default config path, and the default state
 //! directory, then hands them to `cli::run` as `Defaults`. Every other module
-//! takes those values as arguments. The three `allow(dead_code)` lines cover the
-//! modules that only the daemon loop uses, until the next commit wires it.
+//! takes those values as arguments.
 #![forbid(unsafe_code)]
 
-#[allow(dead_code)]
 mod batch;
 mod cli;
 mod config;
 mod manifest;
-#[allow(dead_code)]
 mod scan;
 mod store;
-#[allow(dead_code)]
 mod watch;
 
 use std::io::Write;
