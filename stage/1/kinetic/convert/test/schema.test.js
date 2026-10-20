@@ -46,3 +46,16 @@ test('an unknown element property is rejected', () => {
   const { ok } = validateDeck(deck);
   assert.equal(ok, false);
 });
+
+// ---------- checkpoint 2 (G3 CP1 fixes) ----------
+test('a shape element with paths validates; a text element may carry paths', () => {
+  const deck = load('valid.deck.json');
+  const kpf = deck.slides[0].elements[0].source.kpf;
+  deck.slides[0].elements.push({ id: 'S', kind: 'shape', box: { x: 0, y: 0, w: 10, h: 10 }, paths: [{ d: 'M0 0L10 0L10 10Z', fill: '#000000', opacity: 0.7 }], source: { path: 'pdf', kpf } });
+  deck.slides[0].elements[0].paths = [{ d: 'M0 0L1 0', fill: null, stroke: '#ffffff', strokeWidth: 6 }];
+  deck.slides[0].kpf = { snapshots: [], stills: [], compositeAsContent: true };
+  const { ok, errors } = validateDeck(deck);
+  assert.equal(ok, true, errors.map(formatError).join('\n'));
+  deck.slides[0].elements[2].paths = [];
+  assert.equal(validateDeck(deck).ok, false);
+});
