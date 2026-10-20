@@ -127,9 +127,9 @@
     },
     "mediaPath": {
       "type": "string",
-      "description": "Relative to deck.json. Never a font file, never a GIF, never a space or a parenthesis.",
+      "description": "Relative to deck.json. Never a scheme prefix, never a font file (any case), never a GIF, never a space or a parenthesis.",
       "minLength": 1,
-      "pattern": "^(?![/])(?!.*[ ()])(?!.*\\.(ttf|otf|woff|woff2|gif)$).+$"
+      "pattern": "^(?![A-Za-z][A-Za-z0-9+.-]*:)(?![/])(?!.*[ ()])(?!.*\\.([tT][tT][fF]|[oO][tT][fF]|[wW][oO][fF][fF]|[wW][oO][fF][fF]2|[gG][iI][fF])$).+$"
     },
     "kpfRef": {
       "type": "object",

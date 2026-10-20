@@ -48,6 +48,18 @@ test('an unknown element property is rejected', () => {
 });
 
 // ---------- checkpoint 2 (G3 CP1 fixes) ----------
+test('mediaPath rejects a scheme prefix (D-009)', () => {
+  const { ok, errors } = validateDeck(load('invalid-scheme.deck.json'));
+  assert.equal(ok, false);
+  assert.ok(errors.map(formatError).some((l) => /elements\/1\/src: must match pattern/.test(l)), errors.map(formatError).join('\n'));
+});
+
+test('mediaPath rejects a font extension in any case (D-009)', () => {
+  const { ok, errors } = validateDeck(load('invalid-font-case.deck.json'));
+  assert.equal(ok, false);
+  assert.ok(errors.map(formatError).some((l) => /elements\/1\/src: must match pattern/.test(l)), errors.map(formatError).join('\n'));
+});
+
 test('a shape element with paths validates; a text element may carry paths', () => {
   const deck = load('valid.deck.json');
   const kpf = deck.slides[0].elements[0].source.kpf;
