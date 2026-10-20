@@ -83,6 +83,8 @@ final class CurtainController {
     private var windows: [CurtainWindow] = []
     /// Rider R-3: `NSCursor.hide()` runs once per `unhide()`.
     private var cursorHidden = false
+    /// Rider B3-F1: the empty screen list is logged once, not once per tick.
+    private var loggedNoScreens = false
 
     /// Forwarded to every window's `onChord`. Set by `AppDelegate`.
     var onChord: (ChordEvent) -> Void = { _ in }
@@ -101,9 +103,20 @@ final class CurtainController {
     /// exist it creates none and repeats only the presentation options
     /// and `activate()`. The cursor is hidden once per drop (R-3).
     /// `activate()` is best effort. The tap is the barrier.
+    /// Rider B3-F1: with no screens it logs once and returns. It sets no
+    /// kiosk state and hides no cursor, so `isUp` and the side effects agree.
     func raise() {
         if windows.isEmpty {
-            for screen in NSScreen.screens {
+            let screens = NSScreen.screens
+            if screens.isEmpty {
+                if !loggedNoScreens {
+                    log("no screens: curtain not raised")
+                    loggedNoScreens = true
+                }
+                return
+            }
+            loggedNoScreens = false
+            for screen in screens {
                 let window = CurtainWindow(screen: screen)
                 window.onChord = { [weak self] event in self?.onChord(event) }
                 window.makeKeyAndOrderFront(nil)
