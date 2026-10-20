@@ -1,0 +1,6 @@
+node_modules/
+.cache/
+test-results/
+playwright-report/
+e2e/captures/*
+!e2e/captures/spike-*
