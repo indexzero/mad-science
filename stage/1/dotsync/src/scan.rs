@@ -174,6 +174,23 @@ fn scan_folder(
     if folder.is_empty() {
         return walk_dir(root, "", deny, false, snap);
     }
+    // Never follow a symlink (section 8.1). A hint path can cross a symlinked
+    // directory on backends that follow links. Every ancestor must be a real directory.
+    let mut prefix = root.to_path_buf();
+    for part in folder.split('/') {
+        prefix.push(part);
+        match fs::symlink_metadata(&prefix) {
+            Ok(md) if md.is_dir() => {}
+            Ok(_) => return Ok(()),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+            Err(source) => {
+                return Err(ScanError::Io {
+                    path: prefix,
+                    source,
+                });
+            }
+        }
+    }
     let abs = root.join(folder);
     if deny.is_denied(&format!("{folder}/")) {
         snap.skipped.push((abs, SkipReason::Denied));
@@ -285,7 +302,41 @@ pub fn stat_entry(abs: &Path) -> Result<Option<Stat>, ScanError> {
     Ok(None)
 }
 
+/// Open `root/rel` for reading only when it is still the regular file that a
+/// `symlink_metadata` call sees. A symlink swapped in before or after that call
+/// fails the inode check, so the bytes of a link target are never read.
+pub fn open_regular(root: &Path, rel: &str) -> Result<fs::File, ScanError> {
+    let abs = root.join(rel);
+    let io = |source: std::io::Error| ScanError::Io {
+        path: abs.clone(),
+        source,
+    };
+    let before = fs::symlink_metadata(&abs).map_err(io)?;
+    let file = fs::File::open(&abs).map_err(io)?;
+    let after = file.metadata().map_err(io)?;
+    if !before.file_type().is_file() || !after.is_file() || !same_file(&before, &after) {
+        return Err(io(std::io::Error::other(
+            "not the regular file that was scanned",
+        )));
+    }
+    Ok(file)
+}
+
+/// True when both stats name one file: the same device and inode.
+#[cfg(unix)]
+fn same_file(a: &fs::Metadata, b: &fs::Metadata) -> bool {
+    use std::os::unix::fs::MetadataExt;
+    a.dev() == b.dev() && a.ino() == b.ino()
+}
+
+/// No inode off Unix. The `file_type` checks in `open_regular` are the whole test.
+#[cfg(not(unix))]
+fn same_file(_a: &fs::Metadata, _b: &fs::Metadata) -> bool {
+    true
+}
+
 /// blake3 of the file bytes at `root/rel`, as 64 lowercase hex chars.
+/// Opens through `open_regular`, so a symlink is never read through.
 /// Reads in 64 KiB chunks through `blake3::Hasher::update`.
 pub fn hash_file(root: &Path, rel: &str) -> Result<String, ScanError> {
     let abs = root.join(rel);
@@ -293,7 +344,7 @@ pub fn hash_file(root: &Path, rel: &str) -> Result<String, ScanError> {
         path: abs.clone(),
         source,
     };
-    let mut file = fs::File::open(&abs).map_err(io)?;
+    let mut file = open_regular(root, rel)?;
     let mut hasher = blake3::Hasher::new();
     let mut buf = vec![0u8; HASH_CHUNK];
     loop {
@@ -428,6 +479,26 @@ mod tests {
         let snap = scan(root, &deny, Scope::Folders(vec![String::new()]), 0).unwrap();
         let keys: Vec<&String> = snap.entries.keys().collect();
         assert_eq!(keys, vec!["top.txt"]);
+    }
+
+    #[test]
+    fn scan_folder_scope_never_crosses_a_symlinked_dir() {
+        let base = tempfile::TempDir::new().unwrap();
+        let root = base.path().join("root");
+        let outside = base.path().join("outside");
+        write(&outside, "sub/id_rsa", b"PRIVATE KEY BYTES");
+        write(&root, "cache/deep/blob", b"CACHE BYTES");
+        symlink(&outside, root.join("out")).unwrap();
+        symlink("cache", root.join("alias")).unwrap();
+        let deny = DenyList::default_list().unwrap();
+
+        let full = scan(&root, &deny, Scope::Full, 0).unwrap();
+        let keys: Vec<&String> = full.entries.keys().collect();
+        assert_eq!(keys, vec!["alias", "out"]);
+
+        let folders = Scope::Folders(vec!["out/sub".to_string(), "alias/deep".to_string()]);
+        let snap = scan(&root, &deny, folders, 0).unwrap();
+        assert!(snap.entries.is_empty(), "{:?}", snap.entries);
     }
 
     #[test]

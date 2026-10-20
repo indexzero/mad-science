@@ -13,9 +13,10 @@ use futures::TryStreamExt;
 use object_store::path::{Path, PathPart};
 use object_store::{ObjectStore, ObjectStoreExt, PutPayload};
 use serde::Serialize;
+use tokio::io::AsyncReadExt;
 
 use crate::manifest::{Action, Kind, Manifest, Plan};
-use crate::scan::DenyList;
+use crate::scan::{self, DenyList};
 
 /// The parsed form of a `--store` URL. See Decision 4.6.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -263,8 +264,12 @@ async fn put_action(
 ) -> Result<Put, StoreError> {
     match action {
         Action::Upload { rel, entry } => {
+            // Never read through a symlink (section 8.5). The path must still be
+            // the regular file that `open_regular` stats.
             let abs = root_dir.join(rel);
-            let bytes = tokio::fs::read(&abs)
+            let mut file = tokio::fs::File::from_std(scan::open_regular(root_dir, rel)?);
+            let mut bytes = Vec::new();
+            file.read_to_end(&mut bytes)
                 .await
                 .map_err(|source| StoreError::Io { path: abs, source })?;
             let size = bytes.len() as u64;
@@ -397,6 +402,9 @@ pub enum StoreError {
     Json(#[from] serde_json::Error),
     #[error(transparent)]
     Manifest(#[from] crate::manifest::ManifestError),
+    /// `scan::open_regular` refused or failed to open a file to upload.
+    #[error(transparent)]
+    Scan(#[from] scan::ScanError),
 }
 
 #[cfg(test)]
@@ -638,6 +646,25 @@ mod tests {
             StoreUrl::parse("ftp://x"),
             Err(StoreError::Url(_))
         ));
+    }
+
+    #[tokio::test]
+    async fn store_upload_never_reads_a_file_swapped_for_a_symlink() {
+        let fx = Fx::new();
+        fx.write(".credentials.json", b"{\"secret\":\"CRED BYTES\"}");
+        fx.write("notes.txt", b"harmless");
+        let m = Manifest::new(HOST, ROOT);
+        let plan = fx.plan(&m);
+        let rels: Vec<&str> = plan.actions.iter().map(Action::rel).collect();
+        assert_eq!(rels, vec!["notes.txt"]);
+
+        fs::remove_file(fx.root().join("notes.txt")).unwrap();
+        std::os::unix::fs::symlink(".credentials.json", fx.root().join("notes.txt")).unwrap();
+
+        let report = fx.upload(&plan).await.unwrap();
+        assert!(report.done.is_empty(), "{report:?}");
+        assert!(matches!(report.failed, Some((0, _))), "{report:?}");
+        assert!(fx.keys().await.is_empty());
     }
 
     #[tokio::test]
