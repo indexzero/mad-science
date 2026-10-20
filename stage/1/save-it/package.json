@@ -1,0 +1,24 @@
+{
+  "name": "save-it",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.34.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "pnpm run dry-run && node --test 'test/**/*.test.mjs'",
+    "dry-run": "wrangler deploy --dry-run --outdir dist/worker",
+    "skill:pack": "node pack.mjs",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@cloudflare/workers-oauth-provider": "1.2.3",
+    "@modelcontextprotocol/server": "2.3.1",
+    "agents": "0.29.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "miniflare": "4.20260730.0",
+    "wrangler": "4.151.3"
+  }
+}
