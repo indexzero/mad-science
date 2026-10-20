@@ -1,9 +1,18 @@
 /**
- * The save-it Worker. Build 2 serves `GET /health` and `PUT /u/<token>`.
- * All other paths return 404.
+ * The save-it Worker. The OAuth provider owns `/mcp`, `/token`, `/register`,
+ * and the metadata paths. The default handler serves `GET /health`,
+ * `PUT /u/<token>`, and `GET /authorize`. All other paths return 404.
  */
 
+import { OAuthProvider, AuthorizationError } from "@cloudflare/workers-oauth-provider";
+import { createMcpHandler } from "agents/mcp/server";
+import { createServer } from "./tool.mjs";
 import { verify } from "./token.mjs";
+
+const ALLOWED_REDIRECT_URIS = [
+  "https://claude.ai/api/mcp/auth_callback",
+  "https://claude.com/api/mcp/auth_callback"
+];
 
 const NO_SIGNING_KEY = "not saved: the Worker has no signing key. fix: run SETUP.md step 3";
 
@@ -96,13 +105,70 @@ async function upload(request, env, token, now) {
   return keyJson(key, 201);
 }
 
+const NOT_VALID_AUTH_REQUEST =
+  "not saved: the authorization request is not valid. fix: add the connector again in claude.ai";
+
 /**
- * Answers one request. The clock is read once here and passed down.
+ * Answers `/authorize`. Cloudflare Access is the identity provider.
+ * The steps follow the design "OAuth and MCP" in order.
  * @param {Request} request
- * @param {{ BUNDLES: R2Bucket, UPLOAD_SIGNING_KEY?: string }} env
+ * @param {{ ALLOWED_EMAIL?: string, OAUTH_PROVIDER: any }} env
+ * @param {{ access?: { getIdentity(): Promise<{ email?: string } | undefined> } }} ctx
  * @returns {Promise<Response>}
  */
-async function fetch(request, env) {
+async function authorize(request, env, ctx) {
+  if (request.method !== "GET") {
+    return text(
+      `not saved: method ${request.method} is not allowed. fix: use GET`,
+      405,
+      { Allow: "GET" }
+    );
+  }
+  if (ctx?.access === undefined) {
+    const host = new URL(request.url).host;
+    return text(
+      `not saved: Cloudflare Access did not authenticate this request. fix: protect ${host}/authorize with an Access application (SETUP.md step 5)`,
+      403
+    );
+  }
+  const identity = await ctx.access.getIdentity();
+  const email = typeof identity?.email === "string" ? identity.email.trim() : undefined;
+  const allowed = typeof env.ALLOWED_EMAIL === "string" ? env.ALLOWED_EMAIL.trim() : undefined;
+  if (email === undefined || allowed === undefined || email !== allowed) {
+    return text("not saved: this account is not allowed. fix: sign in as the allowed email", 403);
+  }
+  let authRequest;
+  try {
+    authRequest = await env.OAUTH_PROVIDER.parseAuthRequest(request);
+  } catch (error) {
+    if (error instanceof AuthorizationError && error.redirectTo) {
+      return Response.redirect(error.redirectTo, 302);
+    }
+    return text(NOT_VALID_AUTH_REQUEST, 400);
+  }
+  const client = await env.OAUTH_PROVIDER.lookupClient(authRequest.clientId);
+  if (client === null) {
+    return text(NOT_VALID_AUTH_REQUEST, 400);
+  }
+  const { redirectTo } = await env.OAUTH_PROVIDER.completeAuthorization({
+    request: authRequest,
+    userId: email,
+    metadata: {},
+    scope: authRequest.scope,
+    props: { email }
+  });
+  return Response.redirect(redirectTo, 302);
+}
+
+/**
+ * Answers every request that the OAuth provider does not own.
+ * The clock is read once here and passed down.
+ * @param {Request} request
+ * @param {{ BUNDLES: R2Bucket, UPLOAD_SIGNING_KEY?: string, ALLOWED_EMAIL?: string, OAUTH_PROVIDER: any }} env
+ * @param {any} ctx
+ * @returns {Promise<Response>}
+ */
+async function defaultFetch(request, env, ctx) {
   const now = new Date();
   const url = new URL(request.url);
   if (url.pathname === "/health") {
@@ -118,7 +184,50 @@ async function fetch(request, env) {
   if (url.pathname.startsWith("/u/")) {
     return upload(request, env, url.pathname.slice("/u/".length), now);
   }
+  if (url.pathname === "/authorize") {
+    return authorize(request, env, ctx);
+  }
   return text("not found", 404);
 }
 
-export default { fetch };
+const providers = new Map();
+
+/**
+ * Gives the OAuth provider for one origin. The provider needs the origin
+ * for `resourceMetadata.resource`, so the Worker makes one per origin.
+ * @param {string} origin  new URL(request.url).origin
+ * @returns {OAuthProvider}
+ */
+function providerFor(origin) {
+  let provider = providers.get(origin);
+  if (provider) return provider;
+  provider = new OAuthProvider({
+    apiRoute: "/mcp",
+    apiHandler: {
+      fetch(request, env, ctx) {
+        const handler = createMcpHandler(() => createServer(env, origin));
+        return handler(request, env, ctx);
+      }
+    },
+    defaultHandler: { fetch: defaultFetch },
+    authorizeEndpoint: "/authorize",
+    tokenEndpoint: "/token",
+    clientRegistrationEndpoint: "/register",
+    resourceMetadata: { resource: `${origin}/mcp` },
+    clientRegistrationCallback({ clientMetadata }) {
+      const uris = Array.isArray(clientMetadata.redirect_uris) ? clientMetadata.redirect_uris : [];
+      const bad = uris.find((uri) => !ALLOWED_REDIRECT_URIS.includes(uri));
+      if (uris.length === 0 || bad !== undefined) {
+        return { code: "invalid_redirect_uri", description: "redirect_uris must be the claude.ai or claude.com auth callback", status: 400 };
+      }
+    }
+  });
+  providers.set(origin, provider);
+  return provider;
+}
+
+export default {
+  fetch(request, env, ctx) {
+    return providerFor(new URL(request.url).origin).fetch(request, env, ctx);
+  }
+};
