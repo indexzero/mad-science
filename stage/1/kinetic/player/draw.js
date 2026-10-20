@@ -41,8 +41,15 @@ function drawLines(ctx, list, alpha, fraction) {
 
 function drawImage(ctx, handle, el) {
   const b = el.box;
+  if (el.flip === 'vertical') {
+    // mirror the box: the page draws this image upside down
+    ctx.save();
+    ctx.translate(0, 2 * b.y + b.h);
+    ctx.scale(1, -1);
+  }
   if (el.crop) ctx.drawImage(handle, el.crop.x, el.crop.y, el.crop.w, el.crop.h, b.x, b.y, b.w, b.h);
   else ctx.drawImage(handle, b.x, b.y, b.w, b.h);
+  if (el.flip === 'vertical') ctx.restore();
 }
 
 /** Clip to the part of `box` a wipe has revealed: a rectangle that grows along `direction`. */
@@ -61,19 +68,25 @@ function clipWipe(ctx, box, clip) {
 /**
  * Draw `slide` with steps up to `done` complete and step `done + 1` at `t` seconds (null when idle).
  * `videoControl(el, play)` lets the player start or keep a video; it returns the HTMLVideoElement to draw
- * when playing, else null (the poster is drawn).
+ * when playing, else null (the poster is drawn). `range` { from, to } draws the elements [from, to) only,
+ * with the background when `from` is 0, so a still frame can be rendered a few elements per animation frame.
  */
-export function drawSlide(ctx, deck, slide, preloader, done, t, videoControl) {
+export function drawSlide(ctx, deck, slide, preloader, done, t, videoControl, range = null) {
+  const first = range ? range.from : 0;
+  const last = range ? Math.min(range.to, slide.elements.length) : slide.elements.length;
   ctx.save();
   // a slide never paints outside its own bounds: full-bleed layers (the slide 2 GIF starts at x -99) would
   // otherwise spill over the neighbouring slide during a push
   ctx.beginPath();
   ctx.rect(0, 0, deck.width, deck.height);
   ctx.clip();
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = slide.background?.value || '#000000';
-  ctx.fillRect(0, 0, deck.width, deck.height);
-  for (const el of slide.elements) {
+  if (first === 0) {
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = slide.background?.value || '#000000';
+    ctx.fillRect(0, 0, deck.width, deck.height);
+  }
+  for (let i = first; i < last; i++) {
+    const el = slide.elements[i];
     const st = elementState(el, slide.builds, done, t);
     if (!st.visible) continue;
     ctx.save();
