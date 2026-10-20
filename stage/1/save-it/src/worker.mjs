@@ -85,7 +85,7 @@ async function upload(request, env, token, now) {
   if (length === null) {
     return text("not saved: Content-Length is missing. fix: send the file with curl -T", 411);
   }
-  if (Number(length) !== size) {
+  if (!/^\d+$/.test(length) || Number(length) !== size) {
     return text(
       `not saved: Content-Length ${length} is not equal to size ${size}. fix: build the bundle again and mint a new URL`,
       400
@@ -162,7 +162,7 @@ async function authorize(request, env, ctx) {
 
 /**
  * Answers every request that the OAuth provider does not own.
- * The clock is read once here and passed down.
+ * It reads the clock once and passes the time to upload().
  * @param {Request} request
  * @param {{ BUNDLES: R2Bucket, UPLOAD_SIGNING_KEY?: string, ALLOWED_EMAIL?: string, OAUTH_PROVIDER: any }} env
  * @param {any} ctx
