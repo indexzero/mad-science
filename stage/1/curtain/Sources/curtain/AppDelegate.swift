@@ -9,7 +9,18 @@ enum ChordFeed: String {
     case windowOverride = "window override feed"
     /// `ChordDetector.poll` from the tick.
     case tickPoll = "tick poll"
+    /// The HID event tap of `InputTap` (dispatch 3).
+    case tap = "tap feed"
 }
+
+/// true in a debug build, false in release. `swift build` defines DEBUG;
+/// `swift build -c release` does not. The one input of the escape hatch
+/// of design section 8, layer 1.
+#if DEBUG
+let isDebugBuild = true
+#else
+let isDebugBuild = false
+#endif
 
 /// Owns every side-effecting object and runs the tick. Design section
 /// 5.4. Everything here runs on the main actor.
@@ -18,12 +29,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let store = ConfigStore()
     private let curtain = CurtainController()
     private let power = PowerController()
+    private let tap = InputTap()
     private var detector = ChordDetector()
     private var config = Config.defaults
     /// System uptime of the last chord drop. nil before any drop.
     private var droppedAt: Double?
     /// `Schedule.awake` of the last tick, for the wake handler.
     private var lastAwake = false
+    /// true after the debug timeout dropped the tap. The tick does not
+    /// install the tap again until the curtain drops. Cleared on `.fired`.
+    private var tapTimedOut = false
     private var timer: Timer?
     private var keyMonitor: Any?
     private var wakeObserver: (any NSObjectProtocol)?
@@ -38,6 +53,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         installKeyMonitor()
         curtain.onChord = { [weak self] event in
             self?.handleChord(event, from: .windowOverride)
+        }
+        tap.onChord = { [weak self] event in
+            self?.handleChord(event, from: .tap)
+        }
+        // Design section 5.5, "Accessibility": the check runs on launch
+        // with the prompt, before the curtain can hide the dialog.
+        if !tap.checkTrust() {
+            log("accessibility not granted: the tap will be unavailable")
         }
         wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didWakeNotification, object: nil, queue: .main
@@ -111,7 +134,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             awake: awake, idle: idle,
             curtainUp: curtain.isUp, assertionHeld: power.assertionHeld)
         let actions = Reconcile.decide(state)
-        if actions.contains(.raiseCurtain) { curtain.raise() }
+        if actions.contains(.raiseCurtain) {
+            curtain.raise()
+            if curtain.isUp { tap.install() }
+        }
         if actions.contains(.holdAssertion) {
             power.holdAssertion()
             power.lightPanel()
@@ -123,19 +149,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         apply(detector.poll(now: uptime), from: .tickPoll)
         // dispatch 3: InputTap install, retry, timeout
+        if curtain.isUp {
+            if !tap.isInstalled && !tapTimedOut {
+                tap.install()
+            }
+            if let startedAt = tap.startedAt,
+               TapTimeout.shouldDrop(
+                   startedAt: startedAt, now: Date(),
+                   limit: TapTimeout.debugLimit, isDebug: isDebugBuild) {
+                tap.uninstall()
+                tapTimedOut = true
+                log("tap dropped by debug timeout")
+            }
+        }
     }
 
     /// Both feeds call this: the window feed (dispatch 2) and the tap
-    /// feed (dispatch 3). One detector, two feeds.
+    /// feed (dispatch 3). One detector, two feeds. While the tap is
+    /// installed it deletes every event before the window sees it, so
+    /// the window feed is silent and no gate is needed.
     func handleChord(_ event: ChordEvent, from feed: ChordFeed) {
         apply(detector.feed(event), from: feed)
     }
 
-    /// The `.fired` handling of design section 5.4: drop, reset, and
-    /// record the drop as activity.
+    /// The `.fired` handling of design section 5.4: drop, uninstall the
+    /// tap, reset, and record the drop as activity.
     private func apply(_ verdict: ChordVerdict, from feed: ChordFeed) {
         guard verdict == .fired else { return }
         curtain.drop(by: feed.rawValue)
+        tap.uninstall()
+        tapTimedOut = false
         detector.reset()
         droppedAt = ProcessInfo.processInfo.systemUptime
     }
