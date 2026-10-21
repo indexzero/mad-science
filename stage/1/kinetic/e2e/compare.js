@@ -50,6 +50,29 @@ function paint(png, masks) {
   }
 }
 
+/**
+ * The number of pixels the boxes cover in a `width` x `height` frame, each pixel counted once. Boxes may
+ * overlap (slide 64 places five videos whose boxes overlap), so this is the area of their union, never
+ * the sum of their areas. Boxes are clamped to the frame.
+ */
+export function maskedPixels(masks, width, height) {
+  const covered = new Uint8Array(width * height);
+  let n = 0;
+  for (const m of masks) {
+    const x0 = Math.max(0, m.x);
+    const y0 = Math.max(0, m.y);
+    const x1 = Math.min(width, m.x + m.w);
+    const y1 = Math.min(height, m.y + m.h);
+    for (let y = y0; y < y1; y++) {
+      for (let x = x0; x < x1; x++) {
+        const p = y * width + x;
+        if (!covered[p]) { covered[p] = 1; n += 1; }
+      }
+    }
+  }
+  return n;
+}
+
 function cropPng(png, m) {
   const out = new PNG({ width: m.w, height: m.h });
   for (let y = 0; y < m.h; y++) {
@@ -85,7 +108,7 @@ export function compareCaptures(name, liveBuf, newBuf, masks = []) {
   paint(fresh, masks);
   const diff = new PNG({ width, height });
   const mismatched = pixelmatch(live.data, fresh.data, diff.data, width, height, { threshold: THRESHOLD });
-  const masked = masks.reduce((n, m) => n + m.w * m.h, 0);
+  const masked = maskedPixels(masks, width, height);
   const unmasked = width * height - masked;
   writeFileSync(join(CAPTURES, `${name}.diff.png`), PNG.sync.write(diff));
   const ratio = unmasked > 0 ? mismatched / unmasked : 0;

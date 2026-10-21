@@ -154,6 +154,7 @@ test.describe('spike captures', () => {
 
     const r = compareCaptures('spike-4', live, mine, videoMasks(4, 960, 540));
     console.log(`spike-4 live hash after ${presses} ArrowRight: ${liveHash}; mismatch ratio ${r.ratio.toFixed(5)} (${r.mismatched} of ${r.unmasked} unmasked pixels), tolerance ${toleranceFor('spike-4')}`);
+    expect(r.unmasked).toBeGreaterThan(0);
     expect(r.ratio).toBeLessThan(toleranceFor('spike-4'));
   });
 
@@ -258,6 +259,9 @@ test.describe('all slides at their final build state', () => {
       };
       recordRatio(String(n), entry);
       console.log(`slide ${n}: ${r.rule}, mismatch ratio ${r.ratio.toFixed(5)} (${r.mismatched} of ${r.unmasked} pixels, mask ${(r.maskedFraction * 100).toFixed(1)} percent${r.unmaskedRatio !== null ? `, unmasked ${r.unmaskedRatio.toFixed(5)}` : ''}), ${presses} ArrowRight, tolerance ${tolerance}`);
+      // a ratio over zero compared pixels passes vacuously: a wholly masked final state must fall to the
+      // animated-pixels-masked rule, and that rule must leave pixels to compare
+      expect(r.unmasked).toBeGreaterThan(0);
       expect(r.ratio).toBeLessThan(tolerance);
     });
   }
@@ -304,6 +308,7 @@ test.describe('word build (Q-007)', () => {
     const m = compareCaptures('word-build-mid', liveMid, mineMid, videoMasks(N, 960, 540));
     recordExtra('word-build', { slide: N, unit: build.unit, effect: build.effect, kpfName: build.kpf.name, targets: build.targets, stagger: build.stagger ?? null, rule: r.rule, midBuild: { frozenAt: 0.4, pixelsMovedVsFinal: moved, liveVsNewRatio: m.ratio, asserted: false } });
     console.log(`word-build mid-build frame at 0.4 s: ${moved} pixels differ from the final state on the new side; live vs new ${m.ratio.toFixed(5)} (recorded, not asserted)`);
+    expect(r.unmasked).toBeGreaterThan(0);
     expect(r.ratio).toBeLessThan(toleranceFor('word-build'));
   });
 });
