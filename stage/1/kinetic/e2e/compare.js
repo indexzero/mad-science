@@ -7,7 +7,14 @@ import { PNG } from 'pngjs';
 import { cubicBezier } from '../player/effects.js';
 
 export const here = dirname(fileURLToPath(import.meta.url));
-export const CAPTURES = join(here, 'captures');
+// The committed capture sets (spike-*, word-build*, ratios.json, preload.json, spike-bench.json) live in
+// e2e/captures. A run writes under e2e/captures/out (gitignored), so `pnpm e2e` leaves the tree clean.
+// KINETIC_UPDATE_CAPTURES=1 writes to e2e/captures instead, to update the committed sets on purpose.
+export const COMMITTED_CAPTURES = join(here, 'captures');
+export function capturesDir(env = process.env) {
+  return env.KINETIC_UPDATE_CAPTURES === '1' ? COMMITTED_CAPTURES : join(COMMITTED_CAPTURES, 'out');
+}
+export const CAPTURES = capturesDir();
 export const DECK = JSON.parse(readFileSync(join(here, '..', 'decks', '_all_docs', 'deck.json'), 'utf8'));
 export const TOLERANCE = JSON.parse(readFileSync(join(here, 'tolerance.json'), 'utf8'));
 export const THRESHOLD = 0.1;
@@ -193,7 +200,7 @@ function cropPng(png, m) {
 }
 
 /**
- * Compare a live and a new capture. Writes <name>.{live,new,diff}.png under e2e/captures. Returns
+ * Compare a live and a new capture. Writes <name>.{live,new,diff}.png under CAPTURES. Returns
  * { ratio, mismatched, unmasked, masked, regions: [{ id, ratio }] } where `ratio` is mismatched pixels over
  * unmasked pixels (0 when nothing is unmasked, flagged `vacuous`) and `regions` compares each masked box
  * between the two sides (recorded against tolerance.videoRegion, never asserted).

@@ -1,7 +1,15 @@
 // The capture comparison's mask arithmetic (e2e/compare.js): overlapping video boxes count once.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { maskedPixels, videoMasks, longestLoopMs, animatedFrameCount, masksCoverFrame } from '../../e2e/compare.js';
+import { join } from 'node:path';
+import { maskedPixels, videoMasks, longestLoopMs, animatedFrameCount, masksCoverFrame, capturesDir, COMMITTED_CAPTURES } from '../../e2e/compare.js';
+
+test('a run writes its captures under e2e/captures/out; only KINETIC_UPDATE_CAPTURES=1 writes the committed sets', () => {
+  assert.equal(capturesDir({}), join(COMMITTED_CAPTURES, 'out'));
+  assert.equal(capturesDir({ KINETIC_UPDATE_CAPTURES: '0' }), join(COMMITTED_CAPTURES, 'out'));
+  assert.equal(capturesDir({ KINETIC_UPDATE_CAPTURES: '1' }), COMMITTED_CAPTURES);
+  assert.match(COMMITTED_CAPTURES, /e2e[\\/]captures$/);
+});
 
 test('maskedPixels counts the union of the boxes, not the sum of their areas', () => {
   assert.equal(maskedPixels([], 10, 10), 0);

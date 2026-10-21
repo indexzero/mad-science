@@ -3,7 +3,7 @@
 //         the waiting indicator hiding
 //   new:  ms from goto(2) to the first drawn frame of slide 2 with slide 2 preloaded (a jump from slide 3,
 //         whose preload holds 4, 5, and 2; no transition), and the same through the push from slide 1
-// Writes e2e/captures/spike-bench.json.
+// Writes spike-bench.json under CAPTURES (e2e/captures/out, or e2e/captures with KINETIC_UPDATE_CAPTURES=1).
 import { test, expect } from '@playwright/test';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';

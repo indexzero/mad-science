@@ -5,18 +5,25 @@
 //   spike-1-2 200 ms into the push from slide 1 to slide 2
 //   1 .. 71   every slide at its final build state, video boxes masked; where the mask covers the frame the
 //             final state is compared with the moving pixels of either side masked instead, and the
-//             unmasked ratio is recorded beside it (the rule is recorded); ratios in captures/ratios.json
+//             unmasked ratio is recorded beside it (the rule is recorded); ratios in ratios.json under CAPTURES,
+//             each beside the committed ratio of e2e/captures/ratios.json as a reference
 //   word-build slide 21, `apple:keyboard` (unit character, eight units with their own offsets): the final
 //             state and a mid-build frame per side where some but not all units show, asserted (Q-007)
 import { test, expect } from '@playwright/test';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gotoLive, advanceLive, settle, indicatorHidden, LIVE_BASE, SETTLE_MS } from './live.js';
-import { compareCaptures, compareCapturesMasked, animatedMask, recordExtra, toleranceFor, videoMasks, slideByIndex, TOLERANCE, THRESHOLD, decode, pushBoundary, rawProgress, CAPTURES, DECK, FRAME_GAP_MS, animatedFrameCount, masksCoverFrame, masksCoverText, boxMask, textCoverage, dilateMask } from './compare.js';
+import { compareCaptures, compareCapturesMasked, animatedMask, recordExtra, toleranceFor, videoMasks, slideByIndex, TOLERANCE, THRESHOLD, decode, pushBoundary, rawProgress, CAPTURES, COMMITTED_CAPTURES, DECK, FRAME_GAP_MS, animatedFrameCount, masksCoverFrame, masksCoverText, boxMask, textCoverage, dilateMask } from './compare.js';
 import { stepDuration, stepIsAutomatic, lastStep } from '../player/effects.js';
 
 const PLAYER = (n) => `player/index.html?deck=../decks/_all_docs/deck.json#${n}`;
 const RATIOS = join(CAPTURES, 'ratios.json');
+// the committed ratios, a reference only: a run records each slide's committed ratio beside its own
+const COMMITTED_RATIOS = join(COMMITTED_CAPTURES, 'ratios.json');
+const REFERENCE = RATIOS !== COMMITTED_RATIOS && existsSync(COMMITTED_RATIOS) ? JSON.parse(readFileSync(COMMITTED_RATIOS, 'utf8')).slides || {} : {};
+// A live screenshot that hangs (slide 64 once hung 16.8 minutes in page.screenshot) fails after this bound,
+// and the live side is then taken once more on a fresh page.
+const SHOT_TIMEOUT_MS = 30000;
 const SLIDE_COUNT = DECK.slides.length;
 
 /** Open the new player on slide n and wait for its first frame and its automatic steps. */
@@ -84,10 +91,10 @@ async function newFinalState(page, n) {
 
 /** Frames of a page at one build state, `gapMs` apart: the first is the capture, the rest find the moving pixels. */
 async function frames(page, gapMs = FRAME_GAP_MS, count = 3) {
-  const out = [await page.screenshot()];
+  const out = [await page.screenshot({ timeout: SHOT_TIMEOUT_MS })];
   for (let i = 1; i < count; i++) {
     await page.waitForTimeout(gapMs);
-    out.push(await page.screenshot());
+    out.push(await page.screenshot({ timeout: SHOT_TIMEOUT_MS }));
   }
   return out;
 }
@@ -108,7 +115,28 @@ function frameCount(n) {
   return ruleFor(n) === 'animated-pixels-masked' ? animatedFrameCount(n) : 3;
 }
 
-/** Merge one slide's result into captures/ratios.json. */
+/**
+ * The live side of slide n at its final build state: the press count and `count` frames. A timeout (a hung
+ * live fetch or screenshot) gets one retry on a fresh page. Returns { presses, frames, retried }.
+ */
+async function liveSide(page, browser, n, count) {
+  try {
+    const presses = await liveFinalState(page, n);
+    return { presses, frames: await frames(page, FRAME_GAP_MS, count), retried: false };
+  } catch (e) {
+    if (e?.name !== 'TimeoutError') throw e;
+    console.log(`slide ${n}: live side timed out (${String(e.message).split('\n')[0]}); one retry on a fresh page`);
+    const again = await browser.newPage({ viewport: { width: 960, height: 540 } });
+    try {
+      const presses = await liveFinalState(again, n);
+      return { presses, frames: await frames(again, FRAME_GAP_MS, count), retried: true };
+    } finally {
+      await again.close();
+    }
+  }
+}
+
+/** Merge one slide's result into ratios.json under CAPTURES. */
 function recordRatio(key, entry) {
   const cur = existsSync(RATIOS) ? JSON.parse(readFileSync(RATIOS, 'utf8')) : {};
   const slides = { ...(cur.slides || {}), [key]: entry };
@@ -294,9 +322,10 @@ test.describe('spike captures', () => {
 test.describe('all slides at their final build state', () => {
   for (let n = 1; n <= SLIDE_COUNT; n++) {
     test(`slide ${n}`, async ({ page, browser }) => {
-      const presses = await liveFinalState(page, n);
+      // room for one retry of the live side
+      test.setTimeout(360000);
       const count = frameCount(n);
-      const liveFrames = await frames(page, FRAME_GAP_MS, count);
+      const { presses, frames: liveFrames, retried } = await liveSide(page, browser, n, count);
       const fresh = await browser.newPage({ viewport: { width: 960, height: 540 } });
       await newFinalState(fresh, n);
       const newFrames = await frames(fresh, FRAME_GAP_MS, count);
@@ -318,6 +347,8 @@ test.describe('all slides at their final build state', () => {
         frames: count,
         tolerance,
         pass: r.ratio < tolerance,
+        ...(retried ? { liveRetried: true } : {}),
+        ...(REFERENCE[String(n)] ? { reference: REFERENCE[String(n)].ratio } : {}),
       };
       recordRatio(String(n), entry);
       console.log(`slide ${n}: ${r.rule}, mismatch ratio ${r.ratio.toFixed(5)} (${r.mismatched} of ${r.unmasked} pixels, mask ${(r.maskedFraction * 100).toFixed(1)} percent${r.unmaskedRatio !== null ? `, unmasked ${r.unmaskedRatio.toFixed(5)}` : ''}), ${presses} ArrowRight, tolerance ${tolerance}; text boxes compared ${entry.text.boxesCompared} of ${entry.text.boxes}, text pixels ${entry.text.mismatched} of ${entry.text.compared} mismatched (${entry.text.ratio})`);
