@@ -1,15 +1,9 @@
 {
   "name": "word-build-mid",
-  "ratio": 0.6119972733469666,
-  "mismatched": 80802,
-  "unmasked": 132030,
-  "masked": 386370,
+  "ratio": 0.12124366910523354,
+  "mismatched": 12927,
+  "unmasked": 106620,
+  "masked": 411780,
   "vacuous": false,
-  "regions": [
-    {
-      "id": "D4E5E3CF93F568706799F8B699D243C4",
-      "ratio": 0.028389885343064938,
-      "pixels": 386370
-    }
-  ]
+  "regions": []
 }

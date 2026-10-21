@@ -1,30 +1,116 @@
 {
   "name": "word-build",
-  "ratio": 0.0014542149511474665,
-  "mismatched": 192,
-  "unmasked": 132030,
-  "masked": 386370,
+  "ratio": 0.00019885141050944544,
+  "mismatched": 67,
+  "unmasked": 336935,
+  "masked": 181465,
   "vacuous": false,
-  "regions": [
-    {
-      "id": "D4E5E3CF93F568706799F8B699D243C4",
-      "ratio": 0.1487356678831172,
-      "pixels": 386370
-    }
-  ],
-  "slide": 71,
+  "regions": [],
+  "slide": 21,
   "unit": "character",
-  "effect": "move-in",
-  "kpfName": "apple:move in character",
+  "effect": "keyboard",
+  "kpfName": "apple:keyboard",
   "targets": [
-    "CF7A1DA9812093555DC04CF1ECC15C20"
+    "D545FB99DE2691DC083C7B19980D7329",
+    "CB2D9213C3E0364F2F3EB79B755F1B0F",
+    "43001A2C9FA3D28BDC5E73FD9594DEC7",
+    "CB2D9213C3E0364F2F3EB79B755F1B0F~2",
+    "D5D00D0C5E46B35D4983DAC777A79466",
+    "698CD29A617CCE8ACE6CDC6A3031C56E",
+    "D73CC26EA1BED3F005A836AB171DDF23",
+    "43001A2C9FA3D28BDC5E73FD9594DEC7~2"
   ],
-  "stagger": 0,
-  "rule": "masked",
+  "offsets": [
+    0.712,
+    0.965,
+    1.309,
+    1.556,
+    1.8,
+    1.841,
+    2.065,
+    2.287
+  ],
+  "rule": "animated-pixels-masked",
   "midBuild": {
-    "frozenAt": 0.4,
-    "pixelsMovedVsFinal": 126260,
-    "liveVsNewRatio": 0.6119972733469666,
-    "asserted": false
+    "frozenAt": 6.4799999999999995,
+    "newShown": 3,
+    "newUnits": [
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "liveBurst": [
+      {
+        "ms": 5381,
+        "shown": 0
+      },
+      {
+        "ms": 5598,
+        "shown": 0
+      },
+      {
+        "ms": 5809,
+        "shown": 0
+      },
+      {
+        "ms": 6008,
+        "shown": 1
+      },
+      {
+        "ms": 6206,
+        "shown": 2
+      },
+      {
+        "ms": 6413,
+        "shown": 2
+      },
+      {
+        "ms": 6627,
+        "shown": 3
+      },
+      {
+        "ms": 6845,
+        "shown": 4
+      },
+      {
+        "ms": 7051,
+        "shown": 6
+      },
+      {
+        "ms": 7246,
+        "shown": 7
+      },
+      {
+        "ms": 7446,
+        "shown": 7
+      },
+      {
+        "ms": 7647,
+        "shown": 8
+      },
+      {
+        "ms": 7848,
+        "shown": 8
+      },
+      {
+        "ms": 8047,
+        "shown": 8
+      },
+      {
+        "ms": 8268,
+        "shown": 8
+      }
+    ],
+    "livePick": {
+      "ms": 6627,
+      "shown": 3
+    },
+    "liveVsNewRatio": 0.12124366910523354,
+    "asserted": "some but not all units shown on each side"
   }
 }
