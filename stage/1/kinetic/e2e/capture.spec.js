@@ -6,12 +6,11 @@
 //   1 .. 71   every slide at its final build state, video boxes masked; where the mask covers the frame the
 //             final state is compared with the moving pixels of either side masked instead, and the
 //             unmasked ratio is recorded beside it (the rule is recorded); ratios in captures/ratios.json
-//   word-build slide 71, `apple:move in character` (unit character): the final state, asserted, and a
-//             mid-build frame pair, recorded (Q-007)
+//   word-build slide 21, `apple:keyboard` (unit character, eight units with their own offsets): the final
+//             state and a mid-build frame per side where some but not all units show, asserted (Q-007)
 import { test, expect } from '@playwright/test';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import pixelmatch from 'pixelmatch';
 import { gotoLive, advanceLive, settle, indicatorHidden, LIVE_BASE, SETTLE_MS } from './live.js';
 import { compareCaptures, compareCapturesMasked, animatedMask, recordExtra, toleranceFor, videoMasks, slideByIndex, TOLERANCE, THRESHOLD, decode, pushBoundary, rawProgress, CAPTURES, DECK, FRAME_GAP_MS, animatedFrameCount, masksCoverFrame, masksCoverText, boxMask, textCoverage, dilateMask } from './compare.js';
 import { stepDuration, stepIsAutomatic, lastStep } from '../player/effects.js';
@@ -333,10 +332,63 @@ test.describe('all slides at their final build state', () => {
 });
 
 test.describe('word build (Q-007)', () => {
-  const N = 71;
-  test('word-build: slide 71 moves its text in by character; final state asserted, a mid-build frame recorded', async ({ page, browser }) => {
-    const build = slideByIndex(N).builds.find((b) => b.kpf.name === 'apple:move in character');
-    expect(build).toMatchObject({ effect: 'move-in', unit: 'character', automatic: true });
+  // Slide 21, `apple:keyboard` (unit character): eight one-character text elements (P U T U M E N T), each
+  // revealed at its own offset (Build.offsets) inside one automatic step. The capture is the final state,
+  // asserted under the default, and a mid-build frame on both sides where some but not all units show
+  // (D-020 CP3-F3, D-019 F-05). A unit counts as shown when its box holds at least half the fill-coloured
+  // pixels it holds in the final state; only the target boxes are read, never the video or other text.
+  const N = 21;
+  const MID = 1.43; // seconds after the build begins: between the third offset (1.309) and the fourth (1.556)
+
+  /** The target units of the keyboard build: { id, box (960x540), fill }. */
+  function units(build) {
+    const s = slideByIndex(N);
+    return build.targets.map((id) => {
+      const e = s.elements.find((x) => x.id === id);
+      const sx = 960 / DECK.width;
+      const sy = 540 / DECK.height;
+      const x0 = Math.max(0, Math.floor(e.box.x * sx));
+      const y0 = Math.max(0, Math.floor(e.box.y * sy));
+      const x1 = Math.min(960, Math.ceil((e.box.x + e.box.w) * sx));
+      const y1 = Math.min(540, Math.ceil((e.box.y + e.box.h) * sy));
+      return { id, box: { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }, fill: e.fill };
+    });
+  }
+
+  /** Pixels within 48 of `hex` on each channel inside `box` of a decoded frame. */
+  function fillPixels(png, box, hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    let n = 0;
+    for (let y = box.y; y < box.y + box.h; y++) {
+      for (let x = box.x; x < box.x + box.w; x++) {
+        const i = (y * png.width + x) * 4;
+        if (Math.abs(png.data[i] - r) <= 48 && Math.abs(png.data[i + 1] - g) <= 48 && Math.abs(png.data[i + 2] - b) <= 48) n += 1;
+      }
+    }
+    return n;
+  }
+
+  /** How many units a frame shows, against the final frame of the same side. */
+  function shown(frame, finalFrame, us) {
+    const f = decode(finalFrame);
+    const m = decode(frame);
+    return us.map((u) => {
+      const full = fillPixels(f, u.box, u.fill);
+      const now = fillPixels(m, u.box, u.fill);
+      return full > 0 && now >= full / 2;
+    });
+  }
+
+  test('word-build: slide 21 types its characters one by one; final state and a partial mid-build frame on both sides asserted', async ({ page, browser }) => {
+    const build = slideByIndex(N).builds.find((b) => b.kpf.name === 'apple:keyboard');
+    expect(build).toMatchObject({ effect: 'keyboard', unit: 'character', automatic: true });
+    expect(build.targets.length).toBe(8);
+    const offsets = [...build.offsets].sort((a, b) => a - b);
+    expect(offsets[2]).toBeLessThan(MID);
+    expect(offsets[3]).toBeGreaterThan(MID);
+    const us = units(build);
 
     // final state, both sides
     const presses = await liveFinalState(page, N);
@@ -345,36 +397,55 @@ test.describe('word build (Q-007)', () => {
     const fresh = await browser.newPage({ viewport: { width: 960, height: 540 } });
     await newFinalState(fresh, N);
     const newFrames = await frames(fresh, FRAME_GAP_MS, count);
-    const mine = newFrames[0];
     const r = compareFinal('word-build', N, liveFrames, newFrames, await glyphRegion(fresh, N));
-    console.log(`word-build slide ${N} unit ${build.unit} (${build.targets.length} target, ${build.duration} s, direction ${build.direction}, stagger ${build.stagger}): ${r.rule}, mismatch ratio ${r.ratio.toFixed(5)} (${r.mismatched} of ${r.unmasked} pixels), ${presses} ArrowRight, tolerance ${toleranceFor('word-build')}`);
+    console.log(`word-build slide ${N} ${build.kpf.name} unit ${build.unit} (${build.targets.length} targets, ${build.duration} s, offsets ${build.offsets.join(',')}): ${r.rule}, mismatch ratio ${r.ratio.toFixed(5)} (${r.mismatched} of ${r.unmasked} pixels), ${presses} ArrowRight, tolerance ${toleranceFor('word-build')}`);
 
-    // mid-build, new side: the automatic step frozen at 0.4 s of the 1 s character move-in; the frame must
-    // differ from the final state (the characters are still in flight)
+    // mid-build, new side: the automatic step frozen MID seconds after the keyboard build begins
     await fresh.goto('about:blank');
     await fresh.goto(PLAYER(N));
     await fresh.waitForFunction((k) => window.kinetic && window.kinetic.current() === k, N, { timeout: 60000 });
-    const frozen = await fresh.evaluate(() => window.kinetic.freezeStep(0.4));
-    expect(frozen).toBe(true);
+    const at = build.begin + MID;
+    expect(await fresh.evaluate((t) => window.kinetic.freezeStep(t), at)).toBe(true);
     await fresh.waitForTimeout(300);
-    expect(await fresh.evaluate(() => window.kinetic.state())).toMatchObject({ slide: N, done: 0, animating: true, frozen: 0.4 });
+    expect(await fresh.evaluate(() => window.kinetic.state())).toMatchObject({ slide: N, done: 0, animating: true, frozen: at });
     const mineMid = await fresh.screenshot();
     await fresh.close();
-    const finalPng = decode(mine);
-    const midPng = decode(mineMid);
-    const moved = pixelmatch(finalPng.data, midPng.data, null, 960, 540, { threshold: THRESHOLD });
-    expect(moved).toBeGreaterThan(1000);
+    const newShown = shown(mineMid, newFrames[0], us);
+    const newCount = newShown.filter(Boolean).length;
+    console.log(`word-build mid-build: new side frozen at ${at.toFixed(2)} s shows ${newCount} of ${us.length} units (${newShown.map((x) => (x ? 1 : 0)).join('')})`);
+    // some but not all units: a player that reveals every unit at once fails here (D-020 CP3-F3)
+    expect(newCount).toBeGreaterThan(0);
+    expect(newCount).toBeLessThan(us.length);
 
-    // mid-build, live side: the frame about 400 ms after the slide shows (best effort; the live player's
-    // start of an automatic build is not observable), recorded against the new frozen frame
+    // mid-build, live side: its build start is not observable, so a burst of frames spans the build window
+    // (from the build begin to its last offset, plus a margin) and the counts are recorded per frame
     await page.goto(`${LIVE_BASE}?currentSlide=${N}`, { waitUntil: 'load' });
     await page.waitForFunction(indicatorHidden, null, { timeout: 120000 });
-    await page.waitForTimeout(400);
-    const liveMid = await page.screenshot();
-    const m = compareCaptures('word-build-mid', liveMid, mineMid, videoMasks(N, 960, 540));
-    recordExtra('word-build', { slide: N, unit: build.unit, effect: build.effect, kpfName: build.kpf.name, targets: build.targets, stagger: build.stagger ?? null, rule: r.rule, midBuild: { frozenAt: 0.4, pixelsMovedVsFinal: moved, liveVsNewRatio: m.ratio, asserted: false } });
-    console.log(`word-build mid-build frame at 0.4 s: ${moved} pixels differ from the final state on the new side; live vs new ${m.ratio.toFixed(5)} (recorded, not asserted)`);
+    const t0 = Date.now();
+    await page.waitForTimeout(Math.max(0, (build.begin + offsets[0]) * 1000 - 500));
+    const burst = [];
+    do {
+      const shot = await page.screenshot();
+      burst.push({ ms: Date.now() - t0, shot });
+      await page.waitForTimeout(100);
+    } while (Date.now() - t0 < (build.begin + offsets[offsets.length - 1]) * 1000 + 1000);
+    const liveCounts = burst.map((b) => ({ ms: b.ms, shown: shown(b.shot, liveFrames[0], us).filter(Boolean).length }));
+    const partial = liveCounts.filter((c) => c.shown > 0 && c.shown < us.length);
+    // the live mid frame is the partial frame whose count is nearest the new side's
+    const pick = partial.length ? partial.reduce((best, c) => (Math.abs(c.shown - newShown.filter(Boolean).length) < Math.abs(best.shown - newShown.filter(Boolean).length) ? c : best)) : null;
+    const liveMid = pick ? burst.find((b) => b.ms === pick.ms).shot : burst[Math.floor(burst.length / 2)].shot;
+    // live against new inside the target boxes only (the video phase behind the letters is in the number)
+    const outside = new Uint8Array(960 * 540).fill(1);
+    for (const u of us) for (let y = u.box.y; y < u.box.y + u.box.h; y++) for (let x = u.box.x; x < u.box.x + u.box.w; x++) outside[y * 960 + x] = 0;
+    const m = compareCapturesMasked('word-build-mid', liveMid, mineMid, outside);
+    recordExtra('word-build', {
+      slide: N, unit: build.unit, effect: build.effect, kpfName: build.kpf.name, targets: build.targets, offsets: build.offsets, rule: r.rule,
+      midBuild: { frozenAt: at, newShown: newCount, newUnits: newShown, liveBurst: liveCounts, livePick: pick, liveVsNewRatio: m.ratio, asserted: 'some but not all units shown on each side' },
+    });
+    console.log(`word-build mid-build: live burst counts ${liveCounts.map((c) => `${c.ms}:${c.shown}`).join(' ')}; live pick ${pick ? `${pick.ms} ms, ${pick.shown} units` : 'none'}; live vs new mid inside the target boxes ${m.ratio.toFixed(5)} (recorded)`);
+    expect(partial.length).toBeGreaterThan(0);
     expect(r.unmasked).toBeGreaterThan(0);
+    for (const t of r.text) expect(t.compared, `text ${t.id} is compared`).toBeGreaterThan(0);
     expect(r.ratio).toBeLessThan(toleranceFor('word-build'));
   });
 });
