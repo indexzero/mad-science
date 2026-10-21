@@ -629,7 +629,7 @@ Source: `e2e/captures/spike-bench.json`, written by `e2e/bench.spec.js`. The liv
 
 ## Checkpoint 3
 
-All census effects map to the build vocabulary. All 71 slides convert to `decks/_all_docs/deck.json` and `media/`. The player plays every slide. The Playwright suite captures all 71 slides against the live export, proves the preload under network throttling, and finds no font request. The numbers below come from `pnpm convert` (summary in `.cache/convert-summary.json`), `pnpm test`, and the final full `pnpm e2e` run at `37526f0` on 2026-10-21 (79 passed, 0 failed, 30.4 minutes), or from `du` and `stat` over the committed tree. The capture platform is this Mac, chromium-1248 through Playwright 1.64.1, at 960x540, with `pixelmatch` 8.0.0 at threshold 0.1.
+All census effects map to the build vocabulary. All 71 slides convert to `decks/_all_docs/deck.json` and `media/`. The player plays every slide. The Playwright suite captures all 71 slides against the live export, proves the preload under network throttling, and finds no font request. The numbers below come from `pnpm convert` (summary in `.cache/convert-summary.json`), `pnpm test`, and the final full `pnpm e2e` run at `53e8e4d` on 2026-10-21 after the review fixes (78 passed; slide 64 timed out in a live screenshot and passed on its re-run; 49.5 minutes), or from `du` and `stat` over the committed tree. The capture platform is this Mac, chromium-1248 through Playwright 1.64.1, at 960x540, with `pixelmatch` 8.0.0 at threshold 0.1.
 
 ### Effect mapping
 
@@ -659,153 +659,157 @@ Totals: 310 builds in 84 steps (30 manual, 54 automatic). By unit: 259 `object`,
 
 | count | value |
 |---|---|
-| elements | 794: 485 text, 147 image, 90 video, 72 shape |
-| `source.path`, all 71 slides | `key` 0, `pdf` 557, `texture` 237 |
+| elements | 834: 485 text, 145 image, 90 video, 114 shape |
+| `source.path`, all 71 slides | `key` 0, `pdf` 599, `texture` 235 |
 | text-texture fallbacks (a text page that became a raster) | 0 |
 | mixed pages | 41 on 14 slides (slide:pages 12:2, 27:6, 29:1, 33:4, 39:3, 41:4, 44:1, 46:2, 51:1, 57:7, 58:4, 60:1, 64:1, 65:4) |
 | `mixedFallbacks` | 0 |
+| mixed pages whose body paths split around an image (a shape element under the image) | 4 (slides 29, 44, 58, 60) |
+| text elements with body paths painted after the last glyph (a `-fg` shape over the text) | 35 |
+| clip paths that govern a placement | 816: 805 rectangles, 11 other |
+| placements outside their clip, dropped | 157 glyphs (slides 44 and 62), 2 images (slide 44), 0 paths |
+| outlines a clip may cut, carrying `clip` | 7 glyphs, 146 paths |
+| images a clip cuts, left to the leaf crop | 66, each 1 to 2 page pixels at the page edge |
+| dashed stroke paths (`dash`) | 38 on slides 28, 31, 43, 44, 61, 62, 63 |
 | mixed pages with an image between glyph rows | 11 |
 | picture pages | 73: 70 take their embedded image stream, 3 take a 1x raster |
 | images upside down in their page (`flip: "vertical"`) | 57 |
 | composite-as-content slides | 10: 1, 23, 31, 43, 44, 53, 54, 61, 62, 63 |
-| hidden elements | 558 of 794 |
+| hidden elements | 587 of 834 |
 | orphans (hidden, no build step) | 0 |
 | `.key` parse | 5,116 strings; 217 of 485 text elements have every word as a whole token in a harvested run; the font condition is not evaluable, so `key` stays 0 (see Checkpoint 2) |
 | font files that `mutool extract` wrote | 0 |
-| `deck.json` | 12,536,963 bytes; 2,037 words; 10,501 glyph outlines |
+| `deck.json` | 12,390,998 bytes; 2,011 words; 10,344 glyph outlines |
 
 Every `texture` element is an image or a video. No text page fell back to a raster.
 
-Convert wall time: 39.6 s (`time pnpm convert --key .../2025/_all_docs.final.key`, real) from a warm cache. The cache holds the slide JSON, the PDFs, the GIFs, and the SVG pages, and the 73 transcodes are reused from `media/shared`. The run changed only `source.convertedAt` and `source.converter` in `deck.json`, which are the committer date and short sha of HEAD by design. No media file changed. The committed `deck.json` keeps the values of its own convert (`1e5e7d6`).
+Convert wall time: 39.6 s (`time pnpm convert --key .../2025/_all_docs.final.key`, real) from a warm cache. The cache holds the slide JSON, the PDFs, the GIFs, and the SVG pages, and the 73 transcodes are reused from `media/shared`. The run changed only `source.convertedAt` and `source.converter` in `deck.json`, which are the committer date and short sha of HEAD by design. No media file changed. The committed `deck.json` keeps the values of its own convert (`4e4e1c1`, the convert for the dash fix).
 
 ### Captures, all 71
 
-Each slide is captured at its final build state on both sides. Rule `masked` masks the video boxes on both sides and compares the rest. Where the video boxes cover the frame, that comparison has no pixels, so rule `animated-pixels-masked` compares the final state with the pixels that move on either side masked out. Each side takes one frame every 400 ms over the longest video loop of the slide, 3 to 32 frames, and the mask is dilated by 2 pixels. Before this checkpoint the rule took three frames. On slide 64 that missed the pixels that the Earth GIF moves later in its 5.72 s loop, and one run measured 0.03382 from the GIF phase alone. With the loop sampled, three runs of slide 64 measured 0.00287, 0.00288, and 0.00289.
+Each slide is captured at its final build state on both sides. Rule `masked` masks the video boxes on both sides and compares the rest. Where the video boxes cover the frame, or overlap a text box, rule `animated-pixels-masked` compares the final state with the pixels that move on either side masked out. On the glyph pixels of `deck.json` (filled on a canvas by the test, not by the player, and dilated by 2 pixels) only the motion of the live side counts, so a player that fails to draw a glyph over a video is seen. The spec asserts that every text box has at least one compared pixel. Each side takes one frame every 400 ms over the longest video loop of the slide, 3 to 32 frames, and the mask is dilated by 2 pixels. Before this checkpoint the rule took three frames. On slide 64 that missed the pixels that the Earth GIF moves later in its 5.72 s loop, and one run measured 0.03382 from the GIF phase alone. With the loop sampled, three runs of slide 64 measured 0.00287, 0.00288, and 0.00289.
 
 | measure | value |
 |---|---|
-| slides | 71, all under their tolerance |
-| min | 0 (slide 3) |
-| median | 0.00099 |
-| max | 0.03673 (slide 60, override 0.045) |
-| slides above 0.01 | 27 (0.01133), 43 (0.01135), 44 (0.01825), 52 (0.01912), 60 (0.03673), 61 (0.01066), 62 (0.01219) |
-| rule `masked` | 37 slides: 1, 3, 4, 5, 7, 8, 11, 12, 15, 16, 19, 23, 24, 28, 31, 39, 42, 43, 44, 47, 49, 50, 51, 52, 53, 54, 56, 58, 59, 61, 62, 63, 66, 68, 69, 70, 71 |
-| rule `animated-pixels-masked` | 34 slides: 2, 6, 9, 10, 13, 14, 17, 18, 20, 21, 22, 25, 26, 27, 29, 30, 32, 33, 34, 35, 36, 37, 38, 40, 41, 45, 46, 48, 55, 57, 60, 64, 65, 67 |
+| slides | 71, all under the 0.03 default |
+| min | 0 (slides 11, 53, 54) |
+| median | 0.00149 |
+| max | 0.01912 (slide 52) |
+| slides above 0.01 | 27 (0.01140), 44 (0.01425), 52 (0.01912), 61 (0.01010), 65 (0.01044) |
+| rule `masked` | 27 slides: 1, 4, 5, 11, 12, 19, 23, 24, 28, 31, 39, 42, 43, 44, 50, 51, 52, 53, 54, 58, 61, 62, 63, 66, 68, 69, 71 |
+| rule `animated-pixels-masked` | 44 slides: 2, 3, 6, 7, 8, 9, 10, 13, 14, 15, 16, 17, 18, 20, 21, 22, 25, 26, 27, 29, 30, 32, 33, 34, 35, 36, 37, 38, 40, 41, 45, 46, 47, 48, 49, 55, 56, 57, 59, 60, 64, 65, 67, 70 |
+| text boxes compared | every text box of every slide has compared pixels |
 | default tolerance | 0.03, not raised |
 
-Overrides in `e2e/tolerance.json` (one):
+Overrides in `e2e/tolerance.json`: none. The slide 60 override (0.045) is deleted. Its reason was false: the mismatch was a z-order defect (see Review fixes). Slide 60 now measures 0.00561.
 
-| slide | tolerance | measured | reason |
-|---|---|---|---|
-| 60 | 0.045 | 0.03673 | a full-slide code listing in small monospace text and a hatched red box: the mismatched pixels sit on glyph and hatch edges (the live PDF raster renders the thin strokes heavier than the Path2D fill), no layout or colour difference; measured 0.037 |
+Masked text. Ten slides move from `masked` to `animated-pixels-masked` because a video box overlaps a text box: 3, 7, 8, 15, 16, 47, 49, 56, 59, 70. Slides 3, 7, and 15 compared 2,022, 1,080, and 11,291 pixels before, all outside their text. They now compare 270,202, 433,164, and 130,531 pixels, and inside their text boxes 222,006, 433,164, and 37,186.
 
-Under rule `masked`, slide 7 compares 1,080 pixels and slide 3 compares 2,022, because their video boxes cover 99.8 and 99.6 percent of the frame. The suite asserts that at least one pixel is compared. Those two slides prove only their uncovered strip.
+Per slide (`frames` is the frame count per side; `text boxes compared` counts the text boxes with at least one compared pixel):
 
-Per slide (`frames` is the frame count per side):
-
-| # | rule | ratio | compared pixels | masked fraction | frames | tolerance |
-|---|---|---|---|---|---|---|
-| 1 | masked | 0.00002 | 518,400 | 0 | 3 | 0.03 |
-| 2 | animated-pixels-masked | 0.00048 | 402,284 | 0.224 | 15 | 0.03 |
-| 3 | masked | 0.00000 | 2,022 | 0.996 | 3 | 0.03 |
-| 4 | masked | 0.00060 | 518,400 | 0 | 3 | 0.03 |
-| 5 | masked | 0.00005 | 165,240 | 0.681 | 3 | 0.03 |
-| 6 | animated-pixels-masked | 0.00005 | 455,420 | 0.121 | 6 | 0.03 |
-| 7 | masked | 0.00000 | 1,080 | 0.998 | 3 | 0.03 |
-| 8 | masked | 0.00001 | 164,160 | 0.683 | 3 | 0.03 |
-| 9 | animated-pixels-masked | 0.00129 | 475,580 | 0.083 | 6 | 0.03 |
-| 10 | animated-pixels-masked | 0.00025 | 477,393 | 0.079 | 4 | 0.03 |
-| 11 | masked | 0.00000 | 140,160 | 0.73 | 3 | 0.03 |
-| 12 | masked | 0.00161 | 518,400 | 0 | 3 | 0.03 |
-| 13 | animated-pixels-masked | 0.00426 | 434,711 | 0.161 | 15 | 0.03 |
-| 14 | animated-pixels-masked | 0.00173 | 389,787 | 0.248 | 5 | 0.03 |
-| 15 | masked | 0.00000 | 11,291 | 0.978 | 3 | 0.03 |
-| 16 | masked | 0.00003 | 130,140 | 0.749 | 3 | 0.03 |
-| 17 | animated-pixels-masked | 0.00045 | 396,957 | 0.234 | 5 | 0.03 |
-| 18 | animated-pixels-masked | 0.00101 | 119,521 | 0.769 | 8 | 0.03 |
-| 19 | masked | 0.00143 | 518,400 | 0 | 3 | 0.03 |
-| 20 | animated-pixels-masked | 0.00028 | 450,280 | 0.131 | 21 | 0.03 |
-| 21 | animated-pixels-masked | 0.00019 | 334,695 | 0.354 | 13 | 0.03 |
-| 22 | animated-pixels-masked | 0.00404 | 504,532 | 0.027 | 8 | 0.03 |
-| 23 | masked | 0.00605 | 518,400 | 0 | 3 | 0.03 |
-| 24 | masked | 0.00546 | 518,400 | 0 | 3 | 0.03 |
-| 25 | animated-pixels-masked | 0.00073 | 309,325 | 0.403 | 10 | 0.03 |
-| 26 | animated-pixels-masked | 0.00064 | 303,481 | 0.415 | 31 | 0.03 |
-| 27 | animated-pixels-masked | 0.01133 | 512,944 | 0.011 | 14 | 0.03 |
-| 28 | masked | 0.00196 | 518,400 | 0 | 3 | 0.03 |
-| 29 | animated-pixels-masked | 0.00636 | 381,049 | 0.265 | 5 | 0.03 |
-| 30 | animated-pixels-masked | 0.00012 | 385,600 | 0.256 | 10 | 0.03 |
-| 31 | masked | 0.00954 | 518,400 | 0 | 3 | 0.03 |
-| 32 | animated-pixels-masked | 0.00013 | 447,492 | 0.137 | 5 | 0.03 |
-| 33 | animated-pixels-masked | 0.00600 | 270,013 | 0.479 | 10 | 0.03 |
-| 34 | animated-pixels-masked | 0.00414 | 518,400 | 0 | 8 | 0.03 |
-| 35 | animated-pixels-masked | 0.00000 | 472,678 | 0.088 | 13 | 0.03 |
-| 36 | animated-pixels-masked | 0.00366 | 355,208 | 0.315 | 11 | 0.03 |
-| 37 | animated-pixels-masked | 0.00000 | 437,054 | 0.157 | 4 | 0.03 |
-| 38 | animated-pixels-masked | 0.00106 | 303,787 | 0.414 | 6 | 0.03 |
-| 39 | masked | 0.00283 | 518,400 | 0 | 3 | 0.03 |
-| 40 | animated-pixels-masked | 0.00087 | 435,789 | 0.159 | 3 | 0.03 |
-| 41 | animated-pixels-masked | 0.00351 | 281,152 | 0.458 | 7 | 0.03 |
-| 42 | masked | 0.00005 | 129,600 | 0.75 | 3 | 0.03 |
-| 43 | masked | 0.01135 | 518,400 | 0 | 3 | 0.03 |
-| 44 | masked | 0.01825 | 518,400 | 0 | 3 | 0.03 |
-| 45 | animated-pixels-masked | 0.00076 | 400,784 | 0.227 | 8 | 0.03 |
-| 46 | animated-pixels-masked | 0.00035 | 510,992 | 0.014 | 16 | 0.03 |
-| 47 | masked | 0.00019 | 116,145 | 0.776 | 3 | 0.03 |
-| 48 | animated-pixels-masked | 0.00029 | 175,682 | 0.661 | 5 | 0.03 |
-| 49 | masked | 0.00032 | 81,000 | 0.844 | 3 | 0.03 |
-| 50 | masked | 0.00497 | 518,400 | 0 | 3 | 0.03 |
-| 51 | masked | 0.00310 | 518,400 | 0 | 3 | 0.03 |
-| 52 | masked | 0.01912 | 518,400 | 0 | 3 | 0.03 |
-| 53 | masked | 0.00000 | 518,400 | 0 | 3 | 0.03 |
-| 54 | masked | 0.00000 | 518,400 | 0 | 3 | 0.03 |
-| 55 | animated-pixels-masked | 0.00008 | 405,247 | 0.218 | 4 | 0.03 |
-| 56 | masked | 0.00007 | 138,997 | 0.732 | 3 | 0.03 |
-| 57 | animated-pixels-masked | 0.00453 | 517,059 | 0.003 | 16 | 0.03 |
-| 58 | masked | 0.00186 | 518,400 | 0 | 3 | 0.03 |
-| 59 | masked | 0.00011 | 73,113 | 0.859 | 3 | 0.03 |
-| 60 | animated-pixels-masked | 0.03673 | 518,400 | 0 | 15 | 0.045 |
-| 61 | masked | 0.01066 | 518,400 | 0 | 3 | 0.03 |
-| 62 | masked | 0.01219 | 518,400 | 0 | 3 | 0.03 |
-| 63 | masked | 0.00995 | 518,400 | 0 | 3 | 0.03 |
-| 64 | animated-pixels-masked | 0.00294 | 180,172 | 0.652 | 16 | 0.03 |
-| 65 | animated-pixels-masked | 0.00243 | 233,886 | 0.549 | 6 | 0.03 |
-| 66 | masked | 0.00628 | 518,400 | 0 | 3 | 0.03 |
-| 67 | animated-pixels-masked | 0.00099 | 295,081 | 0.431 | 4 | 0.03 |
-| 68 | masked | 0.00477 | 518,400 | 0 | 3 | 0.03 |
-| 69 | masked | 0.00018 | 518,400 | 0 | 3 | 0.03 |
-| 70 | masked | 0.00081 | 40,763 | 0.921 | 3 | 0.03 |
-| 71 | masked | 0.00157 | 132,030 | 0.745 | 3 | 0.03 |
+| # | rule | ratio | compared pixels | masked fraction | text boxes compared | frames | tolerance |
+|---|---|---|---|---|---|---|---|
+| 1 | masked | 0.00002 | 518,400 | 0 | 1 of 1 | 3 | 0.03 |
+| 2 | animated-pixels-masked | 0.00049 | 397,843 | 0.233 | 1 of 1 | 15 | 0.03 |
+| 3 | animated-pixels-masked | 0.00028 | 270,202 | 0.479 | 2 of 2 | 17 | 0.03 |
+| 4 | masked | 0.00060 | 518,400 | 0 | 2 of 2 | 3 | 0.03 |
+| 5 | masked | 0.00005 | 165,240 | 0.681 | 7 of 7 | 3 | 0.03 |
+| 6 | animated-pixels-masked | 0.00002 | 456,321 | 0.12 | 1 of 1 | 6 | 0.03 |
+| 7 | animated-pixels-masked | 0.00421 | 433,164 | 0.164 | 9 of 9 | 3 | 0.03 |
+| 8 | animated-pixels-masked | 0.00040 | 276,355 | 0.467 | 1 of 1 | 14 | 0.03 |
+| 9 | animated-pixels-masked | 0.00124 | 480,356 | 0.073 | 3 of 3 | 6 | 0.03 |
+| 10 | animated-pixels-masked | 0.00308 | 483,428 | 0.067 | 2 of 2 | 4 | 0.03 |
+| 11 | masked | 0.00000 | 140,160 | 0.73 | 0 of 0 | 3 | 0.03 |
+| 12 | masked | 0.00161 | 518,400 | 0 | 2 of 2 | 3 | 0.03 |
+| 13 | animated-pixels-masked | 0.00842 | 436,612 | 0.158 | 0 of 0 | 15 | 0.03 |
+| 14 | animated-pixels-masked | 0.00148 | 399,235 | 0.23 | 1 of 1 | 5 | 0.03 |
+| 15 | animated-pixels-masked | 0.00442 | 130,531 | 0.748 | 1 of 1 | 31 | 0.03 |
+| 16 | animated-pixels-masked | 0.00003 | 437,359 | 0.156 | 3 of 3 | 11 | 0.03 |
+| 17 | animated-pixels-masked | 0.00048 | 397,719 | 0.233 | 3 of 3 | 5 | 0.03 |
+| 18 | animated-pixels-masked | 0.00199 | 113,607 | 0.781 | 2 of 2 | 8 | 0.03 |
+| 19 | masked | 0.00143 | 518,400 | 0 | 3 of 3 | 3 | 0.03 |
+| 20 | animated-pixels-masked | 0.00028 | 451,732 | 0.129 | 2 of 2 | 21 | 0.03 |
+| 21 | animated-pixels-masked | 0.00017 | 337,559 | 0.349 | 9 of 9 | 13 | 0.03 |
+| 22 | animated-pixels-masked | 0.00404 | 504,543 | 0.027 | 197 of 197 | 8 | 0.03 |
+| 23 | masked | 0.00605 | 518,400 | 0 | 1 of 1 | 3 | 0.03 |
+| 24 | masked | 0.00546 | 518,400 | 0 | 55 of 55 | 3 | 0.03 |
+| 25 | animated-pixels-masked | 0.00089 | 313,908 | 0.394 | 35 of 35 | 10 | 0.03 |
+| 26 | animated-pixels-masked | 0.00054 | 307,710 | 0.406 | 1 of 1 | 31 | 0.03 |
+| 27 | animated-pixels-masked | 0.01140 | 511,221 | 0.014 | 16 of 16 | 14 | 0.03 |
+| 28 | masked | 0.00188 | 518,400 | 0 | 2 of 2 | 3 | 0.03 |
+| 29 | animated-pixels-masked | 0.00068 | 361,113 | 0.303 | 1 of 1 | 5 | 0.03 |
+| 30 | animated-pixels-masked | 0.00011 | 386,717 | 0.254 | 1 of 1 | 10 | 0.03 |
+| 31 | masked | 0.00900 | 518,400 | 0 | 1 of 1 | 3 | 0.03 |
+| 32 | animated-pixels-masked | 0.00016 | 451,077 | 0.13 | 3 of 3 | 5 | 0.03 |
+| 33 | animated-pixels-masked | 0.00604 | 269,773 | 0.48 | 4 of 4 | 10 | 0.03 |
+| 34 | animated-pixels-masked | 0.00414 | 518,400 | 0 | 2 of 2 | 8 | 0.03 |
+| 35 | animated-pixels-masked | 0.00001 | 472,461 | 0.089 | 1 of 1 | 13 | 0.03 |
+| 36 | animated-pixels-masked | 0.00573 | 360,938 | 0.304 | 1 of 1 | 11 | 0.03 |
+| 37 | animated-pixels-masked | 0.00149 | 458,478 | 0.116 | 1 of 1 | 4 | 0.03 |
+| 38 | animated-pixels-masked | 0.00598 | 326,017 | 0.371 | 3 of 3 | 6 | 0.03 |
+| 39 | masked | 0.00283 | 518,400 | 0 | 10 of 10 | 3 | 0.03 |
+| 40 | animated-pixels-masked | 0.00077 | 446,425 | 0.139 | 7 of 7 | 3 | 0.03 |
+| 41 | animated-pixels-masked | 0.00388 | 281,819 | 0.456 | 4 of 4 | 7 | 0.03 |
+| 42 | masked | 0.00005 | 129,600 | 0.75 | 7 of 7 | 3 | 0.03 |
+| 43 | masked | 0.00751 | 518,400 | 0 | 1 of 1 | 3 | 0.03 |
+| 44 | masked | 0.01425 | 518,400 | 0 | 1 of 1 | 3 | 0.03 |
+| 45 | animated-pixels-masked | 0.00071 | 404,740 | 0.219 | 3 of 3 | 8 | 0.03 |
+| 46 | animated-pixels-masked | 0.00038 | 510,812 | 0.015 | 10 of 10 | 16 | 0.03 |
+| 47 | animated-pixels-masked | 0.00084 | 303,387 | 0.415 | 2 of 2 | 12 | 0.03 |
+| 48 | animated-pixels-masked | 0.00035 | 177,764 | 0.657 | 1 of 1 | 5 | 0.03 |
+| 49 | animated-pixels-masked | 0.00078 | 485,385 | 0.064 | 1 of 1 | 9 | 0.03 |
+| 50 | masked | 0.00497 | 518,400 | 0 | 1 of 1 | 3 | 0.03 |
+| 51 | masked | 0.00310 | 518,400 | 0 | 3 of 3 | 3 | 0.03 |
+| 52 | masked | 0.01912 | 518,400 | 0 | 0 of 0 | 3 | 0.03 |
+| 53 | masked | 0.00000 | 518,400 | 0 | 0 of 0 | 3 | 0.03 |
+| 54 | masked | 0.00000 | 518,400 | 0 | 0 of 0 | 3 | 0.03 |
+| 55 | animated-pixels-masked | 0.00009 | 403,433 | 0.222 | 3 of 3 | 4 | 0.03 |
+| 56 | animated-pixels-masked | 0.00005 | 347,072 | 0.33 | 3 of 3 | 16 | 0.03 |
+| 57 | animated-pixels-masked | 0.00453 | 517,050 | 0.003 | 7 of 7 | 16 | 0.03 |
+| 58 | masked | 0.00186 | 518,400 | 0 | 5 of 5 | 3 | 0.03 |
+| 59 | animated-pixels-masked | 0.00010 | 182,460 | 0.648 | 1 of 1 | 16 | 0.03 |
+| 60 | animated-pixels-masked | 0.00561 | 518,400 | 0 | 2 of 2 | 15 | 0.03 |
+| 61 | masked | 0.01010 | 518,400 | 0 | 1 of 1 | 3 | 0.03 |
+| 62 | masked | 0.00843 | 518,400 | 0 | 1 of 1 | 3 | 0.03 |
+| 63 | masked | 0.00962 | 518,400 | 0 | 1 of 1 | 3 | 0.03 |
+| 64 | animated-pixels-masked | 0.00293 | 182,679 | 0.648 | 1 of 1 | 16 | 0.03 |
+| 65 | animated-pixels-masked | 0.01044 | 228,028 | 0.56 | 11 of 11 | 6 | 0.03 |
+| 66 | masked | 0.00628 | 518,400 | 0 | 2 of 2 | 3 | 0.03 |
+| 67 | animated-pixels-masked | 0.00157 | 301,622 | 0.418 | 1 of 1 | 4 | 0.03 |
+| 68 | masked | 0.00477 | 518,400 | 0 | 4 of 4 | 3 | 0.03 |
+| 69 | masked | 0.00018 | 518,400 | 0 | 4 of 4 | 3 | 0.03 |
+| 70 | animated-pixels-masked | 0.00675 | 517,012 | 0.003 | 3 of 3 | 10 | 0.03 |
+| 71 | masked | 0.00145 | 132,030 | 0.745 | 2 of 2 | 3 | 0.03 |
 
 ### Word build (Q-007)
 
-Slide 71, `apple:move in character`, unit `character`, effect `move-in`, rule `masked`: 0.00145 (192 of 132,030 pixels), under 0.03. The mid-build frame at 0.4 s of the new player differs from its final state by 126,260 pixels, so the characters are in flight. Live against new at that moment is 0.612, recorded and not asserted, because the start of an automatic build on the live player cannot be observed.
+Slide 21, `apple:keyboard`, unit `character`, effect `keyboard`: eight one-character text elements (P U T U M E N T), each revealed at its own offset (0.712 to 2.287 s after the build begins at 5.05 s). The final state measures 0.00020 (67 of 336,935 pixels, rule `animated-pixels-masked`), under 0.03. The new player frozen at 6.48 s shows 3 of 8 units (`11100000`). The live side takes a burst of frames over the build window. It showed 0, 1, 2, 3, 4, 6, 7, then 8 units, and the frame at 6,627 ms shows 3. A unit counts as shown when its box holds at least half of its final count of fill-coloured pixels. Only the target boxes are read. The test asserts some but not all units on each side, and it fails when every unit is revealed at once. Live against new inside the target boxes at the mid frame is 0.12124, recorded and not asserted (the video phase behind the letters is in it). Slide 71 moved its quote as one block (one texture, one `position` animation), so it was not a per-unit build.
 
 ### Preload under throttling
 
-CDP `Network.emulateNetworkConditions` at 1.5 Mbit/s down, 750 kbit/s up, 150 ms latency, applied before the player loads. The first slide is drawn after 67,744 ms, because `deck.json` (12,536,963 bytes) loads under the throttle.
+CDP `Network.emulateNetworkConditions` at 1.5 Mbit/s down, 750 kbit/s up, 150 ms latency, applied before the player loads. The first slide is drawn after 67,037 ms, because `deck.json` (12,390,998 bytes) loads under the throttle.
 
 | measure | value |
 |---|---|
-| slowest preload | slide 67 (n+2 is 69), 23,436 ms, waived: 4,332,357 bytes, floor 23,856 ms |
-| slowest preload within the 10 s bar | slide 28 (n+2 is 30), 9,747 ms, 1,783,570 bytes |
-| largest frame delta, 30 frames after each of 70 changes | 16.8 ms (1 to 2); every change measured 16.7 or 16.8 ms |
+| slowest preload | slide 67 (n+2 is 69), 23,443 ms, waived: 4,332,357 bytes, floor 23,856 ms |
+| slowest preload within the 10 s bar | slide 28 (n+2 is 30), 9,780 ms, 1,783,570 bytes |
+| largest frame delta, 30 frames after each of 70 changes | 49.9 ms (50 to 51), under the 50 ms bar; the host had a 1-minute load up to 14.7 from `mediaanalysisd` and Spotlight during this session |
 | failures | 0 |
 
 Waivers. The 10 s bar moves 1,875,000 bytes at this throttle. Where the media still pending at goto(n) needs more than 10 s by its transfer floor (bytes at 1.5 Mbit/s plus one 150 ms latency per round of six requests), the spec asserts the floor plus 10 s instead and records the waiver in `e2e/captures/preload.json`. This is a deviation from the design's bar. The supervisor decides at the gate.
 
 | n | pending | bytes | requests | floor ms | bar ms | preload ms |
 |---|---|---|---|---|---|---|
-| 1 | 2, 3 | 2,063,675 | 12 | 11,306 | 21,306 | 11,383 |
-| 2 | 4 | 2,096,523 | 11 | 11,481 | 21,481 | 11,410 |
-| 10 | 12 | 2,533,464 | 6 | 13,662 | 23,662 | 13,775 |
-| 13 | 15 | 2,491,341 | 12 | 13,587 | 23,587 | 13,877 |
-| 44 | 46 | 1,995,752 | 12 | 10,944 | 20,944 | 10,915 |
-| 47 | 49 | 2,173,165 | 12 | 11,890 | 21,890 | 11,860 |
-| 48 | 50 | 2,479,669 | 6 | 13,375 | 23,375 | 13,463 |
-| 62 | 64 | 1,991,188 | 11 | 10,920 | 20,920 | 10,859 |
-| 67 | 69 | 4,332,357 | 25 | 23,856 | 33,856 | 23,436 |
-| 68 | 70 | 2,945,976 | 13 | 16,162 | 26,162 | 15,959 |
+| 1 | 2, 3 | 2,063,675 | 12 | 11,306 | 21,306 | 11,420 |
+| 2 | 4 | 2,096,523 | 11 | 11,481 | 21,481 | 11,448 |
+| 10 | 12 | 2,533,464 | 6 | 13,662 | 23,662 | 13,755 |
+| 13 | 15 | 2,491,341 | 12 | 13,587 | 23,587 | 13,896 |
+| 44 | 46 | 1,995,752 | 12 | 10,944 | 20,944 | 10,911 |
+| 47 | 49 | 2,173,165 | 12 | 11,890 | 21,890 | 11,858 |
+| 48 | 50 | 2,479,669 | 6 | 13,375 | 23,375 | 13,462 |
+| 62 | 64 | 1,991,188 | 11 | 10,920 | 20,920 | 10,899 |
+| 67 | 69 | 4,332,357 | 25 | 23,856 | 33,856 | 23,443 |
+| 68 | 70 | 2,945,976 | 13 | 16,162 | 26,162 | 15,994 |
 
 The frame bar. The first full run of this checkpoint (D-017, 2026-10-21 01:30Z) failed five changes: 40 to 41 at 83.3 ms, 56 to 57 at 100 ms, 62 to 63 at 83.2 ms, 63 to 64 at 116.6 ms, and 66 to 67 at 116.5 ms. The failure did not come back in five later runs with the same frame loop: the preload spec alone, the whole suite with the capture spec ahead of it, the final full run, and two probes of slides 36 to 68 with 4 and 12 busy-loop processes on the 10 CPUs (1-minute load up to 37.8). Every change in them held 16.8 ms. No player code path was shown to cause it, so the frame code is unchanged. The cause is not verified. That run had no recorded load, and the host had a kernel panic about 37 minutes after it. The bar (50 ms over the 30 frames after a change) is not raised and not waived.
 
@@ -813,7 +817,7 @@ One preload defect was found and fixed while that was probed. `goto(n)` loads n+
 
 ### Fonts
 
-`e2e/fonts.spec.js` plays all 71 slides: 385 requests, 0 font requests. `find stage/1/kinetic -type f` for `.ttf`, `.otf`, `.woff`, `.woff2`, and `.cff` outside `node_modules` prints nothing.
+`e2e/fonts.spec.js` plays all 71 slides: 387 requests, 0 font requests. `find stage/1/kinetic -type f` for `.ttf`, `.otf`, `.woff`, `.woff2`, and `.cff` outside `node_modules` prints nothing.
 
 ### GIF transcode table
 
@@ -904,7 +908,19 @@ This table is the evidence for presentations#6. 168,152,577 bytes of GIF become 
 
 ### Files the suite writes
 
-A full `pnpm e2e` writes `e2e/captures/<n>.*` (gitignored) and rewrites these committed files: `spike-*` (the three spike capture sets, `spike-2-final.*`, and `spike-bench.json`), `ratios.json`, `preload.json`, and `word-build*`. This checkpoint commits them on purpose as the evidence of the final run (`3fc9d05`). No other committed file changes.
+A full `pnpm e2e` writes `e2e/captures/<n>.*` (gitignored) and rewrites these committed files: `spike-*` (the three spike capture sets, `spike-2-final.*`, and `spike-bench.json`), `ratios.json`, `preload.json`, and `word-build*`. This checkpoint commits them on purpose as the evidence of the final run (`3fc9d05`, then `e453930` after the review fixes). No other committed file changes.
+
+### Review fixes
+
+The CP3 reviews D-019 and D-020 found four majors and one minor. This list closes them. Each fix has a regression that fails without it.
+
+| finding | cause | fix commit | regression |
+|---|---|---|---|
+| D-019 F-01 / D-020 CP3-F1, z-order | A mixed page drew all its body paths after its images. Slide 60 drew a 75 percent black image under its red label box (0.03673 under a false override). Slides 29 and 44 hid emoji under a page fill. | `3383baf`: the paths before an image become a shape element under it. The slide 60 override is deleted. | `convert/test/pdf.test.js` path, image, path order; `convert/test/index.test.js` element order of slides 29, 44, 60; slide 60 measures 0.00561 at 0.03 |
+| D-019 F-02 / D-020 CP3-F2, masked text | Under rule `masked` the video boxes hid every glyph of slides 3, 7, and 15. A player that drew no glyph passed at 0.00000. | `60f0540`: a slide whose video box overlaps a text box takes `animated-pixels-masked`. On the glyph pixels only live motion counts. Every text box must have a compared pixel. | the no-glyph mutation fails on slides 3 (0.08022), 7 (0.08168), and 15 (0.13710) |
+| D-019 F-03, clip paths | `convert/pdf.js` counted `<clipPath>` and never applied it. Slide 62 drew its clipped Result block. Slide 44 drew two clipped step boxes. | `4e4e1c1`: a placement outside its clip is dropped. An outline that a clip may cut carries `clip`. Paths painted after the last glyph draw over the text. | `convert/test/pdf.test.js` clipped placement; `convert/test/index.test.js` text of slides 44 and 62 |
+| D-020 CP3-F3 (D-019 F-05), word build | Slide 71 moved its quote as one block, and the motion check counted the video and the subtitle. | `5786e59`: the capture moves to the `apple:keyboard` build of slide 21. It asserts a partial reveal inside the target boxes on both sides. | revealing every unit at once fails (`8 of 8 units`, expected under 8) |
+| D-019 F-04, dash arrays (MINOR) | `stroke-dasharray` was dropped, so dashed boxes and edges drew solid. | `53e8e4d`: one optional field, `dash`, drawn with `setLineDash` | `convert/test/pdf.test.js` dash array; slide 43 drops from 0.01135 to 0.00751 |
 
 ### Checkpoint 3 Done
 
@@ -914,7 +930,7 @@ A full `pnpm e2e` writes `e2e/captures/<n>.*` (gitignored) and rewrites these co
 | player plays every unit and effect | `player/effects.js`, `player/draw.js`, `player/player.js`; `convert/test/player.test.js` |
 | all 71 slides converted; `source.path`, text-texture fallbacks, mixed pages, composite-as-content, orphans | Checkpoint 3, Converter; `decks/_all_docs/deck.json`; `.cache/convert-summary.json` |
 | convert wall time and idempotence | Checkpoint 3, Converter |
-| all 71 captured, 71-ratio summary, rule per slide, override with reason | Checkpoint 3, Captures; `e2e/capture.spec.js`; `e2e/captures/ratios.json`; `e2e/tolerance.json` |
+| all 71 captured, 71-ratio summary, rule per slide, no override | Checkpoint 3, Captures; `e2e/capture.spec.js`; `e2e/captures/ratios.json`; `e2e/tolerance.json` |
 | overlapping video masks counted once | `e2e/compare.js` `maskedPixels`; `convert/test/compare.test.js` (`8537585`) |
 | moving-pixel mask over the video loop | `e2e/compare.js` `animatedFrameCount`; `convert/test/compare.test.js` (`210b266`) |
 | word-build capture | Checkpoint 3, Word build; `e2e/captures/word-build*` |
@@ -923,4 +939,4 @@ A full `pnpm e2e` writes `e2e/captures/<n>.*` (gitignored) and rewrites these co
 | zero font requests, zero font files | Checkpoint 3, Fonts; `e2e/fonts.spec.js` |
 | per-GIF transcode table, `ffmpeg` 9.0.1, presentations#6 | Checkpoint 3, GIF transcode table |
 | budget under 200 MB and 20 MB per file | Checkpoint 3, Budget; `convert/test/budget.test.js` |
-| one full `pnpm e2e` green | 79 passed, 0 failed, 30.4 minutes at `37526f0` |
+| one full `pnpm e2e` green | 79 passed, 0 failed, 30.4 minutes at `37526f0`; after the review fixes at `53e8e4d`: 78 passed, and slide 64 timed out in a live screenshot and passed on its re-run |
