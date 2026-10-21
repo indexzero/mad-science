@@ -900,7 +900,7 @@ This table is the evidence for presentations#6. 168,152,577 bytes of GIF become 
 
 ### Budget
 
-`du -sk decks/_all_docs/media`: 61,580 KB. The files sum to 57,700,551 bytes in 338 files (219 under `media/shared`), 28.9 percent of the 200 MB budget. The largest file is `media/AFB598FC-F6E6-4CF4-959F-A9E10EE00990/DF0DEDC0701C7436568A6F0A7A9F970B.png` at 2,191,640 bytes, 11 percent of the 20 MB file budget. `convert/test/budget.test.js` asserts both limits against the committed tree and that every file is referenced.
+`du -sk decks/_all_docs/media`: 61,368 KB at the push. An earlier read gave 61,580 KB with the same files, because `du` counts disk blocks. The files sum to 57,700,551 bytes in 338 files (219 under `media/shared`), 28.9 percent of the 200 MB budget. The largest file is `media/AFB598FC-F6E6-4CF4-959F-A9E10EE00990/DF0DEDC0701C7436568A6F0A7A9F970B.png` at 2,191,640 bytes, 11 percent of the 20 MB file budget. `convert/test/budget.test.js` asserts both limits against the committed tree and that every file is referenced.
 
 ### Files the suite writes
 
