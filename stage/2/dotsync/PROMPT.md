@@ -1,5 +1,5 @@
 ---
-stage: 1
+stage: 2
 importance: "medium: the owner's agent state survives a machine loss."
 chats: [7a4c75e8]
 design: "orckits#17"
