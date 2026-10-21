@@ -264,10 +264,11 @@ async fn put_action(
 ) -> Result<Put, StoreError> {
     match action {
         Action::Upload { rel, entry } => {
-            // Never read through a symlink (section 8.5). The path must still be
-            // the regular file that `open_regular` stats.
+            // Never read through a symlink (section 8.5). Every ancestor must be a
+            // real directory and the file must carry the inode the scan recorded.
             let abs = root_dir.join(rel);
-            let mut file = tokio::fs::File::from_std(scan::open_regular(root_dir, rel)?);
+            let mut file =
+                tokio::fs::File::from_std(scan::open_regular(root_dir, rel, entry.inode)?);
             let mut bytes = Vec::new();
             file.read_to_end(&mut bytes)
                 .await
@@ -665,6 +666,41 @@ mod tests {
         assert!(report.done.is_empty(), "{report:?}");
         assert!(matches!(report.failed, Some((0, _))), "{report:?}");
         assert!(fx.keys().await.is_empty());
+    }
+
+    #[tokio::test]
+    async fn store_upload_never_reads_through_an_ancestor_swapped_for_a_symlink() {
+        let base = tempfile::TempDir::new().unwrap();
+        let root = base.path().join("root");
+        let outside = base.path().join("outside");
+        fs::create_dir_all(root.join("sub")).unwrap();
+        fs::create_dir_all(&outside).unwrap();
+        fs::write(root.join("sub/notes.txt"), b"harmless").unwrap();
+        fs::write(outside.join("notes.txt"), b"OUTSIDE SECRET BYTES").unwrap();
+        let deny = DenyList::default_list().unwrap();
+        let snap = scan::scan(&root, &deny, Scope::Full, T0).unwrap();
+        let scanned_inode = snap.entries["sub/notes.txt"].inode;
+        let plan = Manifest::new(HOST, ROOT).diff(&root, &snap).unwrap();
+        let rels: Vec<&str> = plan.actions.iter().map(Action::rel).collect();
+        assert_eq!(rels, vec!["sub/notes.txt"]);
+
+        // Swap the parent directory for a symlink after the scan.
+        fs::rename(root.join("sub"), base.path().join("moved")).unwrap();
+        std::os::unix::fs::symlink(&outside, root.join("sub")).unwrap();
+
+        let store = InMemory::new();
+        let layout = Layout::new(Path::default(), HOST);
+        let report = upload(&store, &layout, ROOT, &root, &deny, &plan, 1, T0)
+            .await
+            .unwrap();
+        assert!(report.done.is_empty(), "{report:?}");
+        assert!(matches!(report.failed, Some((0, _))), "{report:?}");
+        let got = store.get(&layout.file_key(ROOT, "sub/notes.txt")).await;
+        assert!(
+            matches!(got, Err(object_store::Error::NotFound { .. })),
+            "the bytes behind the swapped ancestor reached the store"
+        );
+        assert!(scan::hash_file(&root, "sub/notes.txt", scanned_inode).is_err());
     }
 
     #[tokio::test]

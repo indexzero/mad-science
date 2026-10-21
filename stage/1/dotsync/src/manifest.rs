@@ -316,7 +316,7 @@ fn in_scope(scope: &scan::Scope, rel: &str) -> bool {
 /// The hash of the content behind `stat`: the file bytes, or the link target.
 fn hash_of(root: &Path, rel: &str, stat: &Stat) -> Result<String, ManifestError> {
     match stat.kind {
-        Kind::File => Ok(scan::hash_file(root, rel)?),
+        Kind::File => Ok(scan::hash_file(root, rel, stat.inode)?),
         Kind::Link => Ok(scan::hash_target(stat.target.as_deref().unwrap_or(""))),
     }
 }
@@ -740,6 +740,41 @@ mod tests {
         assert_eq!(m.entries["b.txt"].uploaded_version, 2);
         let plan = fx.plan_for(&m, "b.txt");
         assert!(plan.is_empty());
+    }
+
+    #[test]
+    fn diff_never_hashes_a_file_swapped_for_a_symlink_after_scan() {
+        let base = tempfile::TempDir::new().unwrap();
+        let root = base.path().join("root");
+        let outside = base.path().join("outside");
+        fs::create_dir_all(&root).unwrap();
+        fs::create_dir_all(&outside).unwrap();
+        fs::write(root.join("notes.txt"), b"harmless").unwrap();
+        fs::write(outside.join("secret.txt"), b"OUTSIDE SECRET BYTES").unwrap();
+        let secret = blake3::hash(b"OUTSIDE SECRET BYTES").to_hex().to_string();
+        let deny = DenyList::default_list().unwrap();
+        let snap = scan::scan(&root, &deny, Scope::Full, 0).unwrap();
+        assert!(snap.entries.contains_key("notes.txt"));
+
+        // Swap the scanned file for a symlink to the secret between scan and diff.
+        fs::remove_file(root.join("notes.txt")).unwrap();
+        std::os::unix::fs::symlink(outside.join("secret.txt"), root.join("notes.txt")).unwrap();
+
+        let mut m = Manifest::new("alpha", "root");
+        let got = m.diff(&root, &snap);
+        if let Ok(plan) = &got {
+            m.apply(plan, &all_done(plan));
+            let leaked = plan.actions.iter().any(|a| match a {
+                Action::Upload { entry, .. } | Action::Link { entry, .. } => entry.hash == secret,
+                _ => false,
+            });
+            assert!(!leaked, "the secret hash entered the plan: {plan:?}");
+        }
+        assert!(
+            m.entries.values().all(|e| e.hash != secret),
+            "the secret hash entered the manifest"
+        );
+        assert!(got.is_err(), "{got:?}");
     }
 
     #[test]

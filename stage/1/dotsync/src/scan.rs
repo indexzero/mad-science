@@ -302,24 +302,54 @@ pub fn stat_entry(abs: &Path) -> Result<Option<Stat>, ScanError> {
     Ok(None)
 }
 
-/// Open `root/rel` for reading only when it is still the regular file that a
-/// `symlink_metadata` call sees. A symlink swapped in before or after that call
-/// fails the inode check, so the bytes of a link target are never read.
-pub fn open_regular(root: &Path, rel: &str) -> Result<fs::File, ScanError> {
+/// Open `root/rel` for reading only when every ancestor under `root` is a real
+/// directory and the opened file is the regular file the scan recorded. A symlink
+/// at any component, swapped in before or after the scan, fails one of the checks.
+pub fn open_regular(root: &Path, rel: &str, scanned_inode: u64) -> Result<fs::File, ScanError> {
     let abs = root.join(rel);
     let io = |source: std::io::Error| ScanError::Io {
         path: abs.clone(),
         source,
     };
+    let mut prefix = root.to_path_buf();
+    let parts: Vec<&str> = rel.split('/').collect();
+    for part in &parts[..parts.len().saturating_sub(1)] {
+        prefix.push(part);
+        if !fs::symlink_metadata(&prefix)
+            .map_err(io)?
+            .file_type()
+            .is_dir()
+        {
+            return Err(io(std::io::Error::other(
+                "an ancestor is not a real directory",
+            )));
+        }
+    }
     let before = fs::symlink_metadata(&abs).map_err(io)?;
+    if !before.file_type().is_file() {
+        return Err(io(std::io::Error::other("not a regular file")));
+    }
     let file = fs::File::open(&abs).map_err(io)?;
     let after = file.metadata().map_err(io)?;
-    if !before.file_type().is_file() || !after.is_file() || !same_file(&before, &after) {
+    if !after.is_file() || !same_file(&before, &after) || !scanned(&after, scanned_inode) {
         return Err(io(std::io::Error::other(
             "not the regular file that was scanned",
         )));
     }
     Ok(file)
+}
+
+/// True when the opened file carries the inode the scan recorded.
+#[cfg(unix)]
+fn scanned(md: &fs::Metadata, inode: u64) -> bool {
+    use std::os::unix::fs::MetadataExt;
+    md.ino() == inode
+}
+
+/// No inode off Unix. The scan records 0, so there is nothing to compare.
+#[cfg(not(unix))]
+fn scanned(_md: &fs::Metadata, _inode: u64) -> bool {
+    true
 }
 
 /// True when both stats name one file: the same device and inode.
@@ -336,15 +366,15 @@ fn same_file(_a: &fs::Metadata, _b: &fs::Metadata) -> bool {
 }
 
 /// blake3 of the file bytes at `root/rel`, as 64 lowercase hex chars.
-/// Opens through `open_regular`, so a symlink is never read through.
-/// Reads in 64 KiB chunks through `blake3::Hasher::update`.
-pub fn hash_file(root: &Path, rel: &str) -> Result<String, ScanError> {
+/// Opens through `open_regular` with the inode the scan recorded, so a symlink
+/// is never read through. Reads in 64 KiB chunks through `blake3::Hasher::update`.
+pub fn hash_file(root: &Path, rel: &str, scanned_inode: u64) -> Result<String, ScanError> {
     let abs = root.join(rel);
     let io = |source: std::io::Error| ScanError::Io {
         path: abs.clone(),
         source,
     };
-    let mut file = open_regular(root, rel)?;
+    let mut file = open_regular(root, rel, scanned_inode)?;
     let mut hasher = blake3::Hasher::new();
     let mut buf = vec![0u8; HASH_CHUNK];
     loop {
@@ -536,7 +566,8 @@ mod tests {
         let dir = tempfile::TempDir::new().unwrap();
         let body = vec![7u8; HASH_CHUNK * 3 + 11];
         write(dir.path(), "big.bin", &body);
-        let got = hash_file(dir.path(), "big.bin").unwrap();
+        let ino = inode(&fs::symlink_metadata(dir.path().join("big.bin")).unwrap());
+        let got = hash_file(dir.path(), "big.bin", ino).unwrap();
         assert_eq!(got, blake3::hash(&body).to_hex().to_string());
         assert_eq!(got.len(), 64);
         assert_eq!(
