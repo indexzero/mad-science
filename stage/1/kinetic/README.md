@@ -38,6 +38,7 @@ pnpm convert --key ~/Git/indexzero/presentations/2025/_all_docs.final.key
 
 - With no options, the converter reads the live export and writes `decks/_all_docs/`.
 - `--slides` converts only the listed slides (1-based). Write `pnpm convert --slides 1,2,4`. Under pnpm 10, `pnpm convert -- --slides 1,2,4` fails, because pnpm forwards the literal `--`.
+- `--slides` also replaces the committed `decks/_all_docs/deck.json` with a deck of only those slides. To keep the committed deck, add `--out <directory>` with a directory outside this checkout. Otherwise restore the deck with `git checkout -- decks`.
 - `--kpf <url or directory>` reads another copy of the export. `--out <directory>` writes somewhere else.
 - `--key <path>` adds the `.key` string harvest. It records `source.keyParse` in `deck.json`. It never gates an element.
 - The first run fetches the export into `.cache/kpf/` (gitignored). Later runs are offline.
