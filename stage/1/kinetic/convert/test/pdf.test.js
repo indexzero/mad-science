@@ -233,3 +233,14 @@ test('clip paths: a placement wholly outside its clip is dropped, one the clip c
   assert.equal(isAxisRect('M0 0L10 0L10 5L0 5Z'), true);
   assert.equal(isAxisRect('M0 0L10 2L8 7L-2 5Z'), false);
 });
+
+test('a stroke dash array scales with the stroke and reaches the shape path (D-019 F-04)', () => {
+  const svgText = `<svg width="1920" height="1080"><path transform="matrix(2,0,0,2,0,0)" stroke-width="1.5" stroke-dasharray="3,3" fill="none" stroke="#1fffa5" d="M10 10L100 10"/><path d="M0 0L5 5" stroke="#ffffff" fill="none"/></svg>`;
+  const p = parseSvg(svgText);
+  assert.deepEqual(p.bodyPaths[0].dash, [3, 3]);
+  assert.equal(p.bodyPaths[1].dash, null);
+  const el = pageToElements(p, fullSlideLeaf);
+  assert.deepEqual(el.paths[0].dash, [6, 6]);
+  assert.equal(el.paths[0].strokeWidth, 3);
+  assert.equal(el.paths[1].dash, undefined);
+});

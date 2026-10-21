@@ -841,6 +841,15 @@
         },
         "clip": {
           "$ref": "#/$defs/clip"
+        },
+        "dash": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          },
+          "description": "The stroke dash array in slide units (SVG stroke-dasharray scaled with the stroke), drawn with setLineDash (D-019 F-04)."
         }
       }
     },

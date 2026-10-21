@@ -130,6 +130,7 @@ export function parseSvg(svgText) {
           fillOpacity: a['fill-opacity'] !== undefined || alpha() < 1 ? (a['fill-opacity'] !== undefined ? Number(a['fill-opacity']) : 1) * alpha() : null,
           stroke: a.stroke ?? null,
           strokeWidth: a['stroke-width'] !== undefined ? Number(a['stroke-width']) : null,
+          dash: a['stroke-dasharray'] && a['stroke-dasharray'] !== 'none' ? a['stroke-dasharray'].split(/[\s,]+/).filter(Boolean).map(Number) : null,
           transform: a.transform ?? null,
           matrix: withOwn(a.transform),
           clips: clip(),
@@ -572,6 +573,8 @@ function shapesOf(parsed, pm) {
     if (p.stroke) {
       s.stroke = p.stroke;
       s.strokeWidth = r2((p.strokeWidth ?? 1) * Math.hypot(m[0], m[1]));
+      // a dash array scales with the stroke (D-019 F-04): `3,3` and `5,5` on slides 43, 44, 61, 62
+      if (p.dash?.length && p.dash.every(Number.isFinite)) s.dash = p.dash.map((v) => r2(v * Math.hypot(m[0], m[1])));
     }
     if (p.clipKeep?.length) s.clip = p.clipKeep.map((c) => transformPath(c.d, pm));
     return s;

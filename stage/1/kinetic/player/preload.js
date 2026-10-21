@@ -143,7 +143,7 @@ export class Preloader {
   static pathsOf(el) {
     // `clip` (D-019 F-03): the clip paths of the page that may cut this outline, applied in turn
     const clipOf = (c) => (c ? c.map((d) => new Path2D(d)) : null);
-    const out = { paths: (el.paths || []).map((p) => ({ path: new Path2D(p.d), fill: p.fill, opacity: p.opacity, stroke: p.stroke, strokeWidth: p.strokeWidth, clip: clipOf(p.clip), line: el.kind === 'shape' ? lineOf(p) : null })) };
+    const out = { paths: (el.paths || []).map((p) => ({ path: new Path2D(p.d), fill: p.fill, opacity: p.opacity, stroke: p.stroke, strokeWidth: p.strokeWidth, dash: p.dash ?? null, clip: clipOf(p.clip), line: el.kind === 'shape' ? lineOf(p) : null })) };
     if (el.kind === 'text') {
       // a word's outline is its characters' outlines; deck.json carries `d` on the word only when it has no chars
       out.words = el.words.map((w) => ({

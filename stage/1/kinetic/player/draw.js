@@ -20,7 +20,9 @@ function drawPaths(ctx, list, alpha) {
       ctx.globalAlpha = a;
       ctx.strokeStyle = p.stroke;
       ctx.lineWidth = p.strokeWidth ?? 1;
+      if (p.dash) ctx.setLineDash(p.dash);
       ctx.stroke(p.path);
+      if (p.dash) ctx.setLineDash([]);
     }
     if (p.clip) ctx.restore();
   }
