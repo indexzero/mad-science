@@ -9,7 +9,7 @@ Stage 1 on entry. Stage 2 when `check.sh` passes. Stage 3 when the owner runs th
 ## Install
 
 1. Install Rust 1.88 or later, for example with `rustup`. Check it with `rustc --version`.
-2. Change to `stage/1/dotsync/`, the directory that holds `Cargo.toml`. Run `cargo build --release` there.
+2. Change to `stage/2/dotsync/`, the directory that holds `Cargo.toml`. Run `cargo build --release` there.
 3. Copy `target/release/dotsync` to `/usr/local/bin/dotsync`, or to another path. A copy to `/usr/local/bin` can need `sudo`.
 4. Copy `launchd/com.indexzero.dotsync.plist` to `~/Library/LaunchAgents/`.
 5. In that copy, change the two placeholders: the binary path `/usr/local/bin/dotsync` and the log path `/usr/local/var/log/dotsync.log`.
