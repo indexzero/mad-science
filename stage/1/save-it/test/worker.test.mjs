@@ -167,10 +167,101 @@ test("a Content-Length above size returns 400 and stores nothing", async () => {
   assert.equal(await bucket.head(key), null);
 });
 
-test("the upload route passes request.body to put() and never buffers it", () => {
+// The probe runs inside workerd. It imports the dry-run bundle and calls its
+// fetch with a fake BUNDLES binding. The request body is a stream. The stream
+// holds back its last byte until put() is called or the wait ends. A Worker
+// that reads, clones, or buffers the body before put() fails a check below.
+const STREAM_PROBE = `
+import worker from "./worker.js";
+const WAIT_MS = 5000;
+export default {
+  async fetch(request, env, ctx) {
+    const { token, body: text } = await request.json();
+    const bytes = new TextEncoder().encode(text);
+    let openGate;
+    const gate = new Promise((resolve) => { openGate = resolve; });
+    let gateOpen = false;
+    let pulls = 0;
+    const stream = new ReadableStream({
+      async pull(controller) {
+        pulls += 1;
+        if (pulls === 1) {
+          controller.enqueue(bytes.slice(0, -1));
+          return;
+        }
+        await gate;
+        controller.enqueue(bytes.slice(-1));
+        controller.close();
+      }
+    }, { highWaterMark: 0 });
+    const upload = new Request("http://localhost/u/" + token, {
+      method: "PUT",
+      headers: { "Content-Length": String(bytes.length) },
+      body: stream
+    });
+    const original = upload.body;
+    const seen = { putCalled: false };
+    let markPut;
+    const putCalled = new Promise((resolve) => { markPut = resolve; });
+    const BUNDLES = {
+      async head() { return null; },
+      async put(key, body) {
+        seen.putCalled = true;
+        seen.beforeGate = !gateOpen;
+        seen.sameStream = body === original;
+        seen.pullsBeforePut = pulls;
+        seen.bodyUsedBeforePut = upload.bodyUsed;
+        markPut();
+        seen.stored = await new Response(body).text();
+        return {};
+      }
+    };
+    const pending = worker.fetch(upload, { ...env, BUNDLES }, ctx);
+    let timer;
+    const timeout = new Promise((resolve) => { timer = setTimeout(resolve, WAIT_MS); });
+    await Promise.race([putCalled, timeout]);
+    clearTimeout(timer);
+    gateOpen = true;
+    openGate();
+    const res = await pending;
+    return Response.json({ status: res.status, ...seen });
+  }
+};`;
+
+test("the upload route passes request.body to put() and never buffers it", async () => {
   const source = readFileSync(new URL("../src/worker.mjs", import.meta.url), "utf8");
   assert.match(source, /\.put\(\s*key\s*,\s*request\.body\s*,/);
   assert.doesNotMatch(source, /request\s*\.\s*(arrayBuffer|text|blob|json|formData)\s*\(/);
+
+  const dir = new URL("../dist/worker/", import.meta.url).pathname;
+  const base = options();
+  delete base.scriptPath;
+  const probe = new Miniflare({
+    ...base,
+    modulesRoot: dir,
+    modules: [
+      { type: "ESModule", path: `${dir}stream-probe.mjs`, contents: STREAM_PROBE },
+      { type: "ESModule", path: BUNDLE }
+    ]
+  });
+  try {
+    await probe.ready;
+    const key = keyFor("stream-probe");
+    const res = await probe.dispatchFetch("http://localhost/", {
+      method: "POST",
+      body: JSON.stringify({ token: await mint({ key }), body: BODY })
+    });
+    const seen = await res.json();
+    assert.equal(seen.putCalled, true, "the Worker never called put()");
+    assert.equal(seen.beforeGate, true, "put() waited for the last byte, so the Worker buffered the body");
+    assert.equal(seen.sameStream, true, "put() did not get request.body itself, so the Worker cloned or wrapped it");
+    assert.equal(seen.pullsBeforePut, 0, "the Worker read the body before put()");
+    assert.equal(seen.bodyUsedBeforePut, false, "the body was used before put()");
+    assert.equal(seen.stored, BODY);
+    assert.equal(seen.status, 201);
+  } finally {
+    await probe.dispose();
+  }
 });
 
 test("an expired token returns 410", async () => {
