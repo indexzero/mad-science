@@ -1,0 +1,1324 @@
+{
+  "throttle": {
+    "downloadBps": 187500,
+    "uploadBps": 93750,
+    "latencyMs": 150
+  },
+  "bars": {
+    "preloadMs": 10000,
+    "frameMs": 50,
+    "framesAfterChange": 30
+  },
+  "videoType": "webm",
+  "deckBytes": 12390998,
+  "firstSlideMs": 67037,
+  "slowestPreload": {
+    "n": 67,
+    "preloadMs": 23443,
+    "bytes": 4332357,
+    "floorMs": 23856,
+    "waived": true
+  },
+  "slowestPreloadWithinBar": {
+    "n": 28,
+    "preloadMs": 9780,
+    "bytes": 1783570
+  },
+  "largestFrameDelta": {
+    "n": 50,
+    "to": 51,
+    "maxFrameMs": 49.9
+  },
+  "waivers": [
+    {
+      "n": 1,
+      "pending": [
+        2,
+        3
+      ],
+      "bytes": 2063675,
+      "requests": 12,
+      "floorMs": 11306,
+      "barMs": 21306,
+      "preloadMs": 11420
+    },
+    {
+      "n": 2,
+      "pending": [
+        4
+      ],
+      "bytes": 2096523,
+      "requests": 11,
+      "floorMs": 11481,
+      "barMs": 21481,
+      "preloadMs": 11448
+    },
+    {
+      "n": 10,
+      "pending": [
+        12
+      ],
+      "bytes": 2533464,
+      "requests": 6,
+      "floorMs": 13662,
+      "barMs": 23662,
+      "preloadMs": 13755
+    },
+    {
+      "n": 13,
+      "pending": [
+        15
+      ],
+      "bytes": 2491341,
+      "requests": 12,
+      "floorMs": 13587,
+      "barMs": 23587,
+      "preloadMs": 13896
+    },
+    {
+      "n": 44,
+      "pending": [
+        46
+      ],
+      "bytes": 1995752,
+      "requests": 12,
+      "floorMs": 10944,
+      "barMs": 20944,
+      "preloadMs": 10911
+    },
+    {
+      "n": 47,
+      "pending": [
+        49
+      ],
+      "bytes": 2173165,
+      "requests": 12,
+      "floorMs": 11890,
+      "barMs": 21890,
+      "preloadMs": 11858
+    },
+    {
+      "n": 48,
+      "pending": [
+        50
+      ],
+      "bytes": 2479669,
+      "requests": 6,
+      "floorMs": 13375,
+      "barMs": 23375,
+      "preloadMs": 13462
+    },
+    {
+      "n": 62,
+      "pending": [
+        64
+      ],
+      "bytes": 1991188,
+      "requests": 11,
+      "floorMs": 10920,
+      "barMs": 20920,
+      "preloadMs": 10899
+    },
+    {
+      "n": 67,
+      "pending": [
+        69
+      ],
+      "bytes": 4332357,
+      "requests": 25,
+      "floorMs": 23856,
+      "barMs": 33856,
+      "preloadMs": 23443
+    },
+    {
+      "n": 68,
+      "pending": [
+        70
+      ],
+      "bytes": 2945976,
+      "requests": 13,
+      "floorMs": 16162,
+      "barMs": 26162,
+      "preloadMs": 15994
+    }
+  ],
+  "failures": [],
+  "rows": [
+    {
+      "n": 1,
+      "need": [
+        2,
+        3
+      ],
+      "pending": [
+        2,
+        3
+      ],
+      "bytes": 2063675,
+      "requests": 12,
+      "floorMs": 11306,
+      "barMs": 21306,
+      "waived": true,
+      "preloadMs": 11420,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 2,
+      "need": [
+        3,
+        4
+      ],
+      "pending": [
+        4
+      ],
+      "bytes": 2096523,
+      "requests": 11,
+      "floorMs": 11481,
+      "barMs": 21481,
+      "waived": true,
+      "preloadMs": 11448,
+      "maxFrameMs": 16.7
+    },
+    {
+      "n": 3,
+      "need": [
+        4,
+        5
+      ],
+      "pending": [
+        5
+      ],
+      "bytes": 379160,
+      "requests": 2,
+      "floorMs": 2172,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 2212,
+      "maxFrameMs": 16.7
+    },
+    {
+      "n": 4,
+      "need": [
+        5,
+        6
+      ],
+      "pending": [
+        6
+      ],
+      "bytes": 237844,
+      "requests": 2,
+      "floorMs": 1419,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 1476,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 5,
+      "need": [
+        6,
+        7
+      ],
+      "pending": [
+        7
+      ],
+      "bytes": 176319,
+      "requests": 2,
+      "floorMs": 1090,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 1128,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 6,
+      "need": [
+        7,
+        8
+      ],
+      "pending": [
+        8
+      ],
+      "bytes": 386202,
+      "requests": 2,
+      "floorMs": 2210,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 2263,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 7,
+      "need": [
+        8,
+        9
+      ],
+      "pending": [
+        9
+      ],
+      "bytes": 154080,
+      "requests": 2,
+      "floorMs": 972,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 1026,
+      "maxFrameMs": 16.7
+    },
+    {
+      "n": 8,
+      "need": [
+        9,
+        10
+      ],
+      "pending": [
+        10
+      ],
+      "bytes": 130570,
+      "requests": 2,
+      "floorMs": 846,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 861,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 9,
+      "need": [
+        10,
+        11
+      ],
+      "pending": [
+        11
+      ],
+      "bytes": 386271,
+      "requests": 2,
+      "floorMs": 2210,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 2230,
+      "maxFrameMs": 16.7
+    },
+    {
+      "n": 10,
+      "need": [
+        11,
+        12
+      ],
+      "pending": [
+        12
+      ],
+      "bytes": 2533464,
+      "requests": 6,
+      "floorMs": 13662,
+      "barMs": 23662,
+      "waived": true,
+      "preloadMs": 13755,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 11,
+      "need": [
+        12,
+        13
+      ],
+      "pending": [
+        13
+      ],
+      "bytes": 1206470,
+      "requests": 4,
+      "floorMs": 6585,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 6646,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 12,
+      "need": [
+        13,
+        14
+      ],
+      "pending": [
+        14
+      ],
+      "bytes": 470827,
+      "requests": 3,
+      "floorMs": 2661,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 2729,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 13,
+      "need": [
+        14,
+        15
+      ],
+      "pending": [
+        15
+      ],
+      "bytes": 2491341,
+      "requests": 12,
+      "floorMs": 13587,
+      "barMs": 23587,
+      "waived": true,
+      "preloadMs": 13896,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 14,
+      "need": [
+        15,
+        16
+      ],
+      "pending": [
+        16
+      ],
+      "bytes": 273357,
+      "requests": 2,
+      "floorMs": 1608,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 1648,
+      "maxFrameMs": 16.7
+    },
+    {
+      "n": 15,
+      "need": [
+        16,
+        17
+      ],
+      "pending": [
+        17
+      ],
+      "bytes": 224370,
+      "requests": 2,
+      "floorMs": 1347,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 1382,
+      "maxFrameMs": 16.7
+    },
+    {
+      "n": 16,
+      "need": [
+        17,
+        18
+      ],
+      "pending": [
+        18
+      ],
+      "bytes": 276606,
+      "requests": 2,
+      "floorMs": 1625,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 1644,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 17,
+      "need": [
+        18,
+        19
+      ],
+      "pending": [
+        19
+      ],
+      "bytes": 558159,
+      "requests": 3,
+      "floorMs": 3127,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 3150,
+      "maxFrameMs": 16.7
+    },
+    {
+      "n": 18,
+      "need": [
+        19,
+        20
+      ],
+      "pending": [
+        20
+      ],
+      "bytes": 355993,
+      "requests": 2,
+      "floorMs": 2049,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 2078,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 19,
+      "need": [
+        20,
+        21
+      ],
+      "pending": [
+        21
+      ],
+      "bytes": 328564,
+      "requests": 2,
+      "floorMs": 1902,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 1963,
+      "maxFrameMs": 16.7
+    },
+    {
+      "n": 20,
+      "need": [
+        21,
+        22
+      ],
+      "pending": [
+        22
+      ],
+      "bytes": 973350,
+      "requests": 4,
+      "floorMs": 5341,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 5422,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 21,
+      "need": [
+        22,
+        23
+      ],
+      "pending": [],
+      "bytes": 0,
+      "requests": 0,
+      "floorMs": 0,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 504,
+      "maxFrameMs": 16.7
+    },
+    {
+      "n": 22,
+      "need": [
+        23,
+        24
+      ],
+      "pending": [],
+      "bytes": 0,
+      "requests": 0,
+      "floorMs": 0,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 508,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 23,
+      "need": [
+        24,
+        25
+      ],
+      "pending": [
+        25
+      ],
+      "bytes": 343219,
+      "requests": 2,
+      "floorMs": 1981,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 2015,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 24,
+      "need": [
+        25,
+        26
+      ],
+      "pending": [
+        26
+      ],
+      "bytes": 1584675,
+      "requests": 9,
+      "floorMs": 8752,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 8660,
+      "maxFrameMs": 16.7
+    },
+    {
+      "n": 25,
+      "need": [
+        26,
+        27
+      ],
+      "pending": [
+        27
+      ],
+      "bytes": 827048,
+      "requests": 8,
+      "floorMs": 4711,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 4612,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 26,
+      "need": [
+        27,
+        28
+      ],
+      "pending": [],
+      "bytes": 0,
+      "requests": 0,
+      "floorMs": 0,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 507,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 27,
+      "need": [
+        28,
+        29
+      ],
+      "pending": [
+        29
+      ],
+      "bytes": 433518,
+      "requests": 3,
+      "floorMs": 2462,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 2527,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 28,
+      "need": [
+        29,
+        30
+      ],
+      "pending": [
+        30
+      ],
+      "bytes": 1783570,
+      "requests": 11,
+      "floorMs": 9812,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 9780,
+      "maxFrameMs": 16.7
+    },
+    {
+      "n": 29,
+      "need": [
+        30,
+        31
+      ],
+      "pending": [],
+      "bytes": 0,
+      "requests": 0,
+      "floorMs": 0,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 502,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 30,
+      "need": [
+        31,
+        32
+      ],
+      "pending": [
+        32
+      ],
+      "bytes": 154056,
+      "requests": 2,
+      "floorMs": 972,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 1027,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 31,
+      "need": [
+        32,
+        33
+      ],
+      "pending": [
+        33
+      ],
+      "bytes": 312725,
+      "requests": 6,
+      "floorMs": 1818,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 1909,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 32,
+      "need": [
+        33,
+        34
+      ],
+      "pending": [
+        34
+      ],
+      "bytes": 751871,
+      "requests": 5,
+      "floorMs": 4160,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 4192,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 33,
+      "need": [
+        34,
+        35
+      ],
+      "pending": [
+        35
+      ],
+      "bytes": 244063,
+      "requests": 2,
+      "floorMs": 1452,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 1483,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 34,
+      "need": [
+        35,
+        36
+      ],
+      "pending": [
+        36
+      ],
+      "bytes": 404945,
+      "requests": 3,
+      "floorMs": 2310,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 2361,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 35,
+      "need": [
+        36,
+        37
+      ],
+      "pending": [
+        37
+      ],
+      "bytes": 187759,
+      "requests": 3,
+      "floorMs": 1151,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 1178,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 36,
+      "need": [
+        37,
+        38
+      ],
+      "pending": [
+        38
+      ],
+      "bytes": 206364,
+      "requests": 2,
+      "floorMs": 1251,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 1280,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 37,
+      "need": [
+        38,
+        39
+      ],
+      "pending": [],
+      "bytes": 0,
+      "requests": 0,
+      "floorMs": 0,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 502,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 38,
+      "need": [
+        39,
+        40
+      ],
+      "pending": [
+        40
+      ],
+      "bytes": 95231,
+      "requests": 2,
+      "floorMs": 658,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 711,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 39,
+      "need": [
+        40,
+        41
+      ],
+      "pending": [
+        41
+      ],
+      "bytes": 216562,
+      "requests": 6,
+      "floorMs": 1305,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 1375,
+      "maxFrameMs": 16.7
+    },
+    {
+      "n": 40,
+      "need": [
+        41,
+        42
+      ],
+      "pending": [
+        42
+      ],
+      "bytes": 458952,
+      "requests": 2,
+      "floorMs": 2598,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 2631,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 41,
+      "need": [
+        42,
+        43
+      ],
+      "pending": [],
+      "bytes": 0,
+      "requests": 0,
+      "floorMs": 0,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 501,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 42,
+      "need": [
+        43,
+        44
+      ],
+      "pending": [],
+      "bytes": 0,
+      "requests": 0,
+      "floorMs": 0,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 503,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 43,
+      "need": [
+        44,
+        45
+      ],
+      "pending": [
+        45
+      ],
+      "bytes": 301206,
+      "requests": 2,
+      "floorMs": 1756,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 1797,
+      "maxFrameMs": 16.7
+    },
+    {
+      "n": 44,
+      "need": [
+        45,
+        46
+      ],
+      "pending": [
+        46
+      ],
+      "bytes": 1995752,
+      "requests": 12,
+      "floorMs": 10944,
+      "barMs": 20944,
+      "waived": true,
+      "preloadMs": 10911,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 45,
+      "need": [
+        46,
+        47
+      ],
+      "pending": [],
+      "bytes": 0,
+      "requests": 0,
+      "floorMs": 0,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 504,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 46,
+      "need": [
+        47,
+        48
+      ],
+      "pending": [
+        48
+      ],
+      "bytes": 418044,
+      "requests": 2,
+      "floorMs": 2380,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 2429,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 47,
+      "need": [
+        48,
+        49
+      ],
+      "pending": [
+        49
+      ],
+      "bytes": 2173165,
+      "requests": 12,
+      "floorMs": 11890,
+      "barMs": 21890,
+      "waived": true,
+      "preloadMs": 11858,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 48,
+      "need": [
+        49,
+        50
+      ],
+      "pending": [
+        50
+      ],
+      "bytes": 2479669,
+      "requests": 6,
+      "floorMs": 13375,
+      "barMs": 23375,
+      "waived": true,
+      "preloadMs": 13462,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 49,
+      "need": [
+        50,
+        51
+      ],
+      "pending": [
+        51
+      ],
+      "bytes": 302754,
+      "requests": 2,
+      "floorMs": 1765,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 1804,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 50,
+      "need": [
+        51,
+        52
+      ],
+      "pending": [
+        52
+      ],
+      "bytes": 1600492,
+      "requests": 3,
+      "floorMs": 8686,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 8734,
+      "maxFrameMs": 49.9
+    },
+    {
+      "n": 51,
+      "need": [
+        52,
+        53
+      ],
+      "pending": [
+        53
+      ],
+      "bytes": 229145,
+      "requests": 1,
+      "floorMs": 1372,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 1454,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 52,
+      "need": [
+        53,
+        54
+      ],
+      "pending": [],
+      "bytes": 0,
+      "requests": 0,
+      "floorMs": 0,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 504,
+      "maxFrameMs": 33.3
+    },
+    {
+      "n": 53,
+      "need": [
+        54,
+        55
+      ],
+      "pending": [
+        55
+      ],
+      "bytes": 371293,
+      "requests": 2,
+      "floorMs": 2130,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 2181,
+      "maxFrameMs": 16.7
+    },
+    {
+      "n": 54,
+      "need": [
+        55,
+        56
+      ],
+      "pending": [
+        56
+      ],
+      "bytes": 1355724,
+      "requests": 6,
+      "floorMs": 7381,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 7445,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 55,
+      "need": [
+        56,
+        57
+      ],
+      "pending": [
+        57
+      ],
+      "bytes": 347877,
+      "requests": 9,
+      "floorMs": 2155,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 2063,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 56,
+      "need": [
+        57,
+        58
+      ],
+      "pending": [
+        58
+      ],
+      "bytes": 91259,
+      "requests": 6,
+      "floorMs": 637,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 711,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 57,
+      "need": [
+        58,
+        59
+      ],
+      "pending": [
+        59
+      ],
+      "bytes": 1792597,
+      "requests": 8,
+      "floorMs": 9861,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 2521,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 58,
+      "need": [
+        59,
+        60
+      ],
+      "pending": [
+        60
+      ],
+      "bytes": 794237,
+      "requests": 4,
+      "floorMs": 4386,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 4429,
+      "maxFrameMs": 16.7
+    },
+    {
+      "n": 59,
+      "need": [
+        60,
+        61
+      ],
+      "pending": [],
+      "bytes": 0,
+      "requests": 0,
+      "floorMs": 0,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 493,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 60,
+      "need": [
+        61,
+        62
+      ],
+      "pending": [],
+      "bytes": 0,
+      "requests": 0,
+      "floorMs": 0,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 511,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 61,
+      "need": [
+        62,
+        63
+      ],
+      "pending": [],
+      "bytes": 0,
+      "requests": 0,
+      "floorMs": 0,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 501,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 62,
+      "need": [
+        63,
+        64
+      ],
+      "pending": [
+        64
+      ],
+      "bytes": 1991188,
+      "requests": 11,
+      "floorMs": 10920,
+      "barMs": 20920,
+      "waived": true,
+      "preloadMs": 10899,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 63,
+      "need": [
+        64,
+        65
+      ],
+      "pending": [
+        65
+      ],
+      "bytes": 395675,
+      "requests": 7,
+      "floorMs": 2410,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 2375,
+      "maxFrameMs": 16.7
+    },
+    {
+      "n": 64,
+      "need": [
+        65,
+        66
+      ],
+      "pending": [
+        66
+      ],
+      "bytes": 654973,
+      "requests": 2,
+      "floorMs": 3643,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 3679,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 65,
+      "need": [
+        66,
+        67
+      ],
+      "pending": [
+        67
+      ],
+      "bytes": 305789,
+      "requests": 2,
+      "floorMs": 1781,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 1813,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 66,
+      "need": [
+        67,
+        68
+      ],
+      "pending": [
+        68
+      ],
+      "bytes": 654973,
+      "requests": 2,
+      "floorMs": 3643,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 3678,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 67,
+      "need": [
+        68,
+        69
+      ],
+      "pending": [
+        69
+      ],
+      "bytes": 4332357,
+      "requests": 25,
+      "floorMs": 23856,
+      "barMs": 33856,
+      "waived": true,
+      "preloadMs": 23443,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 68,
+      "need": [
+        69,
+        70
+      ],
+      "pending": [
+        70
+      ],
+      "bytes": 2945976,
+      "requests": 13,
+      "floorMs": 16162,
+      "barMs": 26162,
+      "waived": true,
+      "preloadMs": 15994,
+      "maxFrameMs": 16.7
+    },
+    {
+      "n": 69,
+      "need": [
+        70,
+        71
+      ],
+      "pending": [
+        71
+      ],
+      "bytes": 145891,
+      "requests": 2,
+      "floorMs": 928,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 967,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 70,
+      "need": [
+        71
+      ],
+      "pending": [],
+      "bytes": 0,
+      "requests": 0,
+      "floorMs": 0,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": 502,
+      "maxFrameMs": 16.8
+    },
+    {
+      "n": 71,
+      "need": [],
+      "pending": [],
+      "bytes": 0,
+      "requests": 0,
+      "floorMs": 0,
+      "barMs": 10000,
+      "waived": false,
+      "preloadMs": null,
+      "maxFrameMs": null
+    }
+  ]
+}

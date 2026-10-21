@@ -1,0 +1,12 @@
+{
+  "live": {
+    "navigationToGifDecodedMs": 1140,
+    "navigationToIndicatorHiddenMs": 1140
+  },
+  "new": {
+    "gotoToFirstFrameMs": 5.2,
+    "pushFirstFrameMs": 5.3,
+    "pushLandedMs": 505,
+    "maxFrameDeltaMs": 16.8
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "word-build-mid",
+  "ratio": 0.12124366910523354,
+  "mismatched": 12927,
+  "unmasked": 106620,
+  "masked": 411780,
+  "vacuous": false,
+  "regions": []
+}

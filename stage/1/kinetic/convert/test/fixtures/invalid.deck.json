@@ -1,0 +1,60 @@
+{
+  "format": "kinetic/0",
+  "id": "_all_docs",
+  "title": "_all_docs.final.key",
+  "width": 1920,
+  "height": 1080,
+  "source": {
+    "kpf": "https://all-docs.talks.charlie.dev/",
+    "convertedAt": "2026-10-20T15:00:00Z",
+    "converter": "6a63103"
+  },
+  "slides": [
+    {
+      "id": "C1F6FE7C-13D3-4213-B5B2-00EBC914A8EB",
+      "index": 1,
+      "background": { "kind": "color", "value": "#000000" },
+      "elements": [
+        {
+          "id": "no-source-path",
+          "kind": "text",
+          "box": { "x": 0, "y": 0, "w": 10, "h": 10 },
+          "words": [],
+          "fill": "#2f302c",
+          "text": "",
+          "source": {
+            "kpf": { "slide": "C1F6FE7C-13D3-4213-B5B2-00EBC914A8EB", "texture": "X", "page": 0, "textureType": 5, "isBackgroundTexture": false }
+          }
+        },
+        {
+          "id": "font-file-src",
+          "kind": "image",
+          "box": { "x": 0, "y": 0, "w": 10, "h": 10 },
+          "src": "media/shared/Avenir-Heavy.ttf",
+          "scale": 2,
+          "source": {
+            "path": "texture",
+            "kpf": { "slide": "C1F6FE7C-13D3-4213-B5B2-00EBC914A8EB", "texture": "Y", "page": 0, "textureType": 6, "isBackgroundTexture": true }
+          }
+        },
+        {
+          "id": "gif-src",
+          "kind": "video",
+          "box": { "x": 0, "y": 0, "w": 10, "h": 10 },
+          "src": { "mp4": "media/shared/thinking wilder.gif", "webm": "media/shared/0123456789ab.webm" },
+          "poster": "media/shared/0123456789ab.png",
+          "loop": true,
+          "source": {
+            "path": "texture",
+            "kpf": { "slide": "C1F6FE7C-13D3-4213-B5B2-00EBC914A8EB", "texture": "Z", "page": 0, "textureType": 0, "isBackgroundTexture": false },
+            "originalGif": "thinking-wilder.gif",
+            "originalBytes": 7832519,
+            "transparent": false
+          }
+        }
+      ],
+      "builds": [],
+      "transition": { "kind": "push", "duration": 0.75 }
+    }
+  ]
+}

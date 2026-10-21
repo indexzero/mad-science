@@ -1,0 +1,20 @@
+{
+  "name": "kinetic",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.34.0",
+  "description": "A preloading canvas player for Keynote decks, with a converter from the KPF HTML export.",
+  "scripts": {
+    "test": "node --test convert/test/*.test.js",
+    "convert": "node convert/index.js",
+    "e2e": "playwright test",
+    "validate": "node convert/validate.js decks/_all_docs/deck.json --slides 71"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "ajv": "8.20.0",
+    "pixelmatch": "8.0.0",
+    "pngjs": "7.0.0"
+  }
+}

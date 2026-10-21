@@ -1,0 +1,906 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://charlie.dev/kinetic/deck.schema.json",
+  "title": "kinetic deck",
+  "description": "A declarative deck. A slide is a list of elements and a list of build steps. A text element is a list of words, each word a vector outline. Draft of checkpoint 1, extended by checkpoint 2 (per-word fills, shapes on text pages, build timing); checkpoint 3 edits it.",
+  "type": "object",
+  "required": [
+    "format",
+    "id",
+    "title",
+    "width",
+    "height",
+    "source",
+    "slides"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "kinetic/1"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string"
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "kpf",
+        "convertedAt",
+        "converter"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kpf": {
+          "type": "string",
+          "minLength": 1
+        },
+        "key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "convertedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "converter": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{7,40}$"
+        },
+        "keyParse": {
+          "type": "object",
+          "description": "Why the .key parse returned nothing, when it did.",
+          "properties": {
+            "attempted": {
+              "type": "boolean"
+            },
+            "stage": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            },
+            "strings": {
+              "type": "integer"
+            },
+            "textMatched": {
+              "type": "integer",
+              "description": "Text elements whose every word is a whole token in a harvested run."
+            },
+            "textTotal": {
+              "type": "integer"
+            },
+            "fontCondition": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "slides": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/slide"
+      }
+    }
+  },
+  "$defs": {
+    "hex6": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    },
+    "direction": {
+      "enum": [
+        "left",
+        "right",
+        "up",
+        "down"
+      ]
+    },
+    "box": {
+      "type": "object",
+      "description": "Slide coordinates: 1920x1080, origin top left, y down.",
+      "required": [
+        "x",
+        "y",
+        "w",
+        "h"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number",
+          "minimum": 0
+        },
+        "h": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "mediaPath": {
+      "type": "string",
+      "description": "Relative to deck.json. Never a scheme prefix, never a font file (any case), never a GIF, never a space or a parenthesis.",
+      "minLength": 1,
+      "pattern": "^(?![A-Za-z][A-Za-z0-9+.-]*:)(?![/])(?!.*[ ()])(?!.*\\.([tT][tT][fF]|[oO][tT][fF]|[wW][oO][fF][fF]|[wW][oO][fF][fF]2|[gG][iI][fF])$).+$"
+    },
+    "kpfRef": {
+      "type": "object",
+      "required": [
+        "slide",
+        "texture",
+        "page",
+        "textureType",
+        "isBackgroundTexture"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "slide": {
+          "type": "string",
+          "minLength": 1
+        },
+        "texture": {
+          "type": "string",
+          "minLength": 1
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "textureType": {
+          "type": "integer"
+        },
+        "isBackgroundTexture": {
+          "type": "boolean"
+        }
+      }
+    },
+    "glyph": {
+      "type": "object",
+      "required": [
+        "d",
+        "box",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "d": {
+          "type": "string",
+          "minLength": 1
+        },
+        "box": {
+          "$ref": "#/$defs/box"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fill": {
+          "$ref": "#/$defs/hex6",
+          "description": "Set only when it differs from the word's fill."
+        }
+      }
+    },
+    "word": {
+      "type": "object",
+      "required": [
+        "box",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "d": {
+          "type": "string",
+          "minLength": 1
+        },
+        "box": {
+          "$ref": "#/$defs/box"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "chars": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/glyph"
+          }
+        },
+        "fill": {
+          "$ref": "#/$defs/hex6",
+          "description": "Set only when it differs from the element's fill."
+        },
+        "clip": {
+          "$ref": "#/$defs/clip"
+        }
+      },
+      "description": "A word of a text element. `d` is its outline; a word with `chars` carries no `d` of its own (its outline is the characters' outlines in order), so one of the two is required.",
+      "anyOf": [
+        {
+          "required": [
+            "d"
+          ],
+          "properties": {
+            "d": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "required": [
+            "chars"
+          ],
+          "properties": {
+            "chars": {
+              "type": "array",
+              "minItems": 1
+            }
+          }
+        }
+      ]
+    },
+    "elementCommon": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "box",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "box": {
+          "$ref": "#/$defs/box"
+        },
+        "hidden": {
+          "type": "boolean",
+          "default": false
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 1
+        },
+        "kind": {
+          "enum": [
+            "text",
+            "image",
+            "video",
+            "shape"
+          ]
+        },
+        "source": {
+          "type": "object"
+        }
+      }
+    },
+    "textElement": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/elementCommon"
+        }
+      ],
+      "required": [
+        "words",
+        "fill",
+        "text"
+      ],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": {
+          "const": "text"
+        },
+        "words": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/word"
+          }
+        },
+        "fill": {
+          "$ref": "#/$defs/hex6"
+        },
+        "text": {
+          "type": "string"
+        },
+        "font": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "object",
+          "required": [
+            "path",
+            "kpf"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "enum": [
+                "key",
+                "pdf"
+              ]
+            },
+            "kpf": {
+              "$ref": "#/$defs/kpfRef"
+            }
+          }
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/shape"
+          },
+          "description": "Body paths of the page (bars, rules, overlays), drawn under the words."
+        }
+      }
+    },
+    "imageElement": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/elementCommon"
+        }
+      ],
+      "required": [
+        "src",
+        "scale"
+      ],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": {
+          "const": "image"
+        },
+        "src": {
+          "$ref": "#/$defs/mediaPath"
+        },
+        "scale": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Image pixels per slide pixel of the image's full rectangle: imageWidth / rect.w. 1 for a page raster."
+        },
+        "source": {
+          "type": "object",
+          "required": [
+            "path",
+            "kpf"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "const": "texture"
+            },
+            "kpf": {
+              "$ref": "#/$defs/kpfRef"
+            }
+          }
+        },
+        "crop": {
+          "type": "object",
+          "description": "The source rectangle in image pixels that `box` shows, when the page clips the image (a Keynote image mask). Absent when the whole image is visible.",
+          "required": [
+            "x",
+            "y",
+            "w",
+            "h"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "x": {
+              "type": "number",
+              "minimum": 0
+            },
+            "y": {
+              "type": "number",
+              "minimum": 0
+            },
+            "w": {
+              "type": "number",
+              "minimum": 0
+            },
+            "h": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "flip": {
+          "enum": [
+            "vertical"
+          ],
+          "description": "The page draws the image upside down (a negative height in the PDF). The player mirrors the box vertically; `crop` is in the stored image's pixels."
+        }
+      }
+    },
+    "videoElement": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/elementCommon"
+        }
+      ],
+      "required": [
+        "src",
+        "poster",
+        "loop"
+      ],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": {
+          "const": "video"
+        },
+        "src": {
+          "type": "object",
+          "required": [
+            "mp4",
+            "webm"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "mp4": {
+              "$ref": "#/$defs/mediaPath"
+            },
+            "webm": {
+              "$ref": "#/$defs/mediaPath"
+            }
+          }
+        },
+        "poster": {
+          "$ref": "#/$defs/mediaPath"
+        },
+        "loop": {
+          "type": "boolean"
+        },
+        "source": {
+          "type": "object",
+          "required": [
+            "path",
+            "kpf",
+            "originalGif",
+            "originalBytes",
+            "transparent"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "const": "texture"
+            },
+            "kpf": {
+              "$ref": "#/$defs/kpfRef"
+            },
+            "originalGif": {
+              "type": "string",
+              "minLength": 1
+            },
+            "originalBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "transparent": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "element": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "text",
+            "image",
+            "video",
+            "shape"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "text"
+              }
+            }
+          },
+          "then": {
+            "$ref": "#/$defs/textElement"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "image"
+              }
+            }
+          },
+          "then": {
+            "$ref": "#/$defs/imageElement"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "video"
+              }
+            }
+          },
+          "then": {
+            "$ref": "#/$defs/videoElement"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "shape"
+              }
+            }
+          },
+          "then": {
+            "$ref": "#/$defs/shapeElement"
+          }
+        }
+      ]
+    },
+    "build": {
+      "type": "object",
+      "required": [
+        "step",
+        "effect",
+        "unit",
+        "direction",
+        "duration",
+        "targets",
+        "kpf"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "step": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "effect": {
+          "enum": [
+            "move-in",
+            "dissolve",
+            "wipe",
+            "keyboard",
+            "appear",
+            "line-draw",
+            "fade-and-move",
+            "movie-start"
+          ]
+        },
+        "unit": {
+          "enum": [
+            "object",
+            "word",
+            "character"
+          ]
+        },
+        "direction": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/direction"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stagger": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Seconds between consecutive units of a per-word or per-character build, derived from the KPF keyframes (0 when one keyframe moves the whole text)."
+        },
+        "offsets": {
+          "type": "array",
+          "description": "Seconds after `begin` at which each target is revealed, one per target, from the per-leaf hidden keyframes (apple:keyboard).",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "kpf": {
+          "type": "object",
+          "required": [
+            "name",
+            "attributes"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "attributes": {
+              "type": "object"
+            },
+            "objectID": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "begin": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Seconds after the step starts. Nested KPF effects begin when their parent ends.",
+          "default": 0
+        },
+        "distance": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Pixels a move-in travels along its direction, from the KPF keyframes."
+        },
+        "automatic": {
+          "type": "boolean",
+          "description": "True when the KPF event has automaticPlay: the step plays on arrival or after the previous step.",
+          "default": false
+        }
+      }
+    },
+    "transition": {
+      "type": "object",
+      "required": [
+        "kind",
+        "duration"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "push",
+            "dissolve",
+            "none"
+          ]
+        },
+        "direction": {
+          "$ref": "#/$defs/direction"
+        },
+        "duration": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "push"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "direction": {
+            "$ref": "#/$defs/direction"
+          }
+        },
+        "required": [
+          "direction"
+        ]
+      }
+    },
+    "slide": {
+      "type": "object",
+      "required": [
+        "id",
+        "index",
+        "background",
+        "elements",
+        "builds",
+        "transition"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "background": {
+          "type": "object",
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "color"
+            },
+            "value": {
+              "$ref": "#/$defs/hex6"
+            }
+          }
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/element"
+          }
+        },
+        "builds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/build"
+          }
+        },
+        "transition": {
+          "$ref": "#/$defs/transition"
+        },
+        "kpf": {
+          "type": "object",
+          "description": "Textures the converter read and did not draw.",
+          "additionalProperties": false,
+          "properties": {
+            "snapshots": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Full-slide composite pages (textureType 0) that the KPF player draws for transitions and scene caches."
+            },
+            "stills": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Picture pages replaced by a video element (the first GIF frame)."
+            },
+            "compositeAsContent": {
+              "type": "boolean",
+              "description": "True when the textureType 0 page was the event's only content leaf and was converted as content (D-009 F1)."
+            }
+          }
+        }
+      }
+    },
+    "shape": {
+      "type": "object",
+      "description": "A body path of a text page (a bar, a rule, an overlay) in slide coordinates, drawn under the words.",
+      "required": [
+        "d",
+        "fill"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "d": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fill": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/hex6"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "stroke": {
+          "$ref": "#/$defs/hex6"
+        },
+        "strokeWidth": {
+          "type": "number",
+          "minimum": 0
+        },
+        "clip": {
+          "$ref": "#/$defs/clip"
+        },
+        "dash": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          },
+          "description": "The stroke dash array in slide units (SVG stroke-dasharray scaled with the stroke), drawn with setLineDash (D-019 F-04)."
+        }
+      }
+    },
+    "shapeElement": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/elementCommon"
+        }
+      ],
+      "required": [
+        "paths"
+      ],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": {
+          "const": "shape"
+        },
+        "paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/shape"
+          }
+        },
+        "source": {
+          "type": "object",
+          "required": [
+            "path",
+            "kpf"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "const": "pdf"
+            },
+            "kpf": {
+              "$ref": "#/$defs/kpfRef"
+            }
+          }
+        }
+      }
+    },
+    "clip": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Clip paths in slide coordinates (SVG path d), applied in turn: the parts outside any of them are not drawn. Set only where a clip of the page may cut the outline (D-019 F-03)."
+    }
+  }
+}

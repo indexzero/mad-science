@@ -1,0 +1,25 @@
+{
+  "name": "spike-2",
+  "ratio": 0,
+  "mismatched": 0,
+  "unmasked": 0,
+  "masked": 518400,
+  "vacuous": true,
+  "regions": [
+    {
+      "id": "D97C61E084CEC103AC9FC2EFB49B4E37",
+      "ratio": 0.0021527777777777778,
+      "pixels": 518400
+    }
+  ],
+  "finalStateUnmaskedRatio": 0.004303626543209877,
+  "finalStateMismatched": 2231,
+  "videoTimes": [
+    {
+      "D97C61E084CEC103AC9FC2EFB49B4E37": 1.1936
+    },
+    {
+      "D97C61E084CEC103AC9FC2EFB49B4E37": 1.6975
+    }
+  ]
+}

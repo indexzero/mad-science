@@ -1,0 +1,103 @@
+{
+  "format": "kinetic/1",
+  "id": "_all_docs",
+  "title": "_all_docs.final.key",
+  "width": 1920,
+  "height": 1080,
+  "source": {
+    "kpf": "https://all-docs.talks.charlie.dev/",
+    "key": "2025/_all_docs.final.key",
+    "convertedAt": "2026-10-20T15:00:00Z",
+    "converter": "6a63103"
+  },
+  "slides": [
+    {
+      "id": "C1F6FE7C-13D3-4213-B5B2-00EBC914A8EB",
+      "index": 1,
+      "background": { "kind": "color", "value": "#000000" },
+      "elements": [
+        {
+          "id": "DD0E500702D69DAD346BB235AB389CAB",
+          "kind": "text",
+          "box": { "x": 1195.484, "y": 844.787, "w": 240, "h": 60 },
+          "words": [
+            {
+              "d": "M0 0L10 0L10 10L0 10Z",
+              "box": { "x": 1195.484, "y": 844.787, "w": 100, "h": 60 },
+              "text": "OCT",
+              "chars": [
+                { "d": "M0 0L10 0L10 10L0 10Z", "box": { "x": 1195.484, "y": 844.787, "w": 40, "h": 60 }, "text": "O" }
+              ]
+            }
+          ],
+          "fill": "#2f302c",
+          "text": "OCT",
+          "source": {
+            "path": "pdf",
+            "kpf": { "slide": "C1F6FE7C-13D3-4213-B5B2-00EBC914A8EB", "texture": "DD0E500702D69DAD346BB235AB389CAB", "page": 0, "textureType": 5, "isBackgroundTexture": false }
+          }
+        },
+        {
+          "id": "4A5B92597518866B8643DA6521C4D6DA",
+          "kind": "image",
+          "box": { "x": 0, "y": 0, "w": 1920, "h": 1080 },
+          "src": "media/C1F6FE7C-13D3-4213-B5B2-00EBC914A8EB/4A5B92597518866B8643DA6521C4D6DA.png",
+          "scale": 2,
+          "hidden": true,
+          "source": {
+            "path": "texture",
+            "kpf": { "slide": "C1F6FE7C-13D3-4213-B5B2-00EBC914A8EB", "texture": "4A5B92597518866B8643DA6521C4D6DA", "page": 1, "textureType": 6, "isBackgroundTexture": true }
+          }
+        }
+      ],
+      "builds": [
+        {
+          "step": 1,
+          "effect": "move-in",
+          "unit": "word",
+          "direction": "left",
+          "duration": 0.5,
+          "stagger": 0.05,
+          "targets": ["DD0E500702D69DAD346BB235AB389CAB"],
+          "kpf": { "name": "apple:move in", "attributes": { "direction": 12 } }
+        }
+      ],
+      "transition": { "kind": "push", "direction": "left", "duration": 0.75 }
+    },
+    {
+      "id": "59BDD422-82F7-4357-91FC-9651246E9546",
+      "index": 2,
+      "background": { "kind": "color", "value": "#ffffff" },
+      "elements": [
+        {
+          "id": "thinking-wilder",
+          "kind": "video",
+          "box": { "x": 735, "y": 422, "w": 450, "h": 236 },
+          "src": { "mp4": "media/shared/0123456789ab.mp4", "webm": "media/shared/0123456789ab.webm" },
+          "poster": "media/shared/0123456789ab.png",
+          "loop": true,
+          "opacity": 1,
+          "source": {
+            "path": "texture",
+            "kpf": { "slide": "59BDD422-82F7-4357-91FC-9651246E9546", "texture": "thinking-wilder.gif-0.0000-5.3900", "page": 0, "textureType": 0, "isBackgroundTexture": false },
+            "originalGif": "thinking-wilder.gif-0.0000-5.3900.gif",
+            "originalBytes": 7832519,
+            "transparent": false
+          }
+        }
+      ],
+      "builds": [
+        {
+          "step": 1,
+          "effect": "movie-start",
+          "unit": "object",
+          "direction": null,
+          "duration": 0,
+          "targets": ["thinking-wilder"],
+          "kpf": { "name": "apple:movie-start", "attributes": {} }
+        }
+      ],
+      "transition": { "kind": "none", "duration": 0 }
+    }
+  ]
+}
