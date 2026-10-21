@@ -54,6 +54,7 @@ function baseSecurity(c: Context): void {
 const TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
   '.wasm': 'application/wasm'
 };
 
@@ -65,11 +66,16 @@ function typeOf(path: string): string | undefined {
 /** Vendor roots: URL prefix -> directory in node_modules. */
 const VENDOR: Record<string, string> = {
   'jco-transpile': 'node_modules/@bytecodealliance/jco-transpile/vendor/',
-  'preview2-shim': 'node_modules/@bytecodealliance/preview2-shim/dist/browser/'
+  'preview2-shim': 'node_modules/@bytecodealliance/preview2-shim/dist/browser/',
+  // Prism 1.30.0 (core + clike + javascript), copied into the project.
+  prism: 'public/vendor/prism/'
 };
 
+/** jco's two prebuilt glue files that import preview2-shim by bare name. */
+const NEEDS_REWRITE = new Set(['js-component-bindgen-component.js', 'wasm-tools.js']);
+
 /**
- * jco's bindgen glue imports bare specifiers such as
+ * jco's prebuilt glue (bindgen and wasm-tools) imports bare specifiers such as
  * '@bytecodealliance/preview2-shim/cli'. Module workers have no import maps,
  * so the server rewrites those four specifiers to same-origin /vendor/ URLs.
  * Nothing else in the file changes.
@@ -108,6 +114,8 @@ export function createApp(): Hono {
   });
 
   app.get('/main.js', (c) => sendFile(c, 'public/main.js'));
+  app.get('/style.css', (c) => sendFile(c, 'public/style.css'));
+  app.get('/prism-manual.js', (c) => sendFile(c, 'public/prism-manual.js'));
 
   app.get('/guest-worker.js', (c) => {
     c.header('Content-Security-Policy', WORKER_CSP);
@@ -119,7 +127,9 @@ export function createApp(): Hono {
     const rest = c.req.path.slice(`/vendor/${c.req.param('pkg')}/`.length);
     if (!dir || !SAFE.test(rest) || rest.includes('..')) return c.notFound();
     const transform =
-      rest === 'js-component-bindgen-component.js' ? rewriteShimSpecifiers : undefined;
+      c.req.param('pkg') === 'jco-transpile' && NEEDS_REWRITE.has(rest)
+        ? rewriteShimSpecifiers
+        : undefined;
     return sendFile(c, dir + rest, transform);
   });
 

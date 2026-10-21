@@ -14,14 +14,16 @@ export default defineConfig({
   retries: 0,
   reporter: [['list'], ['./tests/table-reporter.ts']],
   timeout: 60_000,
+  // Each browser records the show: test-results/<test>-<browser>/video.webm
+  use: { video: 'on' },
   projects: [
     { name: 'http', testMatch: /headers\.spec\.ts/ },
-    { name: 'chromium', testMatch: /probes\.spec\.ts/, use: { ...devices['Desktop Chrome'] } },
+    { name: 'chromium', testMatch: /(probes|layout)\.spec\.ts/, use: { ...devices['Desktop Chrome'] } },
     {
       name: 'firefox',
-      testMatch: /probes\.spec\.ts/,
+      testMatch: /(probes|layout)\.spec\.ts/,
       use: { ...devices['Desktop Firefox'], channel: firefoxChannel }
     },
-    { name: 'webkit', testMatch: /probes\.spec\.ts/, use: { ...devices['Desktop Safari'] } }
+    { name: 'webkit', testMatch: /(probes|layout)\.spec\.ts/, use: { ...devices['Desktop Safari'] } }
   ]
 });

@@ -2,6 +2,9 @@
 //   default-src 'none'; script-src 'self' blob: 'wasm-unsafe-eval'; connect-src 'none'
 // It transpiles the guest component with jco, imports the generated glue
 // from a blob: URL, runs it, then probes what this agent can and cannot do.
+//
+// Messages in:  load, call, set-log-mode, probe, ping
+// Messages out: ready, log, result, probe-results, pong, error
 
 // Record every CSP violation in this agent. originalPolicy tells us which
 // policy (the worker's or the page's) the browser applied.
@@ -23,6 +26,25 @@ const errorOf = (err) => (err ? `${err.name}: ${err.message}` : String(err));
 let instance = null;
 let loadMessage = null;
 const facts = { glueBlobImport: null, generateMs: null };
+let probedOnce = false;
+let pinged = false;
+
+/** What the host's `log` import does. The page picks the mode. */
+let logMode = 'plain';
+let logCalls = 0;
+// <excerpt:host-log>
+function hostLog(msg) {
+  logCalls += 1;
+  const text =
+    logMode === 'shout' ? msg.toUpperCase() : logMode === 'count' ? `#${logCalls} ${msg}` : msg;
+  self.postMessage({ type: 'log', msg: text, mode: logMode });
+}
+// </excerpt:host-log>
+
+async function sha256(bytes) {
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
 
 /**
  * jco's bindgen glue loads its own two core wasm files with
@@ -88,6 +110,7 @@ async function load({ component, bindgenCores }) {
   }
 
   const t2 = performance.now();
+  // <excerpt:instantiate>
   instance = await mod.instantiate(
     (name) => {
       const bytes = coreModules.get(name);
@@ -96,20 +119,33 @@ async function load({ component, bindgenCores }) {
     },
     {
       // The one import the host supplies. It crosses back to the page.
-      'washe:poc/host': { log: (msg) => self.postMessage({ type: 'log', msg }) }
+      'washe:poc/host': { log: hostLog }
     }
   );
+  // </excerpt:instantiate>
   const instantiateMs = performance.now() - t2;
 
-  self.postMessage({
-    type: 'ready',
-    exports: Object.keys(instance),
+  // Hand a COPY of the glue to the page, so the page can try it too (page 2).
+  const glueCopy = glue.slice().buffer;
+  self.postMessage(
+    {
+      type: 'ready',
+      exports: Object.keys(instance),
+      component: { imports: output.imports, exports: output.exports },
+      glue: glueCopy,
+      glueSha256: await sha256(glue),
+      // The worker's own Resource Timing entries; the page cannot see them.
+      resources: performance
+        .getEntriesByType('resource')
+        .map((e) => ({ name: e.name, decodedBodySize: e.decodedBodySize })),
     timings: { bindgenInitMs, generateMs, instantiateMs },
     sizes: {
       glueJs: glue.byteLength,
-      coreModules: Object.fromEntries([...coreModules].map(([n, b]) => [n, b.byteLength]))
-    }
-  });
+        coreModules: Object.fromEntries([...coreModules].map(([n, b]) => [n, b.byteLength]))
+      }
+    },
+    [glueCopy]
+  );
 }
 
 /** Try `fn`; report whether it threw synchronously or rejected. */
@@ -142,6 +178,7 @@ function webSocketProbe(url) {
 }
 
 async function probes() {
+  violations.length = 0; // each run reports only its own violations
   const p = {};
   p.glueBlobImport = facts.glueBlobImport;
   p.generateMs = facts.generateMs;
@@ -186,8 +223,30 @@ self.addEventListener('message', async ({ data }) => {
       await load(data);
     } else if (data.type === 'call') {
       const output = instance.run(data.input);
-      self.postMessage({ type: 'result', input: data.input, output });
-      self.postMessage({ type: 'probe-results', probes: await probes() });
+      self.postMessage({ type: 'result', input: data.input, output, seq: data.seq });
+      if (!probedOnce) {
+        probedOnce = true;
+        self.postMessage({ type: 'probe-results', probes: await probes() });
+      }
+    } else if (data.type === 'set-log-mode') {
+      logMode = data.mode;
+    } else if (data.type === 'probe') {
+      self.postMessage({ type: 'probe-results', probes: await probes(), rerun: true });
+    } else if (data.type === 'ping') {
+      // One ping only. The worker enforces it, not just the page's button.
+      if (pinged) {
+        self.postMessage({ type: 'pong', refused: true, reply: 'one ping only' });
+      } else {
+        pinged = true;
+        self.postMessage({
+          type: 'pong',
+          refused: false,
+          reply: 'pong',
+          echo: String(data.msg),
+          reversed: [...String(data.msg)].reverse().join(''),
+          from: `a worker where typeof document is "${typeof document}"`
+        });
+      }
     }
   } catch (err) {
     self.postMessage({ type: 'error', error: `${data.type}: ${err?.stack ?? err}` });

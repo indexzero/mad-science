@@ -18,9 +18,15 @@ test('GET / carries the exact page CSP and no inline script', async ({ request }
   expect(res.headers()['referrer-policy']).toBe('strict-origin-when-cross-origin');
   const html = await res.text();
   const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
-  expect(scripts).toHaveLength(1);
-  expect(scripts[0][1]).toContain('src="/main.js"');
-  expect(scripts[0][2].trim()).toBe('');
+  // Every script is external, same-origin, and has an empty body.
+  expect(scripts.map((m) => m[1].match(/\ssrc="([^"]+)"/)?.[1])).toEqual([
+    '/prism-manual.js',
+    '/vendor/prism/prism-core.min.js',
+    '/vendor/prism/prism-clike.min.js',
+    '/vendor/prism/prism-javascript.min.js',
+    '/main.js'
+  ]);
+  for (const m of scripts) expect(m[2].trim()).toBe('');
   expect(html).not.toMatch(/\son[a-z]+\s*=/i); // no inline event handlers
 });
 
@@ -46,6 +52,15 @@ test('vendor and component files are served same-origin', async ({ request }) =>
   const text = await glue.text();
   expect(text).not.toContain("'@bytecodealliance/preview2-shim/");
   expect(text).toContain("'/vendor/preview2-shim/cli.js'");
+  for (const f of ['prism-core.min.js', 'prism-clike.min.js', 'prism-javascript.min.js']) {
+    const res = await request.get(`${base()}/vendor/prism/${f}`);
+    expect(res.status(), f).toBe(200);
+    expect(res.headers()['content-type']).toMatch(/^text\/javascript/);
+  }
+  const wt = await request.get(`${base()}/vendor/jco-transpile/wasm-tools.js`);
+  expect(await wt.text()).not.toContain("'@bytecodealliance/preview2-shim/");
+  const css = await request.get(`${base()}/style.css`);
+  expect(css.headers()['content-type']).toMatch(/^text\/css/);
   const wasm = await request.get(`${base()}/components/guest.wasm`);
   expect(wasm.headers()['content-type']).toBe('application/wasm');
   expect((await wasm.body()).subarray(0, 4)).toEqual(Buffer.from([0, 0x61, 0x73, 0x6d]));
