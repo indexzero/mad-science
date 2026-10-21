@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-/** Default cache root: stage/1/kinetic/.cache/kpf (gitignored). */
+/** Default cache root: stage/2/kinetic/.cache/kpf (gitignored). */
 export const DEFAULT_CACHE_DIR = join(here, '..', '.cache', 'kpf');
 
 /** A browser-like agent. The host answers 403 to Python's default agent; Node's default `node` gets 200. */

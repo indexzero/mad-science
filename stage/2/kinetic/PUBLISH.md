@@ -1,5 +1,5 @@
 ---
-stage: 1
+stage: 2
 project: kinetic
 status: "publish notes only; no upload was performed by this run"
 measured: "2026-10-21, at the checkpoint 4 head of branch 1/kinetic"

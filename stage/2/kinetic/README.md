@@ -1,5 +1,5 @@
 ---
-stage: 1
+stage: 2
 project: kinetic
 status: "built, machine-checkable Done"
 done: "bash check.sh"

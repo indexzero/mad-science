@@ -817,7 +817,7 @@ One preload defect was found and fixed while that was probed. `goto(n)` loads n+
 
 ### Fonts
 
-`e2e/fonts.spec.js` plays all 71 slides: 387 requests, 0 font requests. `find stage/1/kinetic -type f` for `.ttf`, `.otf`, `.woff`, `.woff2`, and `.cff` outside `node_modules` prints nothing.
+`e2e/fonts.spec.js` plays all 71 slides: 387 requests, 0 font requests. `find stage/2/kinetic -type f` for `.ttf`, `.otf`, `.woff`, `.woff2`, and `.cff` outside `node_modules` prints nothing.
 
 ### GIF transcode table
 
