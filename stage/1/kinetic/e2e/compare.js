@@ -103,6 +103,86 @@ export function masksCoverFrame(n, width = 960, height = 540) {
   return maskedPixels(videoMasks(n, width, height), width, height) === width * height;
 }
 
+/** Text element boxes of slide n scaled to the capture size and clamped to the frame; boxes with no visible area are left out. */
+export function textBoxes(n, width = 960, height = 540) {
+  const sx = width / DECK.width;
+  const sy = height / DECK.height;
+  const out = [];
+  for (const e of slideByIndex(n).elements) {
+    if (e.kind !== 'text') continue;
+    const x0 = Math.max(0, Math.floor(e.box.x * sx));
+    const y0 = Math.max(0, Math.floor(e.box.y * sy));
+    const x1 = Math.min(width, Math.ceil((e.box.x + e.box.w) * sx));
+    const y1 = Math.min(height, Math.ceil((e.box.y + e.box.h) * sy));
+    if (x1 > x0 && y1 > y0) out.push({ id: e.id, x: x0, y: y0, w: x1 - x0, h: y1 - y0 });
+  }
+  return out;
+}
+
+/**
+ * True when a video box of slide n overlaps any text box (D-019 F-02, D-020 CP3-F2). The box mask would
+ * then hide text, so the slide is compared under `animated-pixels-masked`: only the pixels that move are
+ * masked, and the still text is compared.
+ */
+export function masksCoverText(n, width = 960, height = 540) {
+  const masks = videoMasks(n, width, height);
+  return textBoxes(n, width, height).some((t) => masks.some((m) => m.x < t.x + t.w && m.x + m.w > t.x && m.y < t.y + t.h && m.y + m.h > t.y));
+}
+
+/** A per-pixel mask (1 masks the pixel out) from mask boxes. */
+export function boxMask(masks, width, height) {
+  const out = new Uint8Array(width * height);
+  for (const m of masks) {
+    for (let y = Math.max(0, m.y); y < Math.min(height, m.y + m.h); y++) {
+      for (let x = Math.max(0, m.x); x < Math.min(width, m.x + m.w); x++) out[y * width + x] = 1;
+    }
+  }
+  return out;
+}
+
+/**
+ * For each text box of slide n: the pixels of the box the comparison sees (not masked) and, given the RGBA
+ * diff of pixelmatch, the compared pixels it flags as mismatched (pure red). Returns [{ id, compared, mismatched, pixels }];
+ * with `union` one entry over the union of the boxes.
+ */
+export function textCoverage(n, pixelMask, diff = null, width = 960, height = 540, union = false) {
+  const boxes = textBoxes(n, width, height);
+  if (union) {
+    // one entry over the union of the boxes, each pixel counted once
+    const seen = new Uint8Array(width * height);
+    let compared = 0;
+    let mismatched = 0;
+    let pixels = 0;
+    for (const t of boxes) {
+      for (let y = t.y; y < t.y + t.h; y++) {
+        for (let x = t.x; x < t.x + t.w; x++) {
+          const p = y * width + x;
+          if (seen[p]) continue;
+          seen[p] = 1;
+          pixels += 1;
+          if (pixelMask[p]) continue;
+          compared += 1;
+          if (diff && diff[p * 4] === 255 && diff[p * 4 + 1] === 0 && diff[p * 4 + 2] === 0) mismatched += 1;
+        }
+      }
+    }
+    return boxes.length ? [{ id: 'union', compared, mismatched, pixels }] : [];
+  }
+  return boxes.map((t) => {
+    let compared = 0;
+    let mismatched = 0;
+    for (let y = t.y; y < t.y + t.h; y++) {
+      for (let x = t.x; x < t.x + t.w; x++) {
+        const p = y * width + x;
+        if (pixelMask[p]) continue;
+        compared += 1;
+        if (diff && diff[p * 4] === 255 && diff[p * 4 + 1] === 0 && diff[p * 4 + 2] === 0) mismatched += 1;
+      }
+    }
+    return { id: t.id, compared, mismatched, pixels: t.w * t.h };
+  });
+}
+
 function cropPng(png, m) {
   const out = new PNG({ width: m.w, height: m.h });
   for (let y = 0; y < m.h; y++) {
@@ -144,7 +224,7 @@ export function compareCaptures(name, liveBuf, newBuf, masks = []) {
   const ratio = unmasked > 0 ? mismatched / unmasked : 0;
   const result = { name, ratio, mismatched, unmasked, masked, vacuous: unmasked === 0, regions };
   writeFileSync(join(CAPTURES, `${name}.json`), JSON.stringify(result, null, 2) + '\n');
-  return result;
+  return { ...result, diff: diff.data };
 }
 
 /**
@@ -152,21 +232,31 @@ export function compareCaptures(name, liveBuf, newBuf, masks = []) {
  * or more frames per side taken at the same build state. A pixel moves when pixelmatch flags it between
  * any two consecutive frames of one side. The mask is dilated by `dilate` pixels so the fringe of a moving
  * region is masked too. Used where a video box covers the frame: the GIF phase cannot be aligned between
- * the two players, so the moving pixels are excluded and the still content is compared.
+ * the two players, so the moving pixels are excluded and the still content is compared. `liveOnly` is an
+ * optional per-pixel region (the glyph pixels) where the motion of the new side is ignored.
  */
-export function animatedMask(liveFrames, newFrames, width, height, dilate = 2) {
+export function animatedMask(liveFrames, newFrames, width, height, dilate = 2, liveOnly = null) {
   const mask = new Uint8Array(width * height);
   for (const frames of [liveFrames, newFrames]) {
+    // inside `liveOnly` (the glyph pixels) only the live side's motion masks a pixel: a glyph is still on
+    // the live side, and a new side that fails to draw it shows the video moving there (D-019 F-02)
+    const skip = frames === newFrames ? liveOnly : null;
     for (let i = 1; i < frames.length; i++) {
       const a = decode(frames[i - 1]);
       const b = decode(frames[i]);
       const d = new PNG({ width, height });
       pixelmatch(a.data, b.data, d.data, width, height, { threshold: THRESHOLD, diffMask: true });
-      for (let p = 0; p < width * height; p++) if (d.data[p * 4 + 3] > 0) mask[p] = 1;
+      for (let p = 0; p < width * height; p++) if (d.data[p * 4 + 3] > 0 && !(skip && skip[p])) mask[p] = 1;
     }
   }
-  if (!dilate) return mask;
+  return dilateMask(mask, width, height, dilate);
+}
+
+/** A per-pixel mask grown by `r` pixels in every direction (a square neighbourhood). */
+export function dilateMask(mask, width, height, r) {
+  if (!r) return mask;
   const out = new Uint8Array(mask);
+  const dilate = r;
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       if (!mask[y * width + x]) continue;
@@ -210,7 +300,7 @@ export function compareCapturesMasked(name, liveBuf, newBuf, pixelMask) {
   const ratio = unmasked > 0 ? mismatched / unmasked : 0;
   const result = { name, ratio, mismatched, unmasked, masked, vacuous: unmasked === 0, regions: [] };
   writeFileSync(join(CAPTURES, `${name}.json`), JSON.stringify(result, null, 2) + '\n');
-  return result;
+  return { ...result, diff: diff.data };
 }
 
 export function toleranceFor(name) {

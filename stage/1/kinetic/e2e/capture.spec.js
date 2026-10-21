@@ -13,7 +13,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import pixelmatch from 'pixelmatch';
 import { gotoLive, advanceLive, settle, indicatorHidden, LIVE_BASE, SETTLE_MS } from './live.js';
-import { compareCaptures, compareCapturesMasked, animatedMask, recordExtra, toleranceFor, videoMasks, slideByIndex, TOLERANCE, THRESHOLD, decode, pushBoundary, rawProgress, CAPTURES, DECK, FRAME_GAP_MS, animatedFrameCount, masksCoverFrame } from './compare.js';
+import { compareCaptures, compareCapturesMasked, animatedMask, recordExtra, toleranceFor, videoMasks, slideByIndex, TOLERANCE, THRESHOLD, decode, pushBoundary, rawProgress, CAPTURES, DECK, FRAME_GAP_MS, animatedFrameCount, masksCoverFrame, masksCoverText, boxMask, textCoverage, dilateMask } from './compare.js';
 import { stepDuration, stepIsAutomatic, lastStep } from '../player/effects.js';
 
 const PLAYER = (n) => `player/index.html?deck=../decks/_all_docs/deck.json#${n}`;
@@ -94,11 +94,19 @@ async function frames(page, gapMs = FRAME_GAP_MS, count = 3) {
 }
 
 /**
- * The frame count per side for slide n: 3, or where the video boxes cover the frame (the moving pixels are
- * masked instead) one frame every FRAME_GAP_MS over the slide's longest video loop.
+ * The rule of slide n: `animated-pixels-masked` where the video boxes cover the frame (the box mask is
+ * vacuous) or overlap a text box (the box mask would hide text, D-019 F-02); else `masked`.
+ */
+function ruleFor(n) {
+  return masksCoverFrame(n) || masksCoverText(n) ? 'animated-pixels-masked' : 'masked';
+}
+
+/**
+ * The frame count per side for slide n: 3, or where the moving pixels are masked one frame every
+ * FRAME_GAP_MS over the slide's longest video loop.
  */
 function frameCount(n) {
-  return masksCoverFrame(n) ? animatedFrameCount(n) : 3;
+  return ruleFor(n) === 'animated-pixels-masked' ? animatedFrameCount(n) : 3;
 }
 
 /** Merge one slide's result into captures/ratios.json. */
@@ -111,7 +119,7 @@ function recordRatio(key, entry) {
     default: TOLERANCE.default,
     rules: {
       masked: 'video boxes masked on both sides, the rest compared',
-      'animated-pixels-masked': 'the video boxes cover the frame (vacuous mask), so the final state is compared with the pixels that move on either side (frames 400 ms apart per side over the longest video loop of the slide, 3 to 32 frames, dilated 2 px) masked out; unmaskedRatio is the design rule number, the first frames compared with no mask, recorded',
+      'animated-pixels-masked': 'the video boxes cover the frame (vacuous mask) or overlap a text box (the box mask would hide text), so the final state is compared with the pixels that move on either side (frames 400 ms apart per side over the longest video loop of the slide, 3 to 32 frames, dilated 2 px; on the glyph pixels of deck.json only the motion of the live side) masked out; unmaskedRatio is the first frames compared with no mask, recorded',
     },
     slides: ordered,
   };
@@ -120,25 +128,68 @@ function recordRatio(key, entry) {
 
 /**
  * Compare a live and a new final-state capture of slide n under the design's rule: the video boxes masked.
- * When the boxes cover the frame (the vacuous case) the final state is compared with the pixels that move
- * on either side masked out (the GIF phase cannot be aligned between the two players), and the unmasked
- * ratio of the first frames is recorded beside it. `liveFrames` and `newFrames` are the frame lists of
- * `frames()`; the first frame of each is the capture. Returns the result with `rule` set.
+ * When the boxes cover the frame (the vacuous case) or overlap a text box (D-019 F-02), the final state is
+ * compared with the pixels that move on either side masked out (the GIF phase cannot be aligned between
+ * the two players; on the glyph pixels only the live side's motion counts), and the unmasked ratio of
+ * the first frames is recorded beside it. `glyphs` is the glyph region of `glyphRegion()`. `liveFrames` and `newFrames` are the frame lists of `frames()`;
+ * the first frame of each is the capture. Returns the result with `rule` set, `text` (the compared and
+ * mismatched pixels of each text box), and `textUnion` (the same over the union of the text boxes).
  */
-function compareFinal(name, n, liveFrames, newFrames) {
+function compareFinal(name, n, liveFrames, newFrames, glyphs) {
   const live = liveFrames[0];
   const mine = newFrames[0];
   const masks = videoMasks(n, 960, 540);
-  let r = compareCaptures(name, live, mine, masks);
-  let rule = 'masked';
+  const rule = ruleFor(n);
+  let r;
+  let pixelMask;
   let unmaskedRatio = null;
-  if (r.vacuous) {
+  if (rule === 'masked') {
+    r = compareCaptures(name, live, mine, masks);
+    pixelMask = boxMask(masks, 960, 540);
+  } else {
     const u = compareCaptures(name, live, mine, []);
     unmaskedRatio = u.ratio;
-    r = compareCapturesMasked(name, live, mine, animatedMask(liveFrames, newFrames, 960, 540));
-    rule = 'animated-pixels-masked';
+    pixelMask = animatedMask(liveFrames, newFrames, 960, 540, 2, glyphs);
+    r = compareCapturesMasked(name, live, mine, pixelMask);
   }
-  return { ...r, rule, unmaskedRatio, maskedFraction: r.masked / (960 * 540) };
+  const text = textCoverage(n, pixelMask, r.diff);
+  const union = textCoverage(n, pixelMask, r.diff, 960, 540, true)[0] ?? { compared: 0, mismatched: 0 };
+  return { ...r, rule, unmaskedRatio, maskedFraction: r.masked / (960 * 540), text, textUnion: union };
+}
+
+/**
+ * The pixels the glyphs of slide n cover at 960x540, dilated 2 px: every word outline of deck.json filled
+ * on a canvas of `page`, without the player's code (a player that fails to draw a glyph does not shrink
+ * the region). On these pixels only the motion of the live side masks a pixel (D-019 F-02).
+ */
+async function glyphRegion(page, n) {
+  const paths = [];
+  for (const e of slideByIndex(n).elements) {
+    if (e.kind !== 'text') continue;
+    for (const w of e.words) paths.push(w.d ?? (w.chars || []).map((c) => c.d).join(''));
+  }
+  const on = await page.evaluate(({ paths, w, h, sw, sh }) => {
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    const ctx = c.getContext('2d');
+    ctx.scale(w / sw, h / sh);
+    ctx.fillStyle = '#ffffff';
+    for (const d of paths) ctx.fill(new Path2D(d));
+    const a = ctx.getImageData(0, 0, w, h).data;
+    const out = [];
+    for (let i = 0; i < w * h; i++) if (a[i * 4 + 3] > 0) out.push(i);
+    return out;
+  }, { paths, w: 960, h: 540, sw: DECK.width, sh: DECK.height });
+  const mask = new Uint8Array(960 * 540);
+  for (const i of on) mask[i] = 1;
+  return dilateMask(mask, 960, 540, 2);
+}
+
+/** Text coverage summary: text boxes with at least one compared pixel; compared and mismatched pixels over the union of the text boxes. */
+function textSummary(r) {
+  const { compared, mismatched } = r.textUnion;
+  return { boxes: r.text.length, boxesCompared: r.text.filter((t) => t.compared > 0).length, compared, mismatched, ratio: compared ? Math.round((mismatched / compared) * 1e6) / 1e6 : null };
 }
 
 test.describe('spike captures', () => {
@@ -250,9 +301,10 @@ test.describe('all slides at their final build state', () => {
       const fresh = await browser.newPage({ viewport: { width: 960, height: 540 } });
       await newFinalState(fresh, n);
       const newFrames = await frames(fresh, FRAME_GAP_MS, count);
+      const glyphs = await glyphRegion(fresh, n);
       await fresh.close();
 
-      const r = compareFinal(String(n), n, liveFrames, newFrames);
+      const r = compareFinal(String(n), n, liveFrames, newFrames, glyphs);
       const tolerance = toleranceFor(String(n));
       const entry = {
         ratio: Math.round(r.ratio * 1e6) / 1e6,
@@ -262,16 +314,19 @@ test.describe('all slides at their final build state', () => {
         ...(r.unmaskedRatio !== null ? { unmaskedRatio: Math.round(r.unmaskedRatio * 1e6) / 1e6 } : {}),
         maskedFraction: Math.round(r.maskedFraction * 1000) / 1000,
         videoRegions: r.regions.map((x) => Math.round(x.ratio * 1000) / 1000),
+        text: textSummary(r),
         presses,
         frames: count,
         tolerance,
         pass: r.ratio < tolerance,
       };
       recordRatio(String(n), entry);
-      console.log(`slide ${n}: ${r.rule}, mismatch ratio ${r.ratio.toFixed(5)} (${r.mismatched} of ${r.unmasked} pixels, mask ${(r.maskedFraction * 100).toFixed(1)} percent${r.unmaskedRatio !== null ? `, unmasked ${r.unmaskedRatio.toFixed(5)}` : ''}), ${presses} ArrowRight, tolerance ${tolerance}`);
+      console.log(`slide ${n}: ${r.rule}, mismatch ratio ${r.ratio.toFixed(5)} (${r.mismatched} of ${r.unmasked} pixels, mask ${(r.maskedFraction * 100).toFixed(1)} percent${r.unmaskedRatio !== null ? `, unmasked ${r.unmaskedRatio.toFixed(5)}` : ''}), ${presses} ArrowRight, tolerance ${tolerance}; text boxes compared ${entry.text.boxesCompared} of ${entry.text.boxes}, text pixels ${entry.text.mismatched} of ${entry.text.compared} mismatched (${entry.text.ratio})`);
       // a ratio over zero compared pixels passes vacuously: a wholly masked final state must fall to the
       // animated-pixels-masked rule, and that rule must leave pixels to compare
       expect(r.unmasked).toBeGreaterThan(0);
+      // every text element with a visible box has at least one compared pixel (D-019 F-02, D-020 CP3-F2)
+      for (const t of r.text) expect(t.compared, `text ${t.id} of slide ${n} is compared`).toBeGreaterThan(0);
       expect(r.ratio).toBeLessThan(tolerance);
     });
   }
@@ -291,7 +346,7 @@ test.describe('word build (Q-007)', () => {
     await newFinalState(fresh, N);
     const newFrames = await frames(fresh, FRAME_GAP_MS, count);
     const mine = newFrames[0];
-    const r = compareFinal('word-build', N, liveFrames, newFrames);
+    const r = compareFinal('word-build', N, liveFrames, newFrames, await glyphRegion(fresh, N));
     console.log(`word-build slide ${N} unit ${build.unit} (${build.targets.length} target, ${build.duration} s, direction ${build.direction}, stagger ${build.stagger}): ${r.rule}, mismatch ratio ${r.ratio.toFixed(5)} (${r.mismatched} of ${r.unmasked} pixels), ${presses} ArrowRight, tolerance ${toleranceFor('word-build')}`);
 
     // mid-build, new side: the automatic step frozen at 0.4 s of the 1 s character move-in; the frame must
