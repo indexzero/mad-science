@@ -1,0 +1,15 @@
+package washe:poc;
+
+/// The one host function the guest may call. The host supplies it at
+/// instantiation time, so the host decides what "log" means.
+interface host {
+  log: func(msg: string);
+}
+
+world guest {
+  import host;
+
+  /// Count the words in `input`, separated by ASCII whitespace.
+  /// Returns the count as a decimal string, e.g. "a b c" -> "3".
+  export run: func(input: string) -> string;
+}
