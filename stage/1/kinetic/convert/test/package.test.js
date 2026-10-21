@@ -15,7 +15,7 @@ test('package.json names the scripts the design names', () => {
   assert.equal(pkg.scripts.test, 'node --test convert/test/*.test.js');
   assert.equal(pkg.scripts.convert, 'node convert/index.js');
   assert.equal(pkg.scripts.e2e, 'playwright test');
-  assert.equal(pkg.scripts.validate, 'node convert/validate.js decks/_all_docs/deck.json');
+  assert.equal(pkg.scripts.validate, 'node convert/validate.js decks/_all_docs/deck.json --slides 71');
 });
 
 test('dev dependencies are pinned to exact versions', () => {

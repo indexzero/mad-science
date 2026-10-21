@@ -9,7 +9,7 @@
     "test": "node --test convert/test/*.test.js",
     "convert": "node convert/index.js",
     "e2e": "playwright test",
-    "validate": "node convert/validate.js decks/_all_docs/deck.json"
+    "validate": "node convert/validate.js decks/_all_docs/deck.json --slides 71"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1",

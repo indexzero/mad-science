@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { validateDeck, formatError, MAX_ERRORS } from '../validate.js';
+import { validateDeck, formatError, MAX_ERRORS, doneChecks } from '../validate.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const load = (name) => JSON.parse(readFileSync(join(here, 'fixtures', name), 'utf8'));
@@ -70,4 +70,13 @@ test('a shape element with paths validates; a text element may carry paths', () 
   assert.equal(ok, true, errors.map(formatError).join('\n'));
   deck.slides[0].elements[2].paths = [];
   assert.equal(validateDeck(deck).ok, false);
+});
+
+test('the Done checks: the slide count and source.path on every element', () => {
+  const deck = { slides: [{ index: 1, elements: [{ id: 'a', source: { path: 'pdf' } }, { id: 'b', source: {} }] }] };
+  assert.deepEqual(doneChecks(deck, { slides: 1 }), ['slide 1 element b: no source.path']);
+  assert.deepEqual(doneChecks(deck, { slides: 71 }), ['expected 71 slides, found 1', 'slide 1 element b: no source.path']);
+  deck.slides[0].elements[1].source.path = 'texture';
+  assert.deepEqual(doneChecks(deck, { slides: 1 }), []);
+  assert.deepEqual(doneChecks(deck), []);
 });

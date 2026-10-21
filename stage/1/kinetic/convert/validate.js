@@ -1,5 +1,6 @@
 // Validate a deck.json against schema/deck.schema.json (JSON Schema draft 2020-12).
-// CLI: node convert/validate.js <deck.json>. Exits 1 with the first 20 errors on failure.
+// CLI: node convert/validate.js <deck.json> [--slides <n>]. Exits 1 with the first 20 errors on failure.
+// `--slides n` adds the Done checks of check.sh: the deck has n slides and every element has `source.path`.
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
@@ -37,8 +38,35 @@ export function formatError(e) {
   return `${where}: ${e.message}${extra}`;
 }
 
+/**
+ * The Done checks beyond the schema: `slides` entries when `slides` is a number, and `source.path` on every
+ * element. Returns a list of problems, empty when the deck passes.
+ */
+export function doneChecks(deck, { slides } = {}) {
+  const problems = [];
+  const list = Array.isArray(deck.slides) ? deck.slides : [];
+  if (typeof slides === 'number' && list.length !== slides) problems.push(`expected ${slides} slides, found ${list.length}`);
+  for (const s of list) {
+    for (const e of s.elements || []) {
+      if (!e.source || typeof e.source.path !== 'string') problems.push(`slide ${s.index} element ${e.id}: no source.path`);
+    }
+  }
+  return problems;
+}
+
 export function main(argv) {
-  const file = argv[0];
+  const args = [...argv];
+  let slides;
+  const at = args.indexOf('--slides');
+  if (at >= 0) {
+    slides = Number(args[at + 1]);
+    args.splice(at, 2);
+    if (!Number.isInteger(slides)) {
+      console.error('--slides needs an integer');
+      return 2;
+    }
+  }
+  const file = args[0];
   if (!file) {
     console.error('usage: node convert/validate.js <deck.json>');
     return 2;
@@ -46,7 +74,14 @@ export function main(argv) {
   const deck = JSON.parse(readFileSync(resolve(file), 'utf8'));
   const { ok, errors } = validateDeck(deck);
   if (ok) {
-    console.log(`valid: ${file} (${deck.slides.length} slides)`);
+    const problems = doneChecks(deck, { slides });
+    if (problems.length) {
+      console.error(`invalid: ${file}, ${problems.length} Done check(s) failed:`);
+      for (const p of problems.slice(0, MAX_ERRORS)) console.error('  ' + p);
+      return 1;
+    }
+    const elements = deck.slides.reduce((n, s) => n + s.elements.length, 0);
+    console.log(`valid: ${file} (${deck.slides.length} slides${slides !== undefined ? `, ${slides} expected` : ''}; ${elements} elements, each with source.path)`);
     return 0;
   }
   console.error(`invalid: ${file}, first ${errors.length} error(s):`);
