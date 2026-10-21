@@ -1,0 +1,30 @@
+{
+  "name": "word-build",
+  "ratio": 0.0014542149511474665,
+  "mismatched": 192,
+  "unmasked": 132030,
+  "masked": 386370,
+  "vacuous": false,
+  "regions": [
+    {
+      "id": "D4E5E3CF93F568706799F8B699D243C4",
+      "ratio": 0.1487356678831172,
+      "pixels": 386370
+    }
+  ],
+  "slide": 71,
+  "unit": "character",
+  "effect": "move-in",
+  "kpfName": "apple:move in character",
+  "targets": [
+    "CF7A1DA9812093555DC04CF1ECC15C20"
+  ],
+  "stagger": 0,
+  "rule": "masked",
+  "midBuild": {
+    "frozenAt": 0.4,
+    "pixelsMovedVsFinal": 126260,
+    "liveVsNewRatio": 0.6119972733469666,
+    "asserted": false
+  }
+}

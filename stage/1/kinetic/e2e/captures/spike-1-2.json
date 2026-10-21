@@ -1,7 +1,7 @@
 {
   "name": "spike-1-2",
-  "ratio": 0.0007310956790123457,
-  "mismatched": 379,
+  "ratio": 0.0007272376543209876,
+  "mismatched": 377,
   "unmasked": 518400,
   "masked": 0,
   "vacuous": false,

@@ -8,18 +8,18 @@
   "regions": [
     {
       "id": "D97C61E084CEC103AC9FC2EFB49B4E37",
-      "ratio": 0.06106867283950617,
+      "ratio": 0.00927662037037037,
       "pixels": 518400
     }
   ],
-  "finalStateUnmaskedRatio": 0.0006057098765432098,
-  "finalStateMismatched": 314,
+  "finalStateUnmaskedRatio": 0.0037249228395061728,
+  "finalStateMismatched": 1931,
   "videoTimes": [
     {
-      "D97C61E084CEC103AC9FC2EFB49B4E37": 1.2221
+      "D97C61E084CEC103AC9FC2EFB49B4E37": 1.2227
     },
     {
-      "D97C61E084CEC103AC9FC2EFB49B4E37": 1.7269
+      "D97C61E084CEC103AC9FC2EFB49B4E37": 1.7268
     }
   ]
 }

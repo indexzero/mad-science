@@ -1,7 +1,7 @@
 {
   "name": "spike-2-final",
-  "ratio": 0.0006057098765432098,
-  "mismatched": 314,
+  "ratio": 0.0037249228395061728,
+  "mismatched": 1931,
   "unmasked": 518400,
   "masked": 0,
   "vacuous": false,
