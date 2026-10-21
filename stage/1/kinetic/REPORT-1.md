@@ -1,6 +1,6 @@
 ---
-checkpoint: 2
-date: "2026-10-20"
+checkpoint: 3
+date: "2026-10-21"
 deck: "presentations/2025/_all_docs.final.key (268,682,708 bytes, read-only)"
 live_export: "https://all-docs.talks.charlie.dev/"
 design: "orckits indexzero/mad-science/2026-10-kinetic/TECHNICAL.DESIGN.md, DESIGN-FINAL revision 5 (checkpoint 1 was written against revision 3)"
@@ -626,3 +626,301 @@ Source: `e2e/captures/spike-bench.json`, written by `e2e/bench.spec.js`. The liv
 | three captures under tolerance | this section, Captures and tolerance |
 | word split error count, push direction, Q-005, `source.path`, benchmark, direction code space | this section |
 | corrections after the CP1 reviews | Corrections after review |
+
+## Checkpoint 3
+
+All census effects map to the build vocabulary. All 71 slides convert to `decks/_all_docs/deck.json` and `media/`. The player plays every slide. The Playwright suite captures all 71 slides against the live export, proves the preload under network throttling, and finds no font request. The numbers below come from `pnpm convert` (summary in `.cache/convert-summary.json`), `pnpm test`, and the final full `pnpm e2e` run at `37526f0` on 2026-10-21 (79 passed, 0 failed, 30.4 minutes), or from `du` and `stat` over the committed tree. The capture platform is this Mac, chromium-1248 through Playwright 1.64.1, at 960x540, with `pixelmatch` 8.0.0 at threshold 0.1.
+
+### Effect mapping
+
+`convert/effects.js` maps every KPF name that the census found. It counts every visited `buildIn` effect by name before deduplication, so the mapped counts equal the recursive census of checkpoint 1. Zero names fell back to `appear`. The converter summary has an empty `unknownEffects` on all 71 slides.
+
+| KPF name | kinetic effect | unit | mapped (recursive) | builds in `deck.json` | note |
+|---|---|---|---|---|---|
+| `apple:move in` | `move-in` | `object`, or `word` when every target is a one-word text element | 153 | 152 | one effect has the same targets as a sibling in its step and folds into it |
+| `apple:move in character` | `move-in` | `character` | 14 | 14 | |
+| `apple:dissolve` | `dissolve` | `object` | 25 | 25 | |
+| `apple:dissolve character` | `dissolve` | `character` | 4 | 4 | |
+| `apple:wipe` | `wipe` | `object` | 10 | 10 | code 11 (6) is `right` and code 12 (2) is `left`; code 21 (2) has no decoded direction and plays the KPF opacity ramp |
+| `apple:keyboard` | `keyboard` | `character` | 8 | 8 | one reveal offset per character (`Build.offsets`, 291 in total) |
+| `apple:appear` | `appear` | `object` | 1 | 1 | |
+| `apple:bc-appear` | `appear` | `object` | 1 | 1 | |
+| `apple:fade and move` | `fade-and-move` | `object` | 2 | 2 | |
+| `com.apple.iWork.Keynote.LineDraw` | `line-draw` | `object` | 3 | 3 | durations 2 s, 2 s, 1 s |
+| `renderMovie` | `movie-start` | `object` | 90 | 0 | folds into its parent `apple:movie-start` |
+| `apple:movie-start` | `movie-start` | `object` | 90 | 90 | |
+| `apple:push` | `push` | slide | 70 | 70 | `left` 55, `up` 7, `down` 5, `right` 3 |
+| `none` | `none` | slide | 1 | 1 | slide 8 |
+| unknown | `appear` | | 0 | 0 | zero fallbacks |
+
+Totals: 310 builds in 84 steps (30 manual, 54 automatic). By unit: 259 `object`, 25 `word`, 26 `character`. The converter checked the direction code of every `apple:move in`, `apple:move in character`, and `apple:fade and move` against its position keyframes: 168 agree and 0 disagree. A per-word or per-character `move-in` has one `position` keyframe for the whole text, so all 39 of them have `Build.stagger` 0. Slides 15, 49, and 70 play six videos at once.
+
+### Converter, all 71 slides
+
+| count | value |
+|---|---|
+| elements | 794: 485 text, 147 image, 90 video, 72 shape |
+| `source.path`, all 71 slides | `key` 0, `pdf` 557, `texture` 237 |
+| text-texture fallbacks (a text page that became a raster) | 0 |
+| mixed pages | 41 on 14 slides (slide:pages 12:2, 27:6, 29:1, 33:4, 39:3, 41:4, 44:1, 46:2, 51:1, 57:7, 58:4, 60:1, 64:1, 65:4) |
+| `mixedFallbacks` | 0 |
+| mixed pages with an image between glyph rows | 11 |
+| picture pages | 73: 70 take their embedded image stream, 3 take a 1x raster |
+| images upside down in their page (`flip: "vertical"`) | 57 |
+| composite-as-content slides | 10: 1, 23, 31, 43, 44, 53, 54, 61, 62, 63 |
+| hidden elements | 558 of 794 |
+| orphans (hidden, no build step) | 0 |
+| `.key` parse | 5,116 strings; 217 of 485 text elements have every word as a whole token in a harvested run; the font condition is not evaluable, so `key` stays 0 (see Checkpoint 2) |
+| font files that `mutool extract` wrote | 0 |
+| `deck.json` | 12,536,963 bytes; 2,037 words; 10,501 glyph outlines |
+
+Every `texture` element is an image or a video. No text page fell back to a raster.
+
+Convert wall time: 39.6 s (`time pnpm convert --key .../2025/_all_docs.final.key`, real) from a warm cache. The cache holds the slide JSON, the PDFs, the GIFs, and the SVG pages, and the 73 transcodes are reused from `media/shared`. The run changed only `source.convertedAt` and `source.converter` in `deck.json`, which are the committer date and short sha of HEAD by design. No media file changed. The committed `deck.json` keeps the values of its own convert (`1e5e7d6`).
+
+### Captures, all 71
+
+Each slide is captured at its final build state on both sides. Rule `masked` masks the video boxes on both sides and compares the rest. Where the video boxes cover the frame, that comparison has no pixels, so rule `animated-pixels-masked` compares the final state with the pixels that move on either side masked out. Each side takes one frame every 400 ms over the longest video loop of the slide, 3 to 32 frames, and the mask is dilated by 2 pixels. Before this checkpoint the rule took three frames. On slide 64 that missed the pixels that the Earth GIF moves later in its 5.72 s loop, and one run measured 0.03382 from the GIF phase alone. With the loop sampled, three runs of slide 64 measured 0.00287, 0.00288, and 0.00289.
+
+| measure | value |
+|---|---|
+| slides | 71, all under their tolerance |
+| min | 0 (slide 3) |
+| median | 0.00099 |
+| max | 0.03673 (slide 60, override 0.045) |
+| slides above 0.01 | 27 (0.01133), 43 (0.01135), 44 (0.01825), 52 (0.01912), 60 (0.03673), 61 (0.01066), 62 (0.01219) |
+| rule `masked` | 37 slides: 1, 3, 4, 5, 7, 8, 11, 12, 15, 16, 19, 23, 24, 28, 31, 39, 42, 43, 44, 47, 49, 50, 51, 52, 53, 54, 56, 58, 59, 61, 62, 63, 66, 68, 69, 70, 71 |
+| rule `animated-pixels-masked` | 34 slides: 2, 6, 9, 10, 13, 14, 17, 18, 20, 21, 22, 25, 26, 27, 29, 30, 32, 33, 34, 35, 36, 37, 38, 40, 41, 45, 46, 48, 55, 57, 60, 64, 65, 67 |
+| default tolerance | 0.03, not raised |
+
+Overrides in `e2e/tolerance.json` (one):
+
+| slide | tolerance | measured | reason |
+|---|---|---|---|
+| 60 | 0.045 | 0.03673 | a full-slide code listing in small monospace text and a hatched red box: the mismatched pixels sit on glyph and hatch edges (the live PDF raster renders the thin strokes heavier than the Path2D fill), no layout or colour difference; measured 0.037 |
+
+Under rule `masked`, slide 7 compares 1,080 pixels and slide 3 compares 2,022, because their video boxes cover 99.8 and 99.6 percent of the frame. The suite asserts that at least one pixel is compared. Those two slides prove only their uncovered strip.
+
+Per slide (`frames` is the frame count per side):
+
+| # | rule | ratio | compared pixels | masked fraction | frames | tolerance |
+|---|---|---|---|---|---|---|
+| 1 | masked | 0.00002 | 518,400 | 0 | 3 | 0.03 |
+| 2 | animated-pixels-masked | 0.00048 | 402,284 | 0.224 | 15 | 0.03 |
+| 3 | masked | 0.00000 | 2,022 | 0.996 | 3 | 0.03 |
+| 4 | masked | 0.00060 | 518,400 | 0 | 3 | 0.03 |
+| 5 | masked | 0.00005 | 165,240 | 0.681 | 3 | 0.03 |
+| 6 | animated-pixels-masked | 0.00005 | 455,420 | 0.121 | 6 | 0.03 |
+| 7 | masked | 0.00000 | 1,080 | 0.998 | 3 | 0.03 |
+| 8 | masked | 0.00001 | 164,160 | 0.683 | 3 | 0.03 |
+| 9 | animated-pixels-masked | 0.00129 | 475,580 | 0.083 | 6 | 0.03 |
+| 10 | animated-pixels-masked | 0.00025 | 477,393 | 0.079 | 4 | 0.03 |
+| 11 | masked | 0.00000 | 140,160 | 0.73 | 3 | 0.03 |
+| 12 | masked | 0.00161 | 518,400 | 0 | 3 | 0.03 |
+| 13 | animated-pixels-masked | 0.00426 | 434,711 | 0.161 | 15 | 0.03 |
+| 14 | animated-pixels-masked | 0.00173 | 389,787 | 0.248 | 5 | 0.03 |
+| 15 | masked | 0.00000 | 11,291 | 0.978 | 3 | 0.03 |
+| 16 | masked | 0.00003 | 130,140 | 0.749 | 3 | 0.03 |
+| 17 | animated-pixels-masked | 0.00045 | 396,957 | 0.234 | 5 | 0.03 |
+| 18 | animated-pixels-masked | 0.00101 | 119,521 | 0.769 | 8 | 0.03 |
+| 19 | masked | 0.00143 | 518,400 | 0 | 3 | 0.03 |
+| 20 | animated-pixels-masked | 0.00028 | 450,280 | 0.131 | 21 | 0.03 |
+| 21 | animated-pixels-masked | 0.00019 | 334,695 | 0.354 | 13 | 0.03 |
+| 22 | animated-pixels-masked | 0.00404 | 504,532 | 0.027 | 8 | 0.03 |
+| 23 | masked | 0.00605 | 518,400 | 0 | 3 | 0.03 |
+| 24 | masked | 0.00546 | 518,400 | 0 | 3 | 0.03 |
+| 25 | animated-pixels-masked | 0.00073 | 309,325 | 0.403 | 10 | 0.03 |
+| 26 | animated-pixels-masked | 0.00064 | 303,481 | 0.415 | 31 | 0.03 |
+| 27 | animated-pixels-masked | 0.01133 | 512,944 | 0.011 | 14 | 0.03 |
+| 28 | masked | 0.00196 | 518,400 | 0 | 3 | 0.03 |
+| 29 | animated-pixels-masked | 0.00636 | 381,049 | 0.265 | 5 | 0.03 |
+| 30 | animated-pixels-masked | 0.00012 | 385,600 | 0.256 | 10 | 0.03 |
+| 31 | masked | 0.00954 | 518,400 | 0 | 3 | 0.03 |
+| 32 | animated-pixels-masked | 0.00013 | 447,492 | 0.137 | 5 | 0.03 |
+| 33 | animated-pixels-masked | 0.00600 | 270,013 | 0.479 | 10 | 0.03 |
+| 34 | animated-pixels-masked | 0.00414 | 518,400 | 0 | 8 | 0.03 |
+| 35 | animated-pixels-masked | 0.00000 | 472,678 | 0.088 | 13 | 0.03 |
+| 36 | animated-pixels-masked | 0.00366 | 355,208 | 0.315 | 11 | 0.03 |
+| 37 | animated-pixels-masked | 0.00000 | 437,054 | 0.157 | 4 | 0.03 |
+| 38 | animated-pixels-masked | 0.00106 | 303,787 | 0.414 | 6 | 0.03 |
+| 39 | masked | 0.00283 | 518,400 | 0 | 3 | 0.03 |
+| 40 | animated-pixels-masked | 0.00087 | 435,789 | 0.159 | 3 | 0.03 |
+| 41 | animated-pixels-masked | 0.00351 | 281,152 | 0.458 | 7 | 0.03 |
+| 42 | masked | 0.00005 | 129,600 | 0.75 | 3 | 0.03 |
+| 43 | masked | 0.01135 | 518,400 | 0 | 3 | 0.03 |
+| 44 | masked | 0.01825 | 518,400 | 0 | 3 | 0.03 |
+| 45 | animated-pixels-masked | 0.00076 | 400,784 | 0.227 | 8 | 0.03 |
+| 46 | animated-pixels-masked | 0.00035 | 510,992 | 0.014 | 16 | 0.03 |
+| 47 | masked | 0.00019 | 116,145 | 0.776 | 3 | 0.03 |
+| 48 | animated-pixels-masked | 0.00029 | 175,682 | 0.661 | 5 | 0.03 |
+| 49 | masked | 0.00032 | 81,000 | 0.844 | 3 | 0.03 |
+| 50 | masked | 0.00497 | 518,400 | 0 | 3 | 0.03 |
+| 51 | masked | 0.00310 | 518,400 | 0 | 3 | 0.03 |
+| 52 | masked | 0.01912 | 518,400 | 0 | 3 | 0.03 |
+| 53 | masked | 0.00000 | 518,400 | 0 | 3 | 0.03 |
+| 54 | masked | 0.00000 | 518,400 | 0 | 3 | 0.03 |
+| 55 | animated-pixels-masked | 0.00008 | 405,247 | 0.218 | 4 | 0.03 |
+| 56 | masked | 0.00007 | 138,997 | 0.732 | 3 | 0.03 |
+| 57 | animated-pixels-masked | 0.00453 | 517,059 | 0.003 | 16 | 0.03 |
+| 58 | masked | 0.00186 | 518,400 | 0 | 3 | 0.03 |
+| 59 | masked | 0.00011 | 73,113 | 0.859 | 3 | 0.03 |
+| 60 | animated-pixels-masked | 0.03673 | 518,400 | 0 | 15 | 0.045 |
+| 61 | masked | 0.01066 | 518,400 | 0 | 3 | 0.03 |
+| 62 | masked | 0.01219 | 518,400 | 0 | 3 | 0.03 |
+| 63 | masked | 0.00995 | 518,400 | 0 | 3 | 0.03 |
+| 64 | animated-pixels-masked | 0.00294 | 180,172 | 0.652 | 16 | 0.03 |
+| 65 | animated-pixels-masked | 0.00243 | 233,886 | 0.549 | 6 | 0.03 |
+| 66 | masked | 0.00628 | 518,400 | 0 | 3 | 0.03 |
+| 67 | animated-pixels-masked | 0.00099 | 295,081 | 0.431 | 4 | 0.03 |
+| 68 | masked | 0.00477 | 518,400 | 0 | 3 | 0.03 |
+| 69 | masked | 0.00018 | 518,400 | 0 | 3 | 0.03 |
+| 70 | masked | 0.00081 | 40,763 | 0.921 | 3 | 0.03 |
+| 71 | masked | 0.00157 | 132,030 | 0.745 | 3 | 0.03 |
+
+### Word build (Q-007)
+
+Slide 71, `apple:move in character`, unit `character`, effect `move-in`, rule `masked`: 0.00145 (192 of 132,030 pixels), under 0.03. The mid-build frame at 0.4 s of the new player differs from its final state by 126,260 pixels, so the characters are in flight. Live against new at that moment is 0.612, recorded and not asserted, because the start of an automatic build on the live player cannot be observed.
+
+### Preload under throttling
+
+CDP `Network.emulateNetworkConditions` at 1.5 Mbit/s down, 750 kbit/s up, 150 ms latency, applied before the player loads. The first slide is drawn after 67,744 ms, because `deck.json` (12,536,963 bytes) loads under the throttle.
+
+| measure | value |
+|---|---|
+| slowest preload | slide 67 (n+2 is 69), 23,436 ms, waived: 4,332,357 bytes, floor 23,856 ms |
+| slowest preload within the 10 s bar | slide 28 (n+2 is 30), 9,747 ms, 1,783,570 bytes |
+| largest frame delta, 30 frames after each of 70 changes | 16.8 ms (1 to 2); every change measured 16.7 or 16.8 ms |
+| failures | 0 |
+
+Waivers. The 10 s bar moves 1,875,000 bytes at this throttle. Where the media still pending at goto(n) needs more than 10 s by its transfer floor (bytes at 1.5 Mbit/s plus one 150 ms latency per round of six requests), the spec asserts the floor plus 10 s instead and records the waiver in `e2e/captures/preload.json`. This is a deviation from the design's bar. The supervisor decides at the gate.
+
+| n | pending | bytes | requests | floor ms | bar ms | preload ms |
+|---|---|---|---|---|---|---|
+| 1 | 2, 3 | 2,063,675 | 12 | 11,306 | 21,306 | 11,383 |
+| 2 | 4 | 2,096,523 | 11 | 11,481 | 21,481 | 11,410 |
+| 10 | 12 | 2,533,464 | 6 | 13,662 | 23,662 | 13,775 |
+| 13 | 15 | 2,491,341 | 12 | 13,587 | 23,587 | 13,877 |
+| 44 | 46 | 1,995,752 | 12 | 10,944 | 20,944 | 10,915 |
+| 47 | 49 | 2,173,165 | 12 | 11,890 | 21,890 | 11,860 |
+| 48 | 50 | 2,479,669 | 6 | 13,375 | 23,375 | 13,463 |
+| 62 | 64 | 1,991,188 | 11 | 10,920 | 20,920 | 10,859 |
+| 67 | 69 | 4,332,357 | 25 | 23,856 | 33,856 | 23,436 |
+| 68 | 70 | 2,945,976 | 13 | 16,162 | 26,162 | 15,959 |
+
+The frame bar. The first full run of this checkpoint (D-017, 2026-10-21 01:30Z) failed five changes: 40 to 41 at 83.3 ms, 56 to 57 at 100 ms, 62 to 63 at 83.2 ms, 63 to 64 at 116.6 ms, and 66 to 67 at 116.5 ms. The failure did not come back in five later runs with the same frame loop: the preload spec alone, the whole suite with the capture spec ahead of it, the final full run, and two probes of slides 36 to 68 with 4 and 12 busy-loop processes on the 10 CPUs (1-minute load up to 37.8). Every change in them held 16.8 ms. No player code path was shown to cause it, so the frame code is unchanged. The cause is not verified. That run had no recorded load, and the host had a kernel panic about 37 minutes after it. The bar (50 ms over the 30 frames after a change) is not raised and not waived.
+
+One preload defect was found and fixed while that was probed. `goto(n)` loads n+1, n+2, and then n-1, and then evicts outside that window. When n-1 was slow, an older call could evict after a later `goto` had loaded its own n+2, and that slide then stayed unready. Now only the newest call evicts. The test "a slow older preload never evicts the newer window" holds back the slide 37 media for 4 s and asserts that slides 38 to 41 stay preloaded.
+
+### Fonts
+
+`e2e/fonts.spec.js` plays all 71 slides: 385 requests, 0 font requests. `find stage/1/kinetic -type f` for `.ttf`, `.otf`, `.woff`, `.woff2`, and `.cff` outside `node_modules` prints nothing.
+
+### GIF transcode table
+
+`ffmpeg` 9.0.1 transcodes each distinct GIF once, keyed by the sha256 of its bytes. MP4: `-movflags faststart -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -pix_fmt yuv420p -c:v libx264 -crf 23 -an`. WebM: the same scale, then `-pix_fmt yuv420p -c:v libvpx-vp9 -b:v 0 -crf 32 -an`. Poster: `-frames:v 1`. No GIF has alpha in its first frame, so every WebM is `yuv420p`. A name is the original basename without its `.gif-<start>-<end>.gif` suffix. The ratio is MP4 plus WebM plus poster bytes over the original GIF bytes. The table is regenerated from the committed `deck.json` and `media/`.
+
+| sha256-12 | original name | slides | original bytes | MP4 bytes | WebM bytes | poster bytes | ratio |
+|---|---|---|---|---|---|---|---|
+| `c0de2c644e86` | seen-things | 11 | 12,619,759 | 318,028 | 229,045 | 157,226 | 5.6 percent |
+| `16e9e587d147` | brooklyn99-papers | 3 | 10,090,326 | 434,994 | 347,224 | 237,526 | 10.1 percent |
+| `7b841497aff9` | it-could-work | 57 | 9,432,988 | 191,198 | 192,958 | 76,557 | 4.9 percent |
+| `c9cced4b0ea5` | thinking-wilder | 2 | 7,832,519 | 168,098 | 137,722 | 142,993 | 5.7 percent |
+| `80d5734cad33` | Air Pollution Nyc GIF by Njorg | 15 | 7,778,774 | 806,490 | 747,506 | 129,081 | 21.6 percent |
+| `aa383b9c8acb` | Earth Planet GIF by National Institute of Standards and Technology (NIST) | 46, 56, 59, 64 | 7,617,051 | 515,146 | 796,544 | 219,104 | 20.1 percent |
+| `cddd415d2d3f` | confused | 45 | 5,276,820 | 101,378 | 113,665 | 187,541 | 7.6 percent |
+| `bd6561d2e1e0` | thank-you-creek | 70 | 5,240,950 | 117,326 | 153,089 | 346,944 | 11.8 percent |
+| `2d2d3df44ac2` | water splashing GIF | 26 | 4,983,623 | 468,160 | 567,165 | 76,122 | 22.3 percent |
+| `899d4dc037eb` | made-myself-sad | 16 | 4,506,188 | 113,883 | 158,776 | 114,581 | 8.6 percent |
+| `e31205c33cd5` | sneakers-david-strathairn | 35 | 4,345,128 | 202,696 | 99,733 | 144,330 | 10.3 percent |
+| `a234efda99a8` | thank-you-so-much | 70 | 4,277,295 | 141,692 | 148,616 | 194,025 | 11.3 percent |
+| `27e735f95842` | limbo-hermes | 46, 47, 59, 64 | 3,715,642 | 260,425 | 254,866 | 182,007 | 18.8 percent |
+| `acf234523c05` | i-was-zero-cool-zero-cool | 34 | 3,381,521 | 93,955 | 74,301 | 135,505 | 9.0 percent |
+| `cd6e9ca6a6be` | what year is it GIF | 18 | 3,170,227 | 112,263 | 99,955 | 176,651 | 12.3 percent |
+| `ee6ae0c5f195` | motion geyser GIF | 26 | 3,144,404 | 145,773 | 148,480 | 183,122 | 15.2 percent |
+| `0a7df24b56af` | skeptical-chicken | 6 | 2,992,279 | 101,455 | 76,743 | 161,101 | 11.3 percent |
+| `575e8a5a38c4` | bell-building | 5 | 2,985,102 | 293,898 | 202,477 | 176,683 | 22.5 percent |
+| `317acaacd074` | Work Spinning GIF by Beeld en Geluid | 3 | 2,769,344 | 238,647 | 293,569 | 116,180 | 23.4 percent |
+| `f362cecef0ea` | delivery GIF (1) | 20 | 2,751,550 | 461,660 | 229,112 | 126,881 | 29.7 percent |
+| `f52413383c81` | simpsons-electricity | 15 | 2,563,551 | 369,818 | 435,749 | 356,738 | 45.3 percent |
+| `ef79f073bf6f` | Doc Brown Model GIF by Back to the Future Trilogy | 42 | 2,462,484 | 182,386 | 188,371 | 270,581 | 26.0 percent |
+| `56cf528d6731` | Delivery GIF | 21 | 2,421,404 | 157,561 | 128,281 | 200,283 | 20.1 percent |
+| `18c689610dc0` | Files Workload GIF | 3 | 2,371,804 | 203,094 | 142,859 | 292,495 | 26.9 percent |
+| `8d03a6159faf` | Sand Emerge GIF by Warner Bros. Pictures | 33 | 2,363,690 | 107,972 | 118,183 | 176,228 | 17.0 percent |
+| `cddf1a8e58f1` | life below zero GIF by National Geographic Channel | 65 | 2,333,365 | 176,714 | 169,917 | 158,844 | 21.7 percent |
+| `245c979dae54` | Skeleton Dance Halloween GIF by Squirrel Monkey | 30 | 2,304,699 | 366,146 | 335,790 | 153,435 | 37.1 percent |
+| `0156df90fab6` | externals-box | 13, 60 | 2,220,559 | 402,437 | 427,626 | 205,513 | 46.6 percent |
+| `684b628c36a9` | Fox Tv Help GIF by 9-1-1 on FOX | 36 | 2,167,592 | 240,286 | 176,521 | 219,715 | 29.4 percent |
+| `b2bb87f3b176` | Black And White Halloween GIF by Fleischer Studios | 30 | 2,164,215 | 374,205 | 387,986 | 145,902 | 42.0 percent |
+| `d932efd65cd9` | show-me-matrix | 41 | 2,133,170 | 88,002 | 77,172 | 121,609 | 13.4 percent |
+| `951866a179fc` | water rodeo GIF | 26 | 2,128,622 | 578,876 | 386,441 | 66,237 | 48.5 percent |
+| `db06727fc718` | thank-you-bruce-lee | 70 | 2,015,536 | 192,707 | 149,629 | 265,919 | 30.2 percent |
+| `561eb9a00d7f` | Climate Change Earth GIF by INTO ACTION (6) | 49 | 1,952,897 | 328,083 | 252,224 | 343,484 | 47.3 percent |
+| `a24fe2880fca` | Halloween Skeleton GIF by Squirrel Monkey | 30 | 1,894,298 | 134,157 | 123,605 | 139,778 | 21.0 percent |
+| `d5f8f4c18a0f` | Confused Green Bay Packers GIF by Martellus Bennett's Text Back Pack | 25 | 1,784,165 | 132,828 | 152,856 | 190,363 | 26.7 percent |
+| `f33a15f5e5e4` | Democratic Socialism GIF by NYC-DSA | 15 | 1,702,280 | 139,988 | 123,567 | 94,400 | 21.0 percent |
+| `590e2ee1e9eb` | Old School Yes GIF | 67 | 1,353,246 | 104,376 | 146,562 | 159,227 | 30.3 percent |
+| `913d50c82e55` | Doc Brown GIF by Back to the Future Trilogy | 48 | 1,326,249 | 115,090 | 108,247 | 309,797 | 40.2 percent |
+| `f7481163a85f` | i-got-a-solution | 55 | 1,199,351 | 135,287 | 147,337 | 223,956 | 42.2 percent |
+| `9da92e8cc405` | force-with-you | 71 | 1,184,055 | 46,697 | 41,500 | 104,391 | 16.3 percent |
+| `53b5c5ed56c2` | 171023-CRUSHER-KEVINJBEATY-01 | 29 | 1,131,251 | 151,418 | 135,475 | 258,326 | 48.2 percent |
+| `f6022fb1ac92` | Pollute Climate Crisis GIF by INTO ACTION (1) | 49 | 1,127,936 | 198,459 | 223,397 | 298,944 | 63.9 percent |
+| `a2a24e8b88d2` | elmo-thanks | 70 | 1,095,168 | 76,505 | 58,468 | 224,798 | 32.9 percent |
+| `8925b1be03b2` | back to the future lightning GIF | 15 | 1,077,494 | 282,672 | 210,919 | 32,714 | 48.8 percent |
+| `157d90947e33` | back_off_scientist_ghostbusters | 9 | 983,866 | 70,243 | 65,428 | 88,652 | 22.8 percent |
+| `013989b3cb24` | angry-computer-panda | 27 | 975,919 | 707,965 | 750,635 | 48,751 | 154.5 percent |
+| `dbcf16ee2f06` | package-delivery | 8 | 921,034 | 205,287 | 243,457 | 142,745 | 64.2 percent |
+| `b44e23973809` | Climate Change Earth GIF by INTO ACTION (5) | 49 | 848,832 | 184,654 | 178,658 | 199,449 | 66.3 percent |
+| `29b1ee029ab1` | files filing cabinet GIF | 3 | 799,039 | 105,203 | 44,382 | 138,989 | 36.1 percent |
+| `4eb1863bbdaa` | bored gravity falls GIF | 22 | 742,288 | 132,047 | 94,010 | 175,850 | 54.1 percent |
+| `61d86126e214` | studying short circuit GIF | 38 | 739,806 | 117,628 | 108,078 | 98,286 | 43.8 percent |
+| `8c67b43c2ca4` | books-pile | 3 | 640,031 | 164,101 | 105,842 | 63,894 | 52.2 percent |
+| `7a8116205f0c` | thank-you | 70 | 553,299 | 107,308 | 48,187 | 112,850 | 48.5 percent |
+| `32d461292530` | mel brooks comedy GIF | 17 | 524,706 | 70,340 | 36,162 | 188,208 | 56.2 percent |
+| `8bd18aba3be6` | cat-book | 32 | 484,205 | 98,195 | 79,991 | 74,065 | 52.1 percent |
+| `950b4a6900d4` | zoidberg | 7 | 477,885 | 39,680 | 56,019 | 120,300 | 45.2 percent |
+| `855a2eb67bfd` | scorpio | 46, 47, 56, 59, 64 | 468,913 | 58,629 | 58,968 | 232,717 | 74.7 percent |
+| `5926c9077f2e` | work publishing GIF | 37 | 453,943 | 71,465 | 68,918 | 110,132 | 55.2 percent |
+| `26af68de687e` | Dance Skeleton GIF | 30 | 415,082 | 231,754 | 171,119 | 116,210 | 125.1 percent |
+| `10aa0e0006c9` | Skeleton Dance GIF | 30 | 406,032 | 123,033 | 102,075 | 98,961 | 79.8 percent |
+| `9e508a478a1a` | glitch | 14 | 399,273 | 279,878 | 242,865 | 100,583 | 156.1 percent |
+| `6745ccec8b9f` | 100 Feet Water Spray GIF | 26 | 346,765 | 104,875 | 34,882 | 113,517 | 73.0 percent |
+| `38f7a123e3f3` | bender | 10 | 258,462 | 45,202 | 43,386 | 87,184 | 68.0 percent |
+| `a0f57ee6ae92` | Climate Change Earth GIF by INTO ACTION (10) | 49 | 250,993 | 75,383 | 57,506 | 166,048 | 119.1 percent |
+| `1d881c8a58d6` | printing-press | 40 | 233,091 | 26,642 | 41,317 | 53,914 | 52.3 percent |
+| `ede8c3bdae81` | Question Mark Mario GIF | 46, 47, 56, 59, 64 | 187,295 | 17,519 | 14,283 | 34,108 | 35.2 percent |
+| `5a6564b2d5fc` | Funny Money GIF | 46, 47, 64 | 154,810 | 27,172 | 25,364 | 168,663 | 142.9 percent |
+| `9959a16e838c` | climate change politics GIF by NRDC | 15 | 139,718 | 105,197 | 58,686 | 130,221 | 210.5 percent |
+| `198407e5c4ec` | climate change politics GIF by NRDC (1) | 15 | 124,239 | 102,842 | 56,735 | 115,025 | 221.0 percent |
+| `ce65a22ec131` | Burning Climate Change GIF by INTO ACTION | 49 | 94,475 | 48,543 | 52,981 | 231,464 | 352.5 percent |
+| `571e51397636` | Climate Change Earth GIF by INTO ACTION | 49 | 81,636 | 37,915 | 40,437 | 128,573 | 253.5 percent |
+| `622e296740bd` | thank-you-neon | 70 | 56,369 | 23,525 | 14,444 | 53,301 | 161.9 percent |
+| total | 73 distinct GIFs | 90 placements on 48 slides | 168,152,577 | 13,955,154 | 12,815,043 | 11,690,497 | 22.9 percent |
+
+This table is the evidence for presentations#6. 168,152,577 bytes of GIF become 13,955,154 bytes of MP4 (8.3 percent) and 12,815,043 bytes of WebM (7.6 percent). A viewer downloads one of the two. With the 11,690,497 bytes of PNG posters, the output is 38,460,694 bytes, 22.9 percent of the GIF bytes. Ten small GIFs grow, most of all `Burning Climate Change GIF by INTO ACTION` at 352.5 percent, and the poster is most of that growth.
+
+### Budget
+
+`du -sk decks/_all_docs/media`: 61,580 KB. The files sum to 57,700,551 bytes in 338 files (219 under `media/shared`), 28.9 percent of the 200 MB budget. The largest file is `media/AFB598FC-F6E6-4CF4-959F-A9E10EE00990/DF0DEDC0701C7436568A6F0A7A9F970B.png` at 2,191,640 bytes, 11 percent of the 20 MB file budget. `convert/test/budget.test.js` asserts both limits against the committed tree and that every file is referenced.
+
+### Files the suite writes
+
+A full `pnpm e2e` writes `e2e/captures/<n>.*` (gitignored) and rewrites these committed files: `spike-*` (the three spike capture sets, `spike-2-final.*`, and `spike-bench.json`), `ratios.json`, `preload.json`, and `word-build*`. This checkpoint commits them on purpose as the evidence of the final run (`3fc9d05`). No other committed file changes.
+
+### Checkpoint 3 Done
+
+| item | where |
+|---|---|
+| every census effect mapped, counts, zero `appear` fallbacks | Checkpoint 3, Effect mapping; `convert/effects.js`; `convert/test/effects.test.js` |
+| player plays every unit and effect | `player/effects.js`, `player/draw.js`, `player/player.js`; `convert/test/player.test.js` |
+| all 71 slides converted; `source.path`, text-texture fallbacks, mixed pages, composite-as-content, orphans | Checkpoint 3, Converter; `decks/_all_docs/deck.json`; `.cache/convert-summary.json` |
+| convert wall time and idempotence | Checkpoint 3, Converter |
+| all 71 captured, 71-ratio summary, rule per slide, override with reason | Checkpoint 3, Captures; `e2e/capture.spec.js`; `e2e/captures/ratios.json`; `e2e/tolerance.json` |
+| overlapping video masks counted once | `e2e/compare.js` `maskedPixels`; `convert/test/compare.test.js` (`8537585`) |
+| moving-pixel mask over the video loop | `e2e/compare.js` `animatedFrameCount`; `convert/test/compare.test.js` (`210b266`) |
+| word-build capture | Checkpoint 3, Word build; `e2e/captures/word-build*` |
+| preload green under throttling, slowest preload, largest frame delta, waivers | Checkpoint 3, Preload; `e2e/preload.spec.js`; `e2e/captures/preload.json` |
+| preload eviction race fixed | `player/player.js` `preloadAround`; `e2e/preload.spec.js` race test (`37526f0`) |
+| zero font requests, zero font files | Checkpoint 3, Fonts; `e2e/fonts.spec.js` |
+| per-GIF transcode table, `ffmpeg` 9.0.1, presentations#6 | Checkpoint 3, GIF transcode table |
+| budget under 200 MB and 20 MB per file | Checkpoint 3, Budget; `convert/test/budget.test.js` |
+| one full `pnpm e2e` green | 79 passed, 0 failed, 30.4 minutes at `37526f0` |
