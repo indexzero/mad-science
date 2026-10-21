@@ -63,7 +63,7 @@ Then open <http://localhost:4173/player/index.html?deck=../decks/_all_docs/deck.
 bash check.sh
 ```
 
-`check.sh` runs from any directory. It prints each step with its command and exit code, and the total time. It exits 0 only when every step passes. The steps are the tool check, `pnpm install --frozen-lockfile`, `pnpm exec playwright install chromium`, `pnpm validate`, `pnpm test`, the font grep, `pnpm e2e`, and `git status --porcelain` on this directory. A full run takes 30 to 50 minutes on the build Mac, because the suite captures all 71 slides from the live export.
+`check.sh` runs from any directory. It prints each step with its command and exit code, and the total time. It exits 0 only when every step passes. The steps are the tool check, `pnpm install --frozen-lockfile`, `pnpm exec playwright install chromium`, `pnpm validate`, and `pnpm test`. Then come the font grep, `pnpm e2e`, and `git status --porcelain` on this directory. A full run takes 30 to 50 minutes on the build Mac, because the suite captures all 71 slides from the live export.
 
 `pnpm e2e` writes every capture, `ratios.json`, `preload.json`, and `spike-bench.json` under `e2e/captures/out/` (gitignored). The committed sets in `e2e/captures/` are references. A run never rewrites them, so the tree stays clean. To update the committed sets on purpose, set the flag:
 

@@ -424,7 +424,7 @@ The design's table says 10 Geist Mono cuts and 8 Avenir cuts. `header.json` name
 
 ## Media size projection
 
-Source: `sslop/D-004/media/results.v2.tsv`. The five largest distinct GIFs, transcoded in scratch with the design's commands on ffmpeg 9.0.1 (MP4: `-movflags faststart -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -pix_fmt yuv420p -c:v libx264 -crf 23 -an`; WebM: `-vf ... -pix_fmt yuv420p -c:v libvpx-vp9 -b:v 0 -crf 32 -an`; poster: `-frames:v 1`).
+Source: `sslop/D-004/media/results.v2.tsv`. The rows are the five largest distinct GIFs. They were transcoded in scratch on ffmpeg 9.0.1 with the design's commands. MP4: `-movflags faststart -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -pix_fmt yuv420p -c:v libx264 -crf 23 -an`. WebM: `-vf ... -pix_fmt yuv420p -c:v libvpx-vp9 -b:v 0 -crf 32 -an`. Poster: `-frames:v 1`.
 
 | GIF | size | frames | alpha < 255 in frame 1 | in bytes | MP4 bytes | WebM bytes | poster PNG | MP4 % | WebM % |
 |---|---|---|---|---|---|---|---|---|---|
