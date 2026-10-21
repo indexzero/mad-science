@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.indexzero.dotsync</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/dotsync</string>
+    <string>daemon</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>DOTSYNC_STORE</key>
+    <string>s3://example-bucket/dotsync</string>
+    <key>AWS_DEFAULT_REGION</key>
+    <string>us-east-1</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
+  <key>StandardOutPath</key>
+  <string>/usr/local/var/log/dotsync.log</string>
+  <key>StandardErrorPath</key>
+  <string>/usr/local/var/log/dotsync.log</string>
+</dict>
+</plist>
