@@ -9,7 +9,7 @@ design: "TECHNICAL.DESIGN.md in the orckits run home indexzero/mad-science/2026-
 
 # save-it decisions
 
-This file names each third-party package and the reason for it. Then it gives the design decisions. The last section lists each difference from `PROMPT.md`.
+This file names each third-party package and the reason for it. Then it gives the design decisions. The last section lists each difference from `PROMPT.md` and from the design.
 
 ## Packages
 
@@ -75,10 +75,11 @@ The `test` script is `pnpm run dry-run && node --test 'test/**/*.test.mjs'`. The
 
 ### No consent page on `/authorize`
 
-`/authorize` shows no consent page. The Access login of the owner is the consent. The owner accepts this risk:
+`/authorize` shows no consent page. The Access login of the owner is the consent. The design accepts this risk. The owner has not reviewed it (QUESTIONS Q-009). The risk:
 
 - An attacker with a claude.ai account can send the owner an authorize link.
 - If claude.ai accepts the callback by `state` alone, the connector of the attacker gets a token with the email of the owner.
+- The connector of the attacker can then mint upload URLs and write bundles into the bucket. It cannot read or list the bucket.
 - This claude.ai behavior is UNVERIFIED.
 - If a fix is necessary, it is `beginConsent` and `approveConsent` from the OAuth library.
 
@@ -92,7 +93,7 @@ SETUP.md step 7 tells the owner to open an authorize link only from their own co
 
 A stored upload returns 201 and a repeat upload returns 200. Each success body is JSON `{ "key": "<key>" }` with `Content-Type: application/json`. Each failure body is one `text/plain` line in the form `not saved: <reason>. fix: <fix>`.
 
-## Differences from the prompt
+## Differences from the prompt and the design
 
 The design lists these 13 differences:
 
@@ -114,3 +115,8 @@ The builds added these differences from the design:
 
 14. `bundle.mjs` runs its CLI when `realpathSync(process.argv[1])` equals the real path of the module. The design form fails when the script runs through a symbolic link.
 15. `buildManifest` takes `(files, { date, source, topic })`, not `(files)`. The manifest must carry the three fields, and `files` does not hold them.
+16. `src/email.mjs` and `test/email.test.mjs` are added. `/authorize` and the tool use one email rule. The rule trims both values and refuses an empty `ALLOWED_EMAIL`. The design tool step 1 compares with `email !== env.ALLOWED_EMAIL`.
+17. The upload route requires a decimal `Content-Length` (`/^\d+$/`) before it compares the value with `size`. The design step 5 uses `Number(Content-Length)` only.
+18. The tool description has one sentence for each field. No sentence has more than 20 words. The text differs from the design text.
+19. `.gitignore` also lists `.tmp/`. The tar and manifest tests write their temporary files there.
+20. `SKILL.md` step 4 gives the topic rule in five short sentences. The design step 4 has one sentence of 25 words. The rule is the same.
