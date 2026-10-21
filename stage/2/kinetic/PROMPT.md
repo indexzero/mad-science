@@ -1,5 +1,5 @@
 ---
-stage: 1
+stage: 2
 project: kinetic
 provenance: reconstructed
 source: "TECHNICAL.DESIGN.md of the orckits run indexzero/mad-science/2026-10-kinetic, revision 5"
@@ -13,7 +13,7 @@ corrections:
 
 ## Task
 
-You rebuild the `_all_docs` Keynote talk as a preloading web player. The project lives at `stage/1/kinetic/` in `indexzero/mad-science`.
+You rebuild the `_all_docs` Keynote talk as a preloading web player. The project lives at `stage/2/kinetic/` in `indexzero/mad-science`.
 
 The owner has fifteen years of Keynote decks in one style. They have image or GIF backgrounds. Text builds in word by word from different directions. Push transitions rotate clockwise. Keynote exports a deck to HTML (the KPF player), and the owner hosts that export as static files. The KPF player fetches each slide when it is reached, so every slide change stalls on the network.
 
@@ -88,7 +88,7 @@ The project is done when every item below holds. The six success criteria are qu
 > - Three spike slides (one word-by-word build, one GIF background, one push) play and their captures match the live export within the tolerance the report sets.
 > - All 71 slides play with no visible stall under Playwright network throttling; slides N+1 and N+2 are preloaded.
 > - No font file is in the output. Each text element records which path it took (key, PDF, texture).
-> - `bash stage/1/kinetic/check.sh` exits 0.
+> - `bash stage/2/kinetic/check.sh` exits 0.
 > - The GIF to MP4 and WebM transcode exists and the ledger notes that presentations#6 can close with it.
 
-And `bash check.sh` in `stage/1/kinetic/` exits 0.
+And `bash check.sh` in `stage/2/kinetic/` exits 0.
