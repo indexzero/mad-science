@@ -1,7 +1,7 @@
 // The capture comparison's mask arithmetic (e2e/compare.js): overlapping video boxes count once.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { maskedPixels, videoMasks } from '../../e2e/compare.js';
+import { maskedPixels, videoMasks, longestLoopMs, animatedFrameCount, masksCoverFrame } from '../../e2e/compare.js';
 
 test('maskedPixels counts the union of the boxes, not the sum of their areas', () => {
   assert.equal(maskedPixels([], 10, 10), 0);
@@ -22,4 +22,19 @@ test('slide 64: its five video boxes overlap; the masked count never exceeds the
   assert.ok(sum > 960 * 540, `the sum of the box areas (${sum}) exceeds the frame, which is the defect`);
   assert.ok(union <= 960 * 540);
   assert.ok(union < sum);
+});
+
+test('the moving-pixel mask samples the longest video loop of the slide (slide 64, D-021)', () => {
+  // slide 64: five GIFs, the longest the Earth GIF at 0.0000-5.7200 s; its boxes cover the frame
+  assert.equal(longestLoopMs(64), 5720);
+  assert.equal(masksCoverFrame(64), true);
+  assert.equal(animatedFrameCount(64), 16); // ceil(5720 / 400) + 1
+  // no video: no loop, the three-frame minimum; a slide whose boxes leave pixels uncovered
+  assert.equal(longestLoopMs(1), 0);
+  assert.equal(animatedFrameCount(1), 3);
+  assert.equal(masksCoverFrame(1), false);
+  // slide 26 has a 12 s GIF: 31 frames, under the 32-frame ceiling
+  assert.equal(longestLoopMs(26), 12000);
+  assert.equal(animatedFrameCount(26), 31);
+  assert.equal(animatedFrameCount(26, 100), 32);
 });

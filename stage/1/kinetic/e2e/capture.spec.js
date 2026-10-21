@@ -13,7 +13,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import pixelmatch from 'pixelmatch';
 import { gotoLive, advanceLive, settle, indicatorHidden, LIVE_BASE, SETTLE_MS } from './live.js';
-import { compareCaptures, compareCapturesMasked, animatedMask, recordExtra, toleranceFor, videoMasks, slideByIndex, TOLERANCE, THRESHOLD, decode, pushBoundary, rawProgress, CAPTURES, DECK } from './compare.js';
+import { compareCaptures, compareCapturesMasked, animatedMask, recordExtra, toleranceFor, videoMasks, slideByIndex, TOLERANCE, THRESHOLD, decode, pushBoundary, rawProgress, CAPTURES, DECK, FRAME_GAP_MS, animatedFrameCount, masksCoverFrame } from './compare.js';
 import { stepDuration, stepIsAutomatic, lastStep } from '../player/effects.js';
 
 const PLAYER = (n) => `player/index.html?deck=../decks/_all_docs/deck.json#${n}`;
@@ -83,14 +83,22 @@ async function newFinalState(page, n) {
   expect(await page.evaluate(() => window.kinetic.state())).toMatchObject({ slide: n, done: plan.length, animating: false });
 }
 
-/** Three frames of a page at one build state, `gapMs` apart: the first is the capture, the rest find the moving pixels. */
-async function frames(page, gapMs = 400, count = 3) {
+/** Frames of a page at one build state, `gapMs` apart: the first is the capture, the rest find the moving pixels. */
+async function frames(page, gapMs = FRAME_GAP_MS, count = 3) {
   const out = [await page.screenshot()];
   for (let i = 1; i < count; i++) {
     await page.waitForTimeout(gapMs);
     out.push(await page.screenshot());
   }
   return out;
+}
+
+/**
+ * The frame count per side for slide n: 3, or where the video boxes cover the frame (the moving pixels are
+ * masked instead) one frame every FRAME_GAP_MS over the slide's longest video loop.
+ */
+function frameCount(n) {
+  return masksCoverFrame(n) ? animatedFrameCount(n) : 3;
 }
 
 /** Merge one slide's result into captures/ratios.json. */
@@ -103,7 +111,7 @@ function recordRatio(key, entry) {
     default: TOLERANCE.default,
     rules: {
       masked: 'video boxes masked on both sides, the rest compared',
-      'animated-pixels-masked': 'the video boxes cover the frame (vacuous mask), so the final state is compared with the pixels that move on either side (three frames 400 ms apart per side, dilated 2 px) masked out; unmaskedRatio is the design rule number, the first frames compared with no mask, recorded',
+      'animated-pixels-masked': 'the video boxes cover the frame (vacuous mask), so the final state is compared with the pixels that move on either side (frames 400 ms apart per side over the longest video loop of the slide, 3 to 32 frames, dilated 2 px) masked out; unmaskedRatio is the design rule number, the first frames compared with no mask, recorded',
     },
     slides: ordered,
   };
@@ -237,10 +245,11 @@ test.describe('all slides at their final build state', () => {
   for (let n = 1; n <= SLIDE_COUNT; n++) {
     test(`slide ${n}`, async ({ page, browser }) => {
       const presses = await liveFinalState(page, n);
-      const liveFrames = await frames(page);
+      const count = frameCount(n);
+      const liveFrames = await frames(page, FRAME_GAP_MS, count);
       const fresh = await browser.newPage({ viewport: { width: 960, height: 540 } });
       await newFinalState(fresh, n);
-      const newFrames = await frames(fresh);
+      const newFrames = await frames(fresh, FRAME_GAP_MS, count);
       await fresh.close();
 
       const r = compareFinal(String(n), n, liveFrames, newFrames);
@@ -254,6 +263,7 @@ test.describe('all slides at their final build state', () => {
         maskedFraction: Math.round(r.maskedFraction * 1000) / 1000,
         videoRegions: r.regions.map((x) => Math.round(x.ratio * 1000) / 1000),
         presses,
+        frames: count,
         tolerance,
         pass: r.ratio < tolerance,
       };
@@ -275,10 +285,11 @@ test.describe('word build (Q-007)', () => {
 
     // final state, both sides
     const presses = await liveFinalState(page, N);
-    const liveFrames = await frames(page);
+    const count = frameCount(N);
+    const liveFrames = await frames(page, FRAME_GAP_MS, count);
     const fresh = await browser.newPage({ viewport: { width: 960, height: 540 } });
     await newFinalState(fresh, N);
-    const newFrames = await frames(fresh);
+    const newFrames = await frames(fresh, FRAME_GAP_MS, count);
     const mine = newFrames[0];
     const r = compareFinal('word-build', N, liveFrames, newFrames);
     console.log(`word-build slide ${N} unit ${build.unit} (${build.targets.length} target, ${build.duration} s, direction ${build.direction}, stagger ${build.stagger}): ${r.rule}, mismatch ratio ${r.ratio.toFixed(5)} (${r.mismatched} of ${r.unmasked} pixels), ${presses} ArrowRight, tolerance ${toleranceFor('word-build')}`);

@@ -73,6 +73,36 @@ export function maskedPixels(masks, width, height) {
   return n;
 }
 
+/**
+ * The longest loop of slide n's videos in ms: the trim range that the original GIF name carries
+ * (`<name>.gif-<start>-<end>.gif`, seconds). 0 when the slide has no video.
+ */
+export function longestLoopMs(n) {
+  let ms = 0;
+  for (const e of slideByIndex(n).elements) {
+    if (e.kind !== 'video') continue;
+    const m = /-(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)\.gif$/.exec(e.source.originalGif || '');
+    if (m) ms = Math.max(ms, Math.round((Number(m[2]) - Number(m[1])) * 1000));
+  }
+  return ms;
+}
+
+export const FRAME_GAP_MS = 400;
+
+/**
+ * Frames per side for the moving-pixel mask of slide n: one every `gapMs` over its longest video loop, plus
+ * one, at least 3 and at most 32. Fewer frames than a loop miss the pixels that move only in another part
+ * of the loop, and the GIF phase of the two players then counts as a mismatch (slide 64, D-021).
+ */
+export function animatedFrameCount(n, gapMs = FRAME_GAP_MS) {
+  return Math.min(32, Math.max(3, Math.ceil(longestLoopMs(n) / gapMs) + 1));
+}
+
+/** True when the video boxes of slide n cover the whole capture, so the masked comparison is vacuous. */
+export function masksCoverFrame(n, width = 960, height = 540) {
+  return maskedPixels(videoMasks(n, width, height), width, height) === width * height;
+}
+
 function cropPng(png, m) {
   const out = new PNG({ width: m.w, height: m.h });
   for (let y = 0; y < m.h; y++) {
