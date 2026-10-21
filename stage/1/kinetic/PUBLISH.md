@@ -17,10 +17,10 @@ Upload three paths and keep their relative layout. The player finds the deck thr
 |---|---|---|
 | `player/` | 6 | 34,806 |
 | `decks/_all_docs/deck.json` | 1 | 12,390,998 |
-| `decks/_all_docs/media/` | 338 | 57,693,699 |
-| total | 345 | 70,119,503 |
+| `decks/_all_docs/media/` | 344 | 57,865,608 |
+| total | 351 | 70,291,412 |
 
-`media/` holds 155 PNG, 37 JPEG, 73 MP4, and 73 WebM files. A viewer fetches one of the two video formats. A WebM browser downloads at most 56,166,977 bytes, the total less the 13,952,526 bytes of MP4.
+`media/` holds 161 PNG, 37 JPEG, 73 MP4, and 73 WebM files. A viewer fetches one of the two video formats. A WebM browser downloads at most 56,338,886 bytes, the total less the 13,952,526 bytes of MP4.
 
 Do not upload `convert/`, `e2e/`, `node_modules/`, `.cache/`, or `schema/`. The player does not read them.
 

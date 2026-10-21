@@ -912,7 +912,7 @@ A full `pnpm e2e` writes `e2e/captures/<n>.*` (gitignored) and rewrites these co
 
 ### Review fixes
 
-The CP3 reviews D-019 and D-020 found four majors and one minor. This list closes them. Each fix has a regression that fails without it.
+The CP3 reviews D-019 and D-020 found four majors and one minor. The CP4 reviews D-023 and D-024 found two majors, two minors, and one nit. This list closes them. Each code fix has a regression that fails without it.
 
 | finding | cause | fix commit | regression |
 |---|---|---|---|
@@ -921,6 +921,15 @@ The CP3 reviews D-019 and D-020 found four majors and one minor. This list close
 | D-019 F-03, clip paths | `convert/pdf.js` counted `<clipPath>` and never applied it. Slide 62 drew its clipped Result block. Slide 44 drew two clipped step boxes. | `4e4e1c1`: a placement outside its clip is dropped. An outline that a clip may cut carries `clip`. Paths painted after the last glyph draw over the text. | `convert/test/pdf.test.js` clipped placement; `convert/test/index.test.js` text of slides 44 and 62 |
 | D-020 CP3-F3 (D-019 F-05), word build | Slide 71 moved its quote as one block, and the motion check counted the video and the subtitle. | `5786e59`: the capture moves to the `apple:keyboard` build of slide 21. It asserts a partial reveal inside the target boxes on both sides. | revealing every unit at once fails (`8 of 8 units`, expected under 8) |
 | D-019 F-04, dash arrays (MINOR) | `stroke-dasharray` was dropped, so dashed boxes and edges drew solid. | `53e8e4d`: one optional field, `dash`, drawn with `setLineDash` | `convert/test/pdf.test.js` dash array; slide 43 drops from 0.01135 to 0.00751 |
+| D-023 R-1, slide 44 emoji | A mixed page matched each image placement to a stream by pixel size. Slide 44 places five 160x160 streams, so all seven emoji showed the clock. The fix for D-019 F-01 made them visible. | `aea7bc2`: a placement and a stream match by their pixels. The SVG data URI and the stream extracted without its SMask have the same IHDR and inflated IDAT. Size is the fallback without a key. The convert counts 0 fallbacks. | `convert/test/index.test.js`: two same-size images on one page take their own streams; slide 44 has 5 distinct `src`. Slide 44 measures 0.01306 (was 0.01425). |
+| D-024 CP4-F1, `check.sh` errexit | `if eval` suspends errexit in a runner. `font_grep` and `clean_tree` ignored a failed `find` or `git status`. | `6a8285b`: each helper returns the exit code of its command substitution | the helpers under an invalid `GIT_DIR` stop at step h with exit 128; `find` on a missing directory stops at step f with exit 1 |
+| D-023 F-1, `--slides` (MINOR) | The README did not say that `--slides` rewrites the committed `deck.json`. | `9dabd6f`: the README says so, and names `--out` outside the checkout or `git checkout -- decks` | docs only |
+| D-024 CP4-F2, immutable cache (MINOR) | `PUBLISH.md` said the bytes for a shared media name never change. The name hashes the source GIF. `c9cced4b0ea5.webm` changed bytes at `d65ddf5`. | `c05379c`: immutable caching needs a versioned path or a name that hashes the output | docs only |
+| D-023 N-1, long sentences (NIT) | Two sentences ran over 25 words. | `27ea78b`: both split | docs only |
+
+The R-1 fix changed the `src` of image elements on three slides. Slide 44 now shows a clock, a globe, a lock, three check marks, and an open lock, as the live does. Slide 58 now shows two prohibition signs where it showed two check marks. Slide 65 now shows a light bulb where it showed a globe. Each slide passes at 0.03: 44 at 0.01306, 58 at 0.00186, and 65 at 0.00359. `e2e/captures/ratios.json` is updated for these three slides with `KINETIC_UPDATE_CAPTURES=1`. The median stays 0.00149.
+
+Six new PNGs join `media/`. It now holds 344 files and 57,865,608 bytes: 161 PNG, 37 JPEG, 73 MP4, and 73 WebM. `deck.json` keeps its size, 12,390,998 bytes. A second clean convert into scratch (`--out`, 2 min 56 s) matched the committed media byte for byte. Its `deck.json` was equal except the stamps. A green `check.sh` ran after the fixes at `27ea78b`: every step exited 0 in 33 min 21 s. `pnpm test` ran 85 tests, 85 pass. `pnpm e2e` gave 79 passed in 33.3 minutes. The 71 slides measured a median of 0.00127 and a max of 0.01912 on slide 52, with no override and no live retry. The fonts spec saw 0 font requests. The preload spec had 0 failures and the same 10 waivers, and the first slide drew at 66,982 ms. The largest frame delta after a change was 50 ms, on slide 50 to 51.
 
 ### Checkpoint 3 Done
 
