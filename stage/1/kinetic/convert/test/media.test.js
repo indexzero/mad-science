@@ -57,6 +57,8 @@ test('sha256 naming: a GIF transcodes to media/shared/<sha256-12>.{mp4,webm,png}
   assert.match(readFileSync(r.mp4, 'utf8'), /libx264 -crf 23 -an/);
   assert.match(readFileSync(r.webm, 'utf8'), /-pix_fmt yuv420p -c:v libvpx-vp9 -b:v 0 -crf 32/);
   assert.match(readFileSync(r.poster, 'utf8'), /-frames:v 1/);
+  assert.match(readFileSync(r.mp4, 'utf8'), /-fflags \+bitexact -flags \+bitexact .*\.mp4$/m);
+  assert.match(readFileSync(r.webm, 'utf8'), /-fflags \+bitexact -flags \+bitexact .*\.webm$/m);
   assert.ok(r.bytes.mp4 > 0 && r.bytes.webm > 0 && r.bytes.poster > 0);
   const again = media.transcodeGif(gif, out);
   assert.equal(again.reused, true);

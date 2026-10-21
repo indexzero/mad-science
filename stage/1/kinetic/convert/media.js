@@ -132,8 +132,13 @@ export function gifHasAlpha(gifPath) {
 
 export const SCALE_EVEN = 'scale=trunc(iw/2)*2:trunc(ih/2)*2';
 
+// Byte-exact output: without these flags the Matroska muxer writes a random track UID (16 bytes of each
+// WebM differ between two runs) and both muxers write the libavformat version string.
+export const BITEXACT = ['-fflags', '+bitexact', '-flags', '+bitexact'];
+
 /**
- * Transcode a GIF to `outDir/<sha256-12>.{mp4,webm,png}` with the design's commands (plus `-nostdin`).
+ * Transcode a GIF to `outDir/<sha256-12>.{mp4,webm,png}` with the design's commands (plus `-nostdin`, and
+ * `-fflags +bitexact -flags +bitexact` on MP4 and WebM so two runs write the same bytes).
  * Deduplicates by sha256 of the GIF bytes: existing outputs are reused. Returns
  * { sha12, mp4, webm, poster, originalBytes, bytes: { mp4, webm, poster }, transparent, reused }.
  */
@@ -148,8 +153,8 @@ export function transcodeGif(gifPath, outDir) {
   let transparent = false;
   if (!reused) {
     transparent = gifHasAlpha(gifPath);
-    run(FFMPEG, ['-nostdin', '-v', 'error', '-y', '-i', gifPath, '-movflags', 'faststart', '-vf', SCALE_EVEN, '-pix_fmt', 'yuv420p', '-c:v', 'libx264', '-crf', '23', '-an', mp4]);
-    run(FFMPEG, ['-nostdin', '-v', 'error', '-y', '-i', gifPath, '-vf', SCALE_EVEN, '-pix_fmt', transparent ? 'yuva420p' : 'yuv420p', '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '32', '-an', webm]);
+    run(FFMPEG, ['-nostdin', '-v', 'error', '-y', '-i', gifPath, '-movflags', 'faststart', '-vf', SCALE_EVEN, '-pix_fmt', 'yuv420p', '-c:v', 'libx264', '-crf', '23', '-an', ...BITEXACT, mp4]);
+    run(FFMPEG, ['-nostdin', '-v', 'error', '-y', '-i', gifPath, '-vf', SCALE_EVEN, '-pix_fmt', transparent ? 'yuva420p' : 'yuv420p', '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '32', '-an', ...BITEXACT, webm]);
     run(FFMPEG, ['-nostdin', '-v', 'error', '-y', '-i', gifPath, '-frames:v', '1', poster]);
   }
   return {
