@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "save-it",
+  "main": "src/worker.mjs",
+  "compatibility_date": "2026-07-30",
+  "compatibility_flags": ["nodejs_compat"],
+  "r2_buckets": [
+    { "binding": "BUNDLES", "bucket_name": "save-it-bundles" }
+  ],
+  "kv_namespaces": [
+    { "binding": "OAUTH_KV", "id": "00000000000000000000000000000000" }
+  ],
+  "vars": {
+    "ALLOWED_EMAIL": "owner@example.com",
+    "MAX_BYTES": "52428800",
+    "UPLOAD_TTL_SECONDS": "60"
+  }
+}
