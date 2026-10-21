@@ -129,3 +129,45 @@ test('preload under throttling: n+1 and n+2 within the bar, no frame over 50 ms 
   console.log(`preload summary: slowest ${slowest.n} at ${slowest.preloadMs} ms (${slowest.waived ? 'waived, ' : ''}${slowest.bytes} bytes); slowest within the 10 s bar ${slowestInBar ? `${slowestInBar.n} at ${slowestInBar.preloadMs} ms` : 'none'}; largest frame delta ${largestFrame.maxFrameMs} ms on ${largestFrame.n} to ${largestFrame.n + 1}; ${result.waivers.length} waiver(s); ${failures.length} failure(s)`);
   expect(failures).toEqual([]);
 });
+
+/** The media paths of slide n relative to deck.json: image sources, both video sources, posters. */
+function mediaPaths(n) {
+  const slide = DECK.slides.find((s) => s.index === n);
+  const out = new Set();
+  for (const el of slide.elements) {
+    if (el.kind === 'image') out.add(el.src);
+    else if (el.kind === 'video') { out.add(el.src.webm); out.add(el.src.mp4); out.add(el.poster); }
+  }
+  return out;
+}
+
+// D-021: goto(n) starts loads of n+1, n+2, n-1 and then evicts outside [n-1, n+2]. When n-1 is slow and the
+// next goto(n+1) has already loaded n+3, the eviction of the older window must not drop n+3. The media of
+// slide 37 that slides 38 to 41 do not share is held back 4 s, so the preload of goto(38) ends after the
+// preload of goto(39) has loaded slide 41.
+test('preload: a slow older preload never evicts the newer window', async ({ page }) => {
+  const N = 38;
+  const keep = new Set([N, N + 1, N + 2, N + 3].flatMap((k) => [...mediaPaths(k)]));
+  const slow = [...mediaPaths(N - 1)].filter((p) => !keep.has(p));
+  expect(slow.length).toBeGreaterThan(0);
+  let held = 0;
+  let released = 0;
+  await page.route((url) => slow.some((p) => url.pathname.endsWith(`/decks/_all_docs/${p}`)), async (route) => {
+    held += 1;
+    await new Promise((r) => setTimeout(r, 4000));
+    await route.continue();
+    released += 1;
+  });
+  await page.goto(PLAYER(N));
+  await page.waitForFunction((k) => window.kinetic && window.kinetic.current() === k, N, { timeout: 60000 });
+  await page.waitForFunction((k) => [k + 1, k + 2].every((x) => window.kinetic.preloaded().includes(x)), N, { timeout: 30000 });
+  await page.evaluate((k) => window.kinetic.goto(k), N + 1);
+  await page.waitForFunction((k) => [k + 1, k + 2].every((x) => window.kinetic.preloaded().includes(x)), N + 1, { timeout: 30000 });
+  // the held media of slide N - 1 lands now and the preload of goto(N) finishes
+  await expect.poll(() => held > 0 && released === held, { timeout: 30000 }).toBe(true);
+  await page.waitForTimeout(1000);
+  const preloaded = await page.evaluate(() => window.kinetic.preloaded());
+  console.log(`preload race: ${held} held requests of slide ${N - 1}; preloaded after the older preload ended: ${preloaded.join(',')}`);
+  expect(held).toBeGreaterThan(0);
+  expect(preloaded).toEqual(expect.arrayContaining([N, N + 1, N + 2, N + 3]));
+});

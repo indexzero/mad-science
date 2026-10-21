@@ -141,14 +141,21 @@ function stillOf(n) {
   return st && st.next >= st.total ? st.canvas : null;
 }
 
+// Each preloadAround call is one generation. Only the newest may evict: an older call whose loads end late
+// (a slow n-1) would otherwise evict the window of a later goto, slides it never knew about (D-021).
+let preloadGeneration = 0;
+
 function preloadAround(n) {
   const pos = positionOf(n);
   const order = [indexAt(pos + 1), indexAt(pos + 2), indexAt(pos - 1)].filter((k) => k !== null);
+  const generation = ++preloadGeneration;
   (async () => {
     for (const k of order) {
+      if (generation !== preloadGeneration) return;
       await preloader.load(k);
       if (k !== indexAt(pos - 1)) queueStill(k);
     }
+    if (generation !== preloadGeneration) return;
     const keep = new Set([n, ...order]);
     preloader.evict(keep);
     for (const k of stills.keys()) if (!keep.has(k)) stills.delete(k);
