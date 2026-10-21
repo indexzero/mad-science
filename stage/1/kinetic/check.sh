@@ -21,7 +21,8 @@ fail() {
 }
 
 # step <id> <command> [<runner>]: print the command, run it (or the runner that checks its output), print the
-# exit code, and stop on a failure.
+# exit code, and stop on a failure. `if eval` suspends errexit inside a runner, so a runner returns the exit
+# code of its own command substitution (D-024 CP4-F1).
 step() {
   local id="$1" cmd="$2" run="${3:-$2}" rc=0
   echo "==> [$id] $cmd"
@@ -56,7 +57,7 @@ step e 'pnpm test'
 FONT_FIND="find . -type f \\( -iname '*.ttf' -o -iname '*.otf' -o -iname '*.woff' -o -iname '*.woff2' -o -iname '*.cff' \\) -not -path './node_modules/*' -not -path './.cache/*'"
 font_grep() {
   local hits
-  hits="$(eval "$FONT_FIND")"
+  hits="$(eval "$FONT_FIND")" || return $?
   [ -z "$hits" ] || { echo "$hits"; return 1; }
   echo "(no output)"
 }
@@ -68,7 +69,7 @@ step g 'pnpm e2e'
 # h. the suite left no tracked file modified and no untracked file outside the ignore rules
 clean_tree() {
   local changes
-  changes="$(git status --porcelain -- .)"
+  changes="$(git status --porcelain -- .)" || return $?
   [ -z "$changes" ] || { echo "$changes"; return 1; }
   echo "(no output)"
 }
