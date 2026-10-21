@@ -54,7 +54,7 @@ The floor is the byte count over 187,500 bytes per second. It is arithmetic, not
 
 ## Cache headers
 
-- `decks/_all_docs/media/shared/*`: a file name is the first 12 hex characters of the sha256 of the source GIF. The bytes for a name do not change. `Cache-Control: public, max-age=31536000, immutable` is safe.
+- `decks/_all_docs/media/shared/*`: a file name is the first 12 hex characters of the sha256 of the source GIF. The name keys the input, not the output bytes. A converter change can write new bytes under the same name: `c9cced4b0ea5.webm` changed at `d65ddf5`. `Cache-Control: public, max-age=31536000, immutable` is safe only under a versioned path, such as a directory per upload, or with a name that hashes the output bytes.
 - `decks/_all_docs/media/<slide UUID>/*`: a name is the KPF asset id. A new convert of the same export writes the same bytes. A long `max-age` is safe for one export. Use a short one if the deck is exported again under the same names.
 - `decks/_all_docs/deck.json` and `player/*`: names do not change between versions. Use `Cache-Control: no-cache` (revalidate with an ETag) or a short `max-age`.
 
