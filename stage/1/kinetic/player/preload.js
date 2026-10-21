@@ -141,12 +141,15 @@ export class Preloader {
   }
 
   static pathsOf(el) {
-    const out = { paths: (el.paths || []).map((p) => ({ path: new Path2D(p.d), fill: p.fill, opacity: p.opacity, stroke: p.stroke, strokeWidth: p.strokeWidth, line: el.kind === 'shape' ? lineOf(p) : null })) };
+    // `clip` (D-019 F-03): the clip paths of the page that may cut this outline, applied in turn
+    const clipOf = (c) => (c ? c.map((d) => new Path2D(d)) : null);
+    const out = { paths: (el.paths || []).map((p) => ({ path: new Path2D(p.d), fill: p.fill, opacity: p.opacity, stroke: p.stroke, strokeWidth: p.strokeWidth, clip: clipOf(p.clip), line: el.kind === 'shape' ? lineOf(p) : null })) };
     if (el.kind === 'text') {
       // a word's outline is its characters' outlines; deck.json carries `d` on the word only when it has no chars
       out.words = el.words.map((w) => ({
         path: new Path2D(w.d ?? (w.chars || []).map((c) => c.d).join('')),
         fill: w.fill || el.fill,
+        clip: clipOf(w.clip),
         chars: (w.chars || []).map((c) => ({ path: new Path2D(c.d), fill: c.fill || w.fill || el.fill })),
       }));
     }

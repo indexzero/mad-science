@@ -107,6 +107,8 @@ function newReport(index1, uuid) {
     mixedFallbacks: 0,
     mixedInterleaved: 0,
     mixedPathSplits: 0,
+    textPathsOver: 0,
+    clips: { kinds: { rect: 0, other: 0 }, dropped: { glyph: 0, path: 0, image: 0 }, clipped: { glyph: 0, path: 0 }, partialImages: 0, conflicts: 0 },
     pictureShapes: { under: 0, over: 0, interleaved: 0 },
     flippedImages: 0,
     compositeAsContent: false,
@@ -245,13 +247,28 @@ async function convertSlide(ctx, index1, uuid, slide) {
 
     const content = pageToElements(page(texture), leaf);
     const ref = kpfRef(uuid, texture, asset, tr);
+    if (content.clipStats) {
+      const c = report.clips;
+      const add = (dst, src) => { for (const k of Object.keys(src)) { if (typeof src[k] === 'object') add(dst[k], src[k]); else dst[k] += src[k]; } };
+      add(c, content.clipStats);
+    }
 
     if (content.kind === 'text' || content.kind === 'mixed') {
       // a word with characters carries no `d` of its own: its outline is the characters' outlines in order
       // (the player joins them); writing both doubled deck.json to 20 MB
       const words = content.words.map((w) => (w.chars?.length ? Object.fromEntries(Object.entries(w).filter(([k]) => k !== 'd')) : w));
       const el = { ...common(leaf, baseId), kind: 'text', words, fill: content.fill, text: content.text };
-      if (content.paths.length) el.paths = content.paths.map(stripOrder);
+      // body paths the page paints after its last glyph draw over the text (slide 62 paints a black box over
+      // the clipped edge of its Result block); the others stay on the text element, under the glyphs
+      let textPaths = content.paths;
+      const overText = () => textPaths.filter((p) => p.order > content.lastGlyph);
+      const setTextPaths = (list) => {
+        textPaths = list;
+        const under = list.filter((p) => !(p.order > content.lastGlyph));
+        if (under.length) el.paths = under.map(stripOrder);
+        else delete el.paths;
+      };
+      setTextPaths(content.paths);
       el.source = { path: 'pdf', kpf: ref };
       if (keyTokens && content.words.every((w) => keyTokens.has(w.text))) report.keyTextMatched += 1;
       if (content.kind === 'mixed') {
@@ -274,9 +291,7 @@ async function convertSlide(ctx, index1, uuid, slide) {
           // become a shape element under it (slide 60 paints its red box, then a 75 percent black image
           // over it); the paths after the last image stay on the text element, over every image
           const layers = mixedLayers(content.paths, content.images);
-          const textPaths = layers[layers.length - 1].paths;
-          if (textPaths.length) el.paths = textPaths.map(stripOrder);
-          else delete el.paths;
+          setTextPaths(layers[layers.length - 1].paths);
           let seg = 0;
           for (const layer of layers) {
             if (layer.kind === 'paths') {
@@ -307,6 +322,11 @@ async function convertSlide(ctx, index1, uuid, slide) {
         rmSync(scratch, { recursive: true, force: true });
       }
       pushElement(el, texture, leaf);
+      const over = overText();
+      if (over.length) {
+        report.textPathsOver += 1;
+        pushElement({ ...common(leaf, `${baseId}-fg`), kind: 'shape', paths: over.map(stripOrder), source: { path: 'pdf', kpf: ref } }, `${baseId}-fg`);
+      }
       continue;
     }
 

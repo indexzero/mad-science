@@ -229,6 +229,9 @@
         "fill": {
           "$ref": "#/$defs/hex6",
           "description": "Set only when it differs from the element's fill."
+        },
+        "clip": {
+          "$ref": "#/$defs/clip"
         }
       },
       "description": "A word of a text element. `d` is its outline; a word with `chars` carries no `d` of its own (its outline is the characters' outlines in order), so one of the two is required.",
@@ -835,6 +838,9 @@
         "strokeWidth": {
           "type": "number",
           "minimum": 0
+        },
+        "clip": {
+          "$ref": "#/$defs/clip"
         }
       }
     },
@@ -877,6 +883,15 @@
           }
         }
       }
+    },
+    "clip": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Clip paths in slide coordinates (SVG path d), applied in turn: the parts outside any of them are not drawn. Set only where a clip of the page may cut the outline (D-019 F-03)."
     }
   }
 }

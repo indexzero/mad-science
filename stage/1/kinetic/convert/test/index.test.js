@@ -32,10 +32,21 @@ test('deck.json: the paths a mixed page paints before an image draw under it (sl
   };
   // slide 60: the red label box, then the 75 percent black image over it
   before(60, '21F5A116BF12ECB30EDCEE9F704977C7-p0', '21F5A116BF12ECB30EDCEE9F704977C7-0');
-  // slide 44: the full-page fill, then the nine emoji
-  for (let k = 0; k < 9; k++) before(44, '7884D393B610F57E5A5FD9CF5A6CECB3-p0', `7884D393B610F57E5A5FD9CF5A6CECB3-${k}`);
+  // slide 44: the full-page fill, then the emoji (seven; two more lie wholly outside their clip, D-019 F-03)
+  for (let k = 0; k < 7; k++) before(44, '7884D393B610F57E5A5FD9CF5A6CECB3-p0', `7884D393B610F57E5A5FD9CF5A6CECB3-${k}`);
   // slide 29: the page fill, then the emoji
   before(29, 'D4FCEF10B3ABC5E7672071C6A63BC5C2-p0', 'D4FCEF10B3ABC5E7672071C6A63BC5C2-0');
   // the text element keeps only the paths after its last image: none on slide 60's label
   assert.equal(deck.slides.find((s) => s.index === 60).elements.find((e) => e.id === '21F5A116BF12ECB30EDCEE9F704977C7').paths, undefined);
+});
+
+test('deck.json: the text that the page clips away is gone (slides 44 and 62, D-019 F-03)', () => {
+  const text = (n) => deck.slides.find((s) => s.index === n).elements.filter((e) => e.kind === 'text').flatMap((e) => e.words.map((w) => w.text)).join(' ');
+  assert.ok(!/Result:/.test(text(62)), 'slide 62 draws no "Result: 3 packages depend on express"');
+  assert.ok(!/blog-api\s+-/.test(text(62)), 'slide 62 draws none of the three result bullets');
+  assert.equal((text(44).match(/Time-Space/g) || []).length, 1, 'slide 44 draws "4. Add Time-Space" once (the bottom left copy is clipped away)');
+  assert.equal((text(44).match(/Create/g) || []).length, 3, 'slide 44 draws "3. Create PKV-KV" once (the top right copy is clipped away)');
+  // the page paints a black box over the clipped edge of the Result block after its last glyph: it draws over the text
+  const ids = order(62);
+  assert.equal(ids.indexOf('2DFD34E8A1F8767F5E26FBB538188249-fg'), ids.indexOf('2DFD34E8A1F8767F5E26FBB538188249') + 1);
 });

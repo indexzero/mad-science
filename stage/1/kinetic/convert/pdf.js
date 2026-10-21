@@ -53,6 +53,8 @@ function decodeEntities(s) {
  * `<image>` inside `<defs>` (a mask source) is recorded in `imageDefs` and never in `images`; a `<use>`
  * inside `<defs>` (a mask's content) is not a placement. A `<g opacity>` multiplies into the `fillOpacity`
  * of the body paths and the `opacity` of the images under it (66 paths and one image deck-wide).
+ * A `<g clip-path="url(#clip_N)">` scopes the placements under it (D-019 F-03): every body path, glyph
+ * placement, and image carries `clips`, the list of its active clip paths in page space ({ d, box, rect }).
  */
 export function parseSvg(svgText) {
   const defs = new Map();
@@ -65,6 +67,10 @@ export function parseSvg(svgText) {
   let groups = 0;
   let inDefs = false;
   let inClipPath = false;
+  let clipId = null;
+  const clipDefs = new Map(); // clipPath id -> { d, transform }
+  const clipStack = [[]]; // the active clips, outermost first
+  const clip = () => clipStack[clipStack.length - 1];
   let width = null;
   let height = null;
   let order = 0; // document order of placements, images, and body paths (the page's z-order)
@@ -90,16 +96,29 @@ export function parseSvg(svgText) {
     } else if (name === 'clipPath') {
       if (!closing) clipPaths += 1;
       inClipPath = !closing;
+      clipId = closing ? null : a.id ?? null;
     } else if (name === 'g' || name === 'mask') {
       if (closing) {
         stack.pop();
         alphas.pop();
+        clipStack.pop();
       } else {
         if (name === 'g') groups += 1;
-        stack.push(withOwn(a.transform));
+        const own = withOwn(a.transform);
+        const ref = /url\(#([^)]+)\)/.exec(a['clip-path'] || '');
+        let clips = clip();
+        if (ref && clipDefs.has(ref[1])) {
+          const def = clipDefs.get(ref[1]);
+          const d = transformPath(def.d, multiply(own, parseMatrix(def.transform) || IDENTITY));
+          clips = [...clips, { d, box: pathBox(d), rect: isAxisRect(d) }];
+        }
+        stack.push(own);
         alphas.push(alpha() * (a.opacity !== undefined ? Number(a.opacity) : 1));
-        if (selfClosing) { stack.pop(); alphas.pop(); }
+        clipStack.push(clips);
+        if (selfClosing) { stack.pop(); alphas.pop(); clipStack.pop(); }
       }
+    } else if (name === 'path' && !closing && inClipPath && !a.id) {
+      if (clipId) clipDefs.set(clipId, { d: a.d || '', transform: a.transform ?? null });
     } else if (name === 'path' && !closing) {
       if (a.id) {
         defs.set(a.id, a.d || '');
@@ -113,6 +132,7 @@ export function parseSvg(svgText) {
           strokeWidth: a['stroke-width'] !== undefined ? Number(a['stroke-width']) : null,
           transform: a.transform ?? null,
           matrix: withOwn(a.transform),
+          clips: clip(),
         });
       }
     } else if (name === 'use' && !closing) {
@@ -131,6 +151,7 @@ export function parseSvg(svgText) {
           ty: matrix[5],
           fill: a.fill ?? null,
           matrix,
+          clips: clip(),
         });
       } else {
         const x = Number(a.x || 0);
@@ -143,10 +164,11 @@ export function parseSvg(svgText) {
           width: a.width !== undefined ? Number(a.width) : def?.width ?? null,
           height: a.height !== undefined ? Number(a.height) : def?.height ?? null,
           matrix: x || y ? multiply(matrix, translate(x, y)) : matrix,
+          clips: clip(),
         });
       }
     } else if (name === 'image' && !closing) {
-      const img = { id: a.id ?? null, width: Number(a.width), height: Number(a.height), transform: a.transform ?? null, matrix: withOwn(a.transform), inDefs, opacity: alpha() };
+      const img = { id: a.id ?? null, width: Number(a.width), height: Number(a.height), transform: a.transform ?? null, matrix: withOwn(a.transform), inDefs, opacity: alpha(), clips: clip() };
       if (inDefs) imageDefs.set(img.id, img);
       else images.push({ ...img, order: order++ });
     }
@@ -366,8 +388,12 @@ export function imagePlacements(parsed) {
  * `box` is the leaf box (from the layer tree, never from the page). Word and glyph boxes come from the ink.
  * Image boxes come from the SVG transform of each placement.
  */
-export function pageToElements(parsed, leaf, { gapEm = 0.3, baselineEm = 0.1 } = {}) {
-  const pm = pageMatrix(leaf, parsed.width, parsed.height);
+export function pageToElements(page, leaf, { gapEm = 0.3, baselineEm = 0.1 } = {}) {
+  const pm = pageMatrix(leaf, page.width, page.height);
+  // clip paths (D-019 F-03): a placement wholly outside a clip of its group is dropped; one that a clip
+  // may cut keeps that clip, mapped to slide space, as `clip` (a list of path `d`, applied in turn)
+  const { parsed, clipStats } = applyClips(page);
+  const toSlide = (clips) => (clips.length ? clips.map((c) => transformPath(c.d, pm)) : null);
   const cls = contentClass(parsed);
   const images = imagePlacements(parsed).map((p) => {
     const m = multiply(pm, p.matrix);
@@ -376,9 +402,9 @@ export function pageToElements(parsed, leaf, { gapEm = 0.3, baselineEm = 0.1 } =
     return { id: p.id, width: p.width, height: p.height, box: roundBox(boxOf(m, p.width, p.height)), matrix: m.map((v) => Math.round(v * 100000) / 100000), use: p.use, order: p.order, opacity: p.opacity, flipY: m[3] < 0 };
   });
   const paths = shapesOf(parsed, pm);
-  if (cls === 'picture') return { kind: 'picture', images, paths };
-  if (cls === 'shape') return { kind: 'shape', paths };
-  if (cls === 'empty') return { kind: 'empty' };
+  if (cls === 'picture') return { kind: 'picture', images, paths, clipStats };
+  if (cls === 'shape') return { kind: 'shape', paths, clipStats };
+  if (cls === 'empty') return { kind: 'empty', clipStats };
   withAdvances(parsed);
   const words = [];
   for (const w of wordsFromUses(parsed.uses, { gapEm, baselineEm })) {
@@ -390,28 +416,119 @@ export function pageToElements(parsed, leaf, { gapEm = 0.3, baselineEm = 0.1 } =
       if (!d) continue;
       const box = boxFromPath(d);
       if (!box) continue;
-      chars.push({ d, box, text: u.text ?? '', fill: u.fill || DEFAULT_FILL });
+      chars.push({ d, box, text: u.text ?? '', fill: u.fill || DEFAULT_FILL, clip: u.clipKeep?.length ? u.clipKeep : null });
     }
     if (!chars.length) continue;
     const fill = mostCommon(chars.map((c) => c.fill), DEFAULT_FILL);
-    words.push({
+    // a word takes the clips that may cut one of its glyphs; a glyph wholly inside them is not affected
+    const cut = chars.filter((c) => c.clip);
+    const key = (c) => c.clip.map((x) => x.d).join('|');
+    if (cut.some((c) => key(c) !== key(cut[0]))) clipStats.conflicts += 1;
+    const word = {
       d: chars.map((c) => c.d).join(''),
       box: roundBox(unionBox(chars.map((c) => c.box))),
       text: w.text,
       fill,
-      chars: chars.map((c) => (c.fill === fill ? { d: c.d, box: c.box, text: c.text } : c)),
-    });
+      chars: chars.map(({ clip, ...c }) => (c.fill === fill ? { d: c.d, box: c.box, text: c.text } : c)),
+    };
+    if (cut.length) word.clip = toSlide(cut[0].clip);
+    words.push(word);
   }
   const fill = mostCommon(words.map((w) => w.fill), DEFAULT_FILL);
+  if (!words.length) return images.length ? { kind: 'picture', images, paths, clipStats } : paths.length ? { kind: 'shape', paths, clipStats } : { kind: 'empty', clipStats };
   return {
     kind: cls,
     box: roundBox(leaf.box),
-    words: words.map((w) => (w.fill === fill ? { d: w.d, box: w.box, text: w.text, chars: w.chars } : w)),
+    words: words.map(({ fill: wf, ...w }) => (wf === fill ? w : { ...w, fill: wf })),
     fill,
     text: words.map((w) => w.text).join(' '),
     paths,
     images,
+    clipStats,
+    lastGlyph: Math.max(...parsed.uses.map((u) => u.order ?? 0)),
   };
+}
+
+/** True when an absolute path `d` of M and L commands is one axis-aligned rectangle. */
+export function isAxisRect(d) {
+  if (/[CQ]/.test(d)) return false;
+  const nums = (d.match(NUM_RE) || []).map(Number);
+  const pts = [];
+  for (let i = 0; i + 1 < nums.length; i += 2) pts.push([nums[i], nums[i + 1]]);
+  if (pts.length > 1 && pts[pts.length - 1][0] === pts[0][0] && pts[pts.length - 1][1] === pts[0][1]) pts.pop();
+  if (pts.length !== 4) return false;
+  const xs = new Set(pts.map((p) => p[0]));
+  const ys = new Set(pts.map((p) => p[1]));
+  return xs.size === 2 && ys.size === 2 && new Set(pts.map((p) => p.join(','))).size === 4;
+}
+
+/**
+ * Where a page-space box stands against a list of clips: 'out' when it lies wholly outside one of them
+ * (it is never drawn), else the clips that may cut it (a rectangle that holds the box within 0.5 page units
+ * is left out; any other clip is kept).
+ */
+export function clipVerdict(box, clips, eps = 0.5) {
+  const keep = [];
+  for (const c of clips || []) {
+    const b = c.box;
+    if (!b) continue;
+    if (box.maxX <= b.minX || box.minX >= b.maxX || box.maxY <= b.minY || box.minY >= b.maxY) return 'out';
+    const inside = c.rect && box.minX >= b.minX - eps && box.maxX <= b.maxX + eps && box.minY >= b.minY - eps && box.maxY <= b.maxY + eps;
+    if (!inside) keep.push(c);
+  }
+  return keep;
+}
+
+/**
+ * Apply the clips of a parsed page: placements wholly outside a clip are removed, a glyph or body path a
+ * clip may cut carries `clipKeep`. Images are dropped when outside; a partly clipped image is counted (its
+ * element is cropped to the leaf box only). Returns { parsed (a shallow copy), clipStats }.
+ */
+export function applyClips(page) {
+  const stats = { kinds: { rect: 0, other: 0 }, dropped: { glyph: 0, path: 0, image: 0 }, clipped: { glyph: 0, path: 0 }, partialImages: 0, conflicts: 0 };
+  const has = (x) => x.clips && x.clips.length;
+  // the distinct clips that govern a placement on this page, by kind
+  const seen = new Set();
+  for (const x of [...page.uses, ...page.bodyPaths, ...page.images, ...(page.imageUses || [])]) {
+    for (const c of x.clips || []) {
+      if (seen.has(c)) continue;
+      seen.add(c);
+      stats.kinds[c.rect ? 'rect' : 'other'] += 1;
+    }
+  }
+  const uses = [];
+  for (const u of page.uses) {
+    if (!has(u)) { uses.push(u); continue; }
+    const def = page.defs.get(u.href);
+    const box = def ? pathBox(transformPath(def, u.matrix)) : null;
+    if (!box) { uses.push(u); continue; }
+    const v = clipVerdict(box, u.clips);
+    if (v === 'out') { stats.dropped.glyph += 1; continue; }
+    if (v.length) stats.clipped.glyph += 1;
+    uses.push(v.length ? { ...u, clipKeep: v } : u);
+  }
+  const bodyPaths = [];
+  for (const p of page.bodyPaths) {
+    if (!has(p)) { bodyPaths.push(p); continue; }
+    const b = pathBox(transformPath(p.d, p.matrix || IDENTITY));
+    if (!b) { bodyPaths.push(p); continue; }
+    const half = p.stroke && p.stroke !== 'none' ? ((p.strokeWidth ?? 1) * Math.hypot((p.matrix || IDENTITY)[0], (p.matrix || IDENTITY)[1])) / 2 : 0;
+    const v = clipVerdict({ minX: b.minX - half, maxX: b.maxX + half, minY: b.minY - half, maxY: b.maxY + half }, p.clips);
+    if (v === 'out') { stats.dropped.path += 1; continue; }
+    if (v.length) stats.clipped.path += 1;
+    bodyPaths.push(v.length ? { ...p, clipKeep: v } : p);
+  }
+  const keepImage = (i, w, h) => {
+    if (!has(i)) return true;
+    const b = boxOf(i.matrix, w, h);
+    const v = clipVerdict({ minX: b.x, maxX: b.x + b.w, minY: b.y, maxY: b.y + b.h }, i.clips);
+    if (v === 'out') { stats.dropped.image += 1; return false; }
+    if (v.length) stats.partialImages += 1;
+    return true;
+  };
+  const images = page.images.filter((i) => keepImage(i, i.width, i.height));
+  const imageUses = (page.imageUses || []).filter((u) => u.width === null || u.height === null || keepImage(u, u.width, u.height));
+  return { parsed: { ...page, uses, bodyPaths, images, imageUses }, clipStats: stats };
 }
 
 /**
@@ -456,6 +573,7 @@ function shapesOf(parsed, pm) {
       s.stroke = p.stroke;
       s.strokeWidth = r2((p.strokeWidth ?? 1) * Math.hypot(m[0], m[1]));
     }
+    if (p.clipKeep?.length) s.clip = p.clipKeep.map((c) => transformPath(c.d, pm));
     return s;
   });
 }

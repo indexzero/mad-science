@@ -2,8 +2,14 @@
 // with the state the build steps give it. Hidden elements wait for their build step.
 import { elementState } from './effects.js';
 
+/** Clip to each path of `clip` in turn (the page's clip paths, D-019 F-03). The caller saves and restores. */
+function clipTo(ctx, clip) {
+  for (const c of clip) ctx.clip(c);
+}
+
 function drawPaths(ctx, list, alpha) {
   for (const p of list) {
+    if (p.clip) { ctx.save(); clipTo(ctx, p.clip); }
     const a = alpha * (p.opacity ?? 1);
     if (p.fill) {
       ctx.globalAlpha = a;
@@ -16,6 +22,7 @@ function drawPaths(ctx, list, alpha) {
       ctx.lineWidth = p.strokeWidth ?? 1;
       ctx.stroke(p.path);
     }
+    if (p.clip) ctx.restore();
   }
 }
 
@@ -28,6 +35,7 @@ function drawLines(ctx, list, alpha, fraction) {
   for (const p of list) {
     const line = p.line;
     if (!line) continue;
+    if (p.clip) { ctx.save(); clipTo(ctx, p.clip); }
     ctx.globalAlpha = alpha * (p.opacity ?? 1);
     ctx.strokeStyle = p.stroke || p.fill || '#000000';
     ctx.lineWidth = line.width;
@@ -36,6 +44,7 @@ function drawLines(ctx, list, alpha, fraction) {
     ctx.lineDashOffset = 0;
     ctx.stroke(line.path);
     ctx.setLineDash([]);
+    if (p.clip) ctx.restore();
   }
 }
 
@@ -111,10 +120,12 @@ export function drawSlide(ctx, deck, slide, preloader, done, t, videoControl, ra
       drawPaths(ctx, h.paths, st.alpha);
       if (!st.items) {
         for (const w of h.words) {
+          if (w.clip) { ctx.save(); clipTo(ctx, w.clip); }
           ctx.globalAlpha = st.alpha;
           ctx.fillStyle = w.fill;
           ctx.fill(w.path);
           for (const c of w.chars) if (c.fill !== w.fill) { ctx.fillStyle = c.fill; ctx.fill(c.path); }
+          if (w.clip) ctx.restore();
         }
       } else if (st.unit === 'word') {
         h.words.forEach((w, i) => {
@@ -122,6 +133,7 @@ export function drawSlide(ctx, deck, slide, preloader, done, t, videoControl, ra
           if (!s || !s.visible) return;
           ctx.save();
           ctx.translate(s.dx, s.dy);
+          if (w.clip) clipTo(ctx, w.clip);
           ctx.globalAlpha = s.alpha;
           ctx.fillStyle = w.fill;
           ctx.fill(w.path);
@@ -137,6 +149,7 @@ export function drawSlide(ctx, deck, slide, preloader, done, t, videoControl, ra
             if (!s || !s.visible) continue;
             ctx.save();
             ctx.translate(s.dx, s.dy);
+            if (w.clip) clipTo(ctx, w.clip);
             ctx.globalAlpha = s.alpha;
             ctx.fillStyle = c.fill;
             ctx.fill(c.path);

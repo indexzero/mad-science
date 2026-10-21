@@ -63,7 +63,7 @@ test('a space placement splits words and a baseline change splits words', () => 
 });
 
 // ---------- checkpoint 2 ----------
-import { transformPath, pageToElements, classifyPage, contentClass } from '../pdf.js';
+import { transformPath, pageToElements, classifyPage, contentClass, isAxisRect } from '../pdf.js';
 import { IDENTITY } from '../layout.js';
 
 const fullSlideLeaf = { matrix: IDENTITY, width: 1920, height: 1080, contentsRect: { x: 0, y: 0, width: 1, height: 1 }, box: { x: 0, y: 0, w: 1920, h: 1080 } };
@@ -116,7 +116,8 @@ test('a page with images and no placements is a picture; body paths only is a sh
   assert.equal(pic.images.length, 1);
   assert.deepEqual(pic.images[0].box, { x: 384, y: 324, w: 1920, h: 540 });
   const shape = pageToElements({ width: 10, height: 10, uses: [], imageUses: [], images: [], bodyPaths: [{ d: 'M0 0H10V10Z', fill: '#1b1b1b', matrix: null }], defs: new Map() }, fullSlideLeaf);
-  assert.deepEqual(shape, { kind: 'shape', paths: [{ order: 0, d: 'M0 0L1920 0L1920 1080Z', fill: '#1b1b1b' }] });
+  const { clipStats, ...shapeOut } = shape;
+  assert.deepEqual(shapeOut, { kind: 'shape', paths: [{ order: 0, d: 'M0 0L1920 0L1920 1080Z', fill: '#1b1b1b' }] });
   assert.equal(pic.images[0].order, 0, 'a synthetic image without an order sorts first');
 });
 
@@ -201,4 +202,34 @@ test('a mixed page painted path, image, path keeps that order: the first path un
   const two = mixedLayers([{ order: 0, d: 'a' }, { order: 2, d: 'b' }], [{ order: 1 }, { order: 3 }]);
   assert.deepEqual(two.map((x) => x.kind + (x.index ?? '')), ['paths', 'image0', 'paths', 'image1', 'text']);
   assert.deepEqual(two[4].paths, []);
+});
+
+test('clip paths: a placement wholly outside its clip is dropped, one the clip cuts carries the clip (D-019 F-03)', () => {
+  const svgText = `<svg width="1920" height="1080"><defs><path id="font_1_1" d="M0 0L1 0L1 1L0 1Z"/></defs>
+<clipPath id="clip_1"><path transform="matrix(1,0,0,-1,0,1080)" d="M100 580H500V980H100Z"/></clipPath>
+<g clip-path="url(#clip_1)">
+<path d="M150 150L250 150L250 250L150 250Z" fill="#111111"/>
+<path d="M400 400L700 400L700 450L400 450Z" fill="#222222"/>
+<path d="M800 800L900 800L900 900L800 900Z" fill="#333333"/>
+<use data-text="A" xlink:href="#font_1_1" transform="matrix(20,0,0,-20,200,300)"/>
+<use data-text="B" xlink:href="#font_1_1" transform="matrix(20,0,0,-20,1200,300)"/>
+<use data-text="C" xlink:href="#font_1_1" transform="matrix(20,0,0,-20,490,300)"/>
+</g></svg>`;
+  const p = parseSvg(svgText);
+  assert.equal(p.clipPaths, 1);
+  assert.equal(p.uses[0].clips.length, 1);
+  assert.deepEqual(p.uses[0].clips[0].box, { minX: 100, maxX: 500, minY: 100, maxY: 500 });
+  assert.equal(p.uses[0].clips[0].rect, true);
+  const el = pageToElements(p, fullSlideLeaf);
+  assert.deepEqual(el.clipStats.dropped, { glyph: 1, path: 1, image: 0 });
+  assert.deepEqual(el.clipStats.clipped, { glyph: 1, path: 1 });
+  assert.equal(el.text, 'A C', 'B lies wholly outside the clip and is dropped');
+  assert.deepEqual(el.paths.map((s) => s.fill), ['#111111', '#222222'], 'the path wholly outside is dropped');
+  assert.equal(el.paths[0].clip, undefined, 'a path wholly inside carries no clip');
+  assert.deepEqual(el.paths[1].clip, ['M100 500L500 500L500 100L100 100Z'], 'the path the clip cuts carries it in slide space');
+  const c = el.words.find((w) => w.text === 'C');
+  assert.deepEqual(c.clip, ['M100 500L500 500L500 100L100 100Z']);
+  assert.equal(el.words.find((w) => w.text === 'A').clip, undefined);
+  assert.equal(isAxisRect('M0 0L10 0L10 5L0 5Z'), true);
+  assert.equal(isAxisRect('M0 0L10 2L8 7L-2 5Z'), false);
 });
