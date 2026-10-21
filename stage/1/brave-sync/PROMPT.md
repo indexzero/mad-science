@@ -5,7 +5,7 @@ status: "designed, not built"
 source_chat: 08a1228b
 source_messages: [3]
 run_issue: "https://github.com/indexzero/orckits/issues/14"
-design: "FINDINGS.md, and TECHNICAL.DESIGN.md in the orckits run home indexzero/mad-science/2026-10-brave-sync/"
+design: "The Architecture section below is authoritative. FINDINGS.md and TECHNICAL.DESIGN.md follow it."
 recovered_on: "2026-10-20"
 overrides:
   - "The sync code is read from the file named by BRAVE_SYNC_CODE_FILE, not from the BRAVE_SYNC_CODE environment variable."
@@ -17,7 +17,41 @@ overrides:
 
 # brave-sync
 
-brave-sync is a read-only Brave Sync v2 client. It pulls every device's open tabs and synced history from one sync chain and writes them as JSON lines. Read FINDINGS.md first.
+brave-sync is a custom Brave Sync v2 client that joins the owner's sync chain as one more member, read-only, and keeps every device's open tabs and synced history with no retention limit. Brave keeps hosting the sync. Read the Architecture section first.
+
+## Architecture (owner decisions, 2026-10-21)
+
+This section maps the choices. It wins over anything below it that disagrees.
+
+### What the owner wants
+
+- "I want to have Brave sync my things." Brave's own sync service stays the server of record for the chain. Every device keeps syncing to Brave as it does today.
+- "I do want a custom client that's part of my sync cluster." brave-sync is one more member of that chain. It reads what the other devices sync.
+- "I want that sync client to have infinite storage, as opposed to the local SQLite database that Brave uses, which truncates after a certain period of time." The client's value is retention: it keeps what Brave's own local history drops.
+- Long term, capture runs at the edge, like everything in yourbytes, and the hardest sources get three to five capture implementations so the owner can choose.
+
+### The choices
+
+| # | Choice | Decision | Why |
+|---|---|---|---|
+| A1 | Who hosts the sync chain | Brave's production sync service | Owner: "I want to have Brave sync my things." |
+| A2 | Self-host go-sync for real data | Rejected | Owner: "self-hosting the sync server myself, is something I do not want to do." |
+| A3 | What brave-sync is | A read-only member of the chain, talking the sync protocol | The owner wants a member of the cluster, not a scraper of one device. |
+| A4 | Where the client stores data | Its own append-only store with no retention limit, starting as JSON lines on disk | Brave's local history truncates. The archive must not. |
+| A5 | Dev and test server | brave/go-sync, vendored at a pinned commit by `hack/vendor.sh`, run locally by `hack/dev.sh` | The client needs a server it can be tested against without touching a real chain. |
+| A6 | Dev server backends | First the upstream compose stack (dynamo-local plus Redis). Then a SQLite backend for both datastore and cache, so the dev server is one native binary. | Dev only. SQLite for both is fine for testing (owner). |
+| A7 | Runtime of the client | Node, unless a Zig or JS Brave Sync client exists that Bun can reuse | Owner: "an exploratory node.js (or bun if there's like a Zig Brave Sync client already) implementation." |
+| A8 | Portability | Web Crypto and `fetch` in the core, Node-only APIs behind one adapter | The client moves to the edge later. |
+
+### Other capture approaches, all valid, each its own future implementation
+
+1. The sync-chain member (this project).
+2. Local profile readers: Brave's history SQLite and session files, one device at a time.
+3. The DOM history scraper (the owner's gist d6d4801d).
+
+### Status note
+
+The investigation phase below (FINDINGS.md) was refused by the host's safety check on 2026-10-20 and has not been written. Work on the dev server (A5, A6) does not depend on it.
 
 ## The prompt, verbatim from [3]
 
