@@ -9,7 +9,7 @@ import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LIVE_BASE, loadHeader, loadSlide, fetchAsset } from './kpf.js';
 import { composeLeaves, roundBox } from './layout.js';
-import { parsePage, pageToElements, classifyPage, wordsFromUses, withAdvances, stripOrder, DEFAULT_FILL } from './pdf.js';
+import { parsePage, pageToElements, classifyPage, wordsFromUses, withAdvances, stripOrder, mixedLayers, DEFAULT_FILL } from './pdf.js';
 import { planLeaves } from './plan.js';
 import { extractPageImages, placeImage, rasterize, transcodeGif } from './media.js';
 import { collectBuilds, transitionOf } from './effects.js';
@@ -106,6 +106,7 @@ function newReport(index1, uuid) {
     mixedPages: 0,
     mixedFallbacks: 0,
     mixedInterleaved: 0,
+    mixedPathSplits: 0,
     pictureShapes: { under: 0, over: 0, interleaved: 0 },
     flippedImages: 0,
     compositeAsContent: false,
@@ -269,7 +270,23 @@ async function convertSlide(ctx, index1, uuid, slide) {
         const matched = content.images.map((pl) => streams.find((s) => s.width === pl.width && s.height === pl.height) || null);
         if (matched.every(Boolean)) {
           const placed = new Map(); // stream object -> file
-          content.images.forEach((pl, k) => {
+          // the body paths split around the images by page order (D-019 F-01): the paths before an image
+          // become a shape element under it (slide 60 paints its red box, then a 75 percent black image
+          // over it); the paths after the last image stay on the text element, over every image
+          const layers = mixedLayers(content.paths, content.images);
+          const textPaths = layers[layers.length - 1].paths;
+          if (textPaths.length) el.paths = textPaths.map(stripOrder);
+          else delete el.paths;
+          let seg = 0;
+          for (const layer of layers) {
+            if (layer.kind === 'paths') {
+              const sid = `${baseId}-p${seg++}`;
+              pushElement({ ...common(leaf, sid), kind: 'shape', paths: layer.paths.map(stripOrder), source: { path: 'pdf', kpf: ref } }, sid);
+              continue;
+            }
+            if (layer.kind !== 'image') continue;
+            const k = layer.index;
+            const pl = content.images[k];
             const img = matched[k];
             if (!placed.has(img.object)) placed.set(img.object, placeImage(img, slideMediaDir, `${baseId.replace('~', '-')}-${k}`));
             const file = placed.get(img.object);
@@ -280,7 +297,8 @@ async function convertSlide(ctx, index1, uuid, slide) {
             report.media.push({ id: `${baseId}-${k}`, kind: 'image', how: 'stream', bytes: firstUse ? img.bytes : 0, width: img.width, height: img.height, scale, cropped: !!crop, reused: !firstUse });
             if (pl.flipY) report.flippedImages += 1;
             pushElement({ ...withOpacity(common(leaf, `${baseId}-${k}`), pl.opacity), box, kind: 'image', src: relMedia(file), scale, ...placementFields(pl, crop, img.height), source: { path: 'texture', kpf: ref } }, `${baseId}-${k}`);
-          });
+          }
+          if (seg) report.mixedPathSplits += 1;
         } else {
           report.mixedFallbacks += 1;
           report.textTextureFallbacks += 1;

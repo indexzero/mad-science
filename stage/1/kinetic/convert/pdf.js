@@ -414,6 +414,28 @@ export function pageToElements(parsed, leaf, { gapEm = 0.3, baselineEm = 0.1 } =
   };
 }
 
+/**
+ * The paint order of a mixed page as element layers (D-019 F-01, D-020 CP3-F1). The body paths split around
+ * the images by page order: the paths before an image stay under it, the paths after the last image stay
+ * over every image. Glyphs still draw over all images (D-016). `paths` and `images` carry `order`. Returns
+ * [{ kind: 'paths', paths } | { kind: 'image', index }] ending with { kind: 'text', paths } (the paths the
+ * text element keeps; empty when no path follows the last image).
+ */
+export function mixedLayers(paths, images) {
+  const sortedPaths = [...paths].sort((a, b) => a.order - b.order);
+  const byOrder = images.map((im, index) => ({ index, order: im.order ?? 0 })).sort((a, b) => a.order - b.order);
+  const out = [];
+  let pi = 0;
+  for (const im of byOrder) {
+    const seg = [];
+    while (pi < sortedPaths.length && sortedPaths[pi].order < im.order) seg.push(sortedPaths[pi++]);
+    if (seg.length) out.push({ kind: 'paths', paths: seg });
+    out.push({ kind: 'image', index: im.index });
+  }
+  out.push({ kind: 'text', paths: sortedPaths.slice(pi) });
+  return out;
+}
+
 /** A shape path without its `order` (deck.json carries no z-order field; element order is the z-order). */
 export function stripOrder({ order, ...p }) {
   return p;

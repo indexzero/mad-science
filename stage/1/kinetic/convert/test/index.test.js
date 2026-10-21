@@ -18,3 +18,24 @@ test('placementFields mirrors the crop of a flipped image and marks it', () => {
   assert.deepEqual(placementFields({ flipY: true }, null, 100), { flip: 'vertical' });
   assert.deepEqual(placementFields({ flipY: true }, { x: 1, y: 10, w: 3, h: 20 }, 100), { flip: 'vertical', crop: { x: 1, y: 70, w: 3, h: 20 } });
 });
+
+// D-019 F-01 / D-020 CP3-F1: the committed deck keeps the paint order of its mixed pages
+import { readFileSync } from 'node:fs';
+const deck = JSON.parse(readFileSync(new URL('../../decks/_all_docs/deck.json', import.meta.url), 'utf8'));
+const order = (n) => deck.slides.find((s) => s.index === n).elements.map((e) => e.id);
+
+test('deck.json: the paths a mixed page paints before an image draw under it (slides 29, 44, 60)', () => {
+  const before = (n, a, b) => {
+    const ids = order(n);
+    assert.ok(ids.indexOf(a) >= 0 && ids.indexOf(b) >= 0, `slide ${n}: ${a} and ${b} exist`);
+    assert.ok(ids.indexOf(a) < ids.indexOf(b), `slide ${n}: ${a} draws before ${b}`);
+  };
+  // slide 60: the red label box, then the 75 percent black image over it
+  before(60, '21F5A116BF12ECB30EDCEE9F704977C7-p0', '21F5A116BF12ECB30EDCEE9F704977C7-0');
+  // slide 44: the full-page fill, then the nine emoji
+  for (let k = 0; k < 9; k++) before(44, '7884D393B610F57E5A5FD9CF5A6CECB3-p0', `7884D393B610F57E5A5FD9CF5A6CECB3-${k}`);
+  // slide 29: the page fill, then the emoji
+  before(29, 'D4FCEF10B3ABC5E7672071C6A63BC5C2-p0', 'D4FCEF10B3ABC5E7672071C6A63BC5C2-0');
+  // the text element keeps only the paths after its last image: none on slide 60's label
+  assert.equal(deck.slides.find((s) => s.index === 60).elements.find((e) => e.id === '21F5A116BF12ECB30EDCEE9F704977C7').paths, undefined);
+});

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { parseSvg, glyphDefs, withAdvances, wordsFromUses, parseMatrix, pathBox } from '../pdf.js';
+import { parseSvg, glyphDefs, withAdvances, wordsFromUses, parseMatrix, pathBox, mixedLayers } from '../pdf.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const svg = readFileSync(join(here, 'fixtures', 'slide1-p1.svg'), 'utf8');
@@ -182,4 +182,23 @@ test('a <g opacity> multiplies into the fill opacity of body paths and the opaci
   assert.equal(el.kind, 'picture');
   assert.deepEqual(el.images.map((i) => [i.order, i.opacity]), [[2, 0.2], [4, 1]]);
   assert.deepEqual(el.paths.map((s) => [s.order, s.opacity]), [[0, 0.1], [1, 0.05], [3, undefined]]);
+});
+
+test('a mixed page painted path, image, path keeps that order: the first path under the image, the second over it (D-019 F-01)', () => {
+  const svgText = `<svg width="1920" height="1080"><defs><path id="font_1_1" d="M0 0L1 0L1 1Z"/></defs>
+<path d="M0 0L100 0L100 100Z" fill="#ff0000"/>
+<image id="image_1" width="10" height="10" transform="matrix(10,0,0,10,0,0)" xlink:href="data:x"/>
+<path d="M0 0L50 0L50 50Z" fill="#00ff00"/>
+<use data-text="A" xlink:href="#font_1_1" transform="matrix(20,0,0,-20,10,40)" fill="#ffffff"/></svg>`;
+  const p = parseSvg(svgText);
+  const el = pageToElements(p, fullSlideLeaf);
+  assert.equal(el.kind, 'mixed');
+  const layers = mixedLayers(el.paths, el.images);
+  assert.deepEqual(layers.map((x) => x.kind), ['paths', 'image', 'text']);
+  assert.deepEqual(layers[0].paths.map((s) => s.fill), ['#ff0000'], 'the red path stays under the image');
+  assert.deepEqual(layers[2].paths.map((s) => s.fill), ['#00ff00'], 'the green path stays over the image, on the text element');
+  // two images with a path between them, and no path after the last image
+  const two = mixedLayers([{ order: 0, d: 'a' }, { order: 2, d: 'b' }], [{ order: 1 }, { order: 3 }]);
+  assert.deepEqual(two.map((x) => x.kind + (x.index ?? '')), ['paths', 'image0', 'paths', 'image1', 'text']);
+  assert.deepEqual(two[4].paths, []);
 });
