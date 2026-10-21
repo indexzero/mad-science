@@ -860,8 +860,8 @@
       "pass": true
     },
     "44": {
-      "ratio": 0.01425,
-      "mismatched": 7387,
+      "ratio": 0.013056,
+      "mismatched": 6768,
       "unmasked": 518400,
       "rule": "masked",
       "maskedFraction": 0,
@@ -870,8 +870,8 @@
         "boxes": 1,
         "boxesCompared": 1,
         "compared": 518400,
-        "mismatched": 7387,
-        "ratio": 0.01425
+        "mismatched": 6768,
+        "ratio": 0.013056
       },
       "presses": 0,
       "frames": 3,
@@ -1270,19 +1270,19 @@
       "pass": true
     },
     "65": {
-      "ratio": 0.010442,
-      "mismatched": 2381,
-      "unmasked": 228028,
+      "ratio": 0.003403,
+      "mismatched": 781,
+      "unmasked": 229471,
       "rule": "animated-pixels-masked",
-      "unmaskedRatio": 0.217348,
-      "maskedFraction": 0.56,
+      "unmaskedRatio": 0.26773,
+      "maskedFraction": 0.557,
       "videoRegions": [],
       "text": {
         "boxes": 11,
         "boxesCompared": 11,
-        "compared": 200245,
-        "mismatched": 553,
-        "ratio": 0.002762
+        "compared": 200093,
+        "mismatched": 199,
+        "ratio": 0.000995
       },
       "presses": 4,
       "frames": 6,

@@ -1,6 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { visibleImage, placementFields } from '../index.js';
+import { deflateSync, crc32 } from 'node:zlib';
+import { visibleImage, placementFields, matchStreams } from '../index.js';
+import { parseSvg, imagePlacements } from '../pdf.js';
+import { imageDataKey } from '../media.js';
 
 test('visibleImage keeps a whole image and crops a masked one to the page clip', () => {
   const whole = visibleImage({ x: 10, y: 20, w: 100, h: 50 }, { x: 0, y: 0, w: 1920, h: 1080 }, 200, 100);
@@ -49,4 +52,56 @@ test('deck.json: the text that the page clips away is gone (slides 44 and 62, D-
   // the page paints a black box over the clipped edge of the Result block after its last glyph: it draws over the text
   const ids = order(62);
   assert.equal(ids.indexOf('2DFD34E8A1F8767F5E26FBB538188249-fg'), ids.indexOf('2DFD34E8A1F8767F5E26FBB538188249') + 1);
+});
+
+// D-023 R-1: slide 44 places five streams of one pixel size; matching by size gave all seven emoji the first
+const chunk = (type, data) => {
+  const len = Buffer.alloc(4);
+  len.writeUInt32BE(data.length);
+  const body = Buffer.concat([Buffer.from(type, 'latin1'), data]);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(body));
+  return Buffer.concat([len, body, crc]);
+};
+// a 2x2 RGB PNG of one color; `extra` adds an ancillary chunk, as `mutool extract` adds iCCP
+const png = (rgb, extra = false) => {
+  const ihdr = Buffer.from([0, 0, 0, 2, 0, 0, 0, 2, 8, 2, 0, 0, 0]);
+  const row = Buffer.from([0, ...rgb, ...rgb]);
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', ihdr),
+    ...(extra ? [chunk('tEXt', Buffer.from('k\0v'))] : []),
+    chunk('IDAT', deflateSync(Buffer.concat([row, row]))),
+    chunk('IEND', Buffer.alloc(0)),
+  ]);
+};
+
+test('matchStreams: two same-size images on one page each take their own stream', () => {
+  const red = png([255, 0, 0]);
+  const blue = png([0, 0, 255]);
+  const uri = (b) => `data:image/png;base64,${b.toString('base64')}`;
+  const svg = `<svg width="100" height="100"><image id="image_1" width="2" height="2" xlink:href="${uri(red)}"/>`
+    + `<image id="image_2" width="2" height="2" transform="matrix(1,0,0,1,10,0)" xlink:href="${uri(blue)}"/>`
+    + `<use xlink:href="#image_2" x="0" y="0" width="2" height="2" transform="matrix(1,0,0,1,20,0)"/></svg>`;
+  const placements = imagePlacements(parseSvg(svg));
+  assert.equal(placements.length, 3);
+  // the streams carry other ancillary chunks than the data URIs; the pixels are the same
+  const streams = [
+    { object: 19, width: 2, height: 2, key: imageDataKey(png([255, 0, 0], true)) },
+    { object: 22, width: 2, height: 2, key: imageDataKey(png([0, 0, 255], true)) },
+  ];
+  const { matched, sizeFallbacks } = matchStreams(placements, streams);
+  assert.deepEqual(matched.map((m) => m.object), [19, 22, 22]);
+  assert.equal(sizeFallbacks, 0);
+  // without a key, a placement falls back to the first stream of its size, and the fallback is counted
+  const bare = matchStreams(placements.map((p) => ({ ...p, key: null })), streams);
+  assert.deepEqual(bare.matched.map((m) => m.object), [19, 19, 19]);
+  assert.equal(bare.sizeFallbacks, 3);
+  assert.equal(matchStreams([{ key: null, width: 5, height: 5 }], streams).matched[0], null);
+});
+
+test('deck.json: slide 44 shows its five distinct emoji streams, not one (D-023 R-1)', () => {
+  const imgs = deck.slides.find((s) => s.index === 44).elements.filter((e) => e.kind === 'image');
+  assert.equal(imgs.length, 7);
+  assert.equal(new Set(imgs.map((e) => e.src)).size, 5, imgs.map((e) => e.src).join(' '));
 });

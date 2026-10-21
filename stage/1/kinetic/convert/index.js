@@ -90,6 +90,24 @@ export function placementFields(pl, crop, imgH) {
   return out;
 }
 
+/**
+ * Match each image placement of a mixed page to an extracted stream (D-023 R-1). A placement names its stream
+ * by its pixels: `key` is the same `imageDataKey` on the SVG data URI and on the stream. A placement without a
+ * keyed match falls back to the first stream of its pixel size (slide 44 places five streams of one size, so
+ * size alone gave all seven emoji the first). A stream may match more than once. Returns { matched, sizeFallbacks }.
+ */
+export function matchStreams(placements, streams) {
+  let sizeFallbacks = 0;
+  const matched = placements.map((pl) => {
+    const byKey = pl.key ? streams.find((s) => s.key === pl.key) : null;
+    if (byKey) return byKey;
+    const bySize = streams.find((s) => s.width === pl.width && s.height === pl.height) || null;
+    if (bySize) sizeFallbacks += 1;
+    return bySize;
+  });
+  return { matched, sizeFallbacks };
+}
+
 function kpfRef(uuid, texture, asset, tr) {
   return { slide: uuid, texture, page: asset.index, textureType: tr?.textureType ?? 0, isBackgroundTexture: tr?.isBackgroundTexture ?? false };
 }
@@ -105,6 +123,7 @@ function newReport(index1, uuid) {
     pictures: { stream: 0, raster: 0 },
     mixedPages: 0,
     mixedFallbacks: 0,
+    imageSizeFallbacks: 0,
     mixedInterleaved: 0,
     mixedPathSplits: 0,
     textPathsOver: 0,
@@ -272,7 +291,7 @@ async function convertSlide(ctx, index1, uuid, slide) {
       el.source = { path: 'pdf', kpf: ref };
       if (keyTokens && content.words.every((w) => keyTokens.has(w.text))) report.keyTextMatched += 1;
       if (content.kind === 'mixed') {
-        // one image element per placement, matched to the page's streams by pixel size (D-009 F2). The
+        // one image element per placement, matched to the page's streams by their pixels (D-023 R-1). The
         // images draw under the text: on 30 of the 40 mixed pages every image precedes every glyph in the
         // page's order, on the other 10 each image precedes the glyphs of its own row (slide 12 draws a
         // bar, then a row of text, then the next bar); `mixedInterleaved` counts the latter
@@ -280,11 +299,12 @@ async function convertSlide(ctx, index1, uuid, slide) {
         const firstGlyph = Math.min(...(page(texture).uses.map((u) => u.order ?? 0)));
         if (content.images.some((pl) => (pl.order ?? 0) > firstGlyph)) report.mixedInterleaved += 1;
         const scratch = join(CACHE, 'extract', uuid, texture);
-        const { images: streams, fontFilesDeleted } = extractPageImages(pdf, asset.index, scratch);
+        const { images: streams, fontFilesDeleted } = extractPageImages(pdf, asset.index, scratch, { keys: true });
         report.fontFilesDeleted += fontFilesDeleted;
         // a stream may be placed more than once on a page (slide 39 draws each badge twice), so the match
         // never consumes a stream; the file of the first placement is reused by the later ones
-        const matched = content.images.map((pl) => streams.find((s) => s.width === pl.width && s.height === pl.height) || null);
+        const { matched, sizeFallbacks } = matchStreams(content.images, streams);
+        report.imageSizeFallbacks += sizeFallbacks;
         if (matched.every(Boolean)) {
           const placed = new Map(); // stream object -> file
           // the body paths split around the images by page order (D-019 F-01): the paths before an image

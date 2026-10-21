@@ -6,6 +6,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { multiply, apply, translate, pageMatrix, roundBox, boxOf, IDENTITY } from './layout.js';
+import { imageDataKey } from './media.js';
 
 export const MUTOOL = process.env.MUTOOL || 'mutool';
 
@@ -162,6 +163,7 @@ export function parseSvg(svgText) {
           order: order++,
           opacity: alpha(),
           href,
+          key: def?.key ?? null,
           width: a.width !== undefined ? Number(a.width) : def?.width ?? null,
           height: a.height !== undefined ? Number(a.height) : def?.height ?? null,
           matrix: x || y ? multiply(matrix, translate(x, y)) : matrix,
@@ -169,12 +171,18 @@ export function parseSvg(svgText) {
         });
       }
     } else if (name === 'image' && !closing) {
-      const img = { id: a.id ?? null, width: Number(a.width), height: Number(a.height), transform: a.transform ?? null, matrix: withOwn(a.transform), inDefs, opacity: alpha(), clips: clip() };
+      const img = { id: a.id ?? null, width: Number(a.width), height: Number(a.height), transform: a.transform ?? null, matrix: withOwn(a.transform), inDefs, opacity: alpha(), clips: clip(), key: dataUriKey(a['xlink:href'] || a.href) };
       if (inDefs) imageDefs.set(img.id, img);
       else images.push({ ...img, order: order++ });
     }
   }
   return { width, height, defs, imageDefs, uses, imageUses, bodyPaths, images, clipPaths, groups };
+}
+
+/** The `imageDataKey` of a base64 data URI (mutool writes each raster inline), or null. */
+function dataUriKey(href) {
+  const m = /^data:image\/(?:png|jpeg);base64,/.exec(href || '');
+  return m ? imageDataKey(Buffer.from(href.slice(m[0].length).replace(/\s+/g, ''), 'base64')) : null;
 }
 
 /** Glyph defs only (ids that start with `font_`). */
@@ -374,8 +382,8 @@ export function contentClass(parsed) {
 /** Every raster placement of a page (body images and image uses) with its page matrix and pixel size. */
 export function imagePlacements(parsed) {
   const out = [];
-  for (const i of parsed.images) out.push({ id: i.id, width: i.width, height: i.height, matrix: i.matrix, use: false, order: i.order ?? 0, opacity: i.opacity ?? 1 });
-  for (const u of parsed.imageUses || []) out.push({ id: u.href, width: u.width, height: u.height, matrix: u.matrix, use: true, order: u.order ?? 0, opacity: u.opacity ?? 1 });
+  for (const i of parsed.images) out.push({ id: i.id, key: i.key ?? null, width: i.width, height: i.height, matrix: i.matrix, use: false, order: i.order ?? 0, opacity: i.opacity ?? 1 });
+  for (const u of parsed.imageUses || []) out.push({ id: u.href, key: u.key ?? null, width: u.width, height: u.height, matrix: u.matrix, use: true, order: u.order ?? 0, opacity: u.opacity ?? 1 });
   return out.sort((a, b) => a.order - b.order);
 }
 
@@ -400,7 +408,7 @@ export function pageToElements(page, leaf, { gapEm = 0.3, baselineEm = 0.1 } = {
     const m = multiply(pm, p.matrix);
     // a negative y scale in the placement is a vertical flip: the PDF draws the image with a negative height
     // (slide 68's gradient overlay fades at the bottom right; drawn upright it faded at the top right)
-    return { id: p.id, width: p.width, height: p.height, box: roundBox(boxOf(m, p.width, p.height)), matrix: m.map((v) => Math.round(v * 100000) / 100000), use: p.use, order: p.order, opacity: p.opacity, flipY: m[3] < 0 };
+    return { id: p.id, key: p.key, width: p.width, height: p.height, box: roundBox(boxOf(m, p.width, p.height)), matrix: m.map((v) => Math.round(v * 100000) / 100000), use: p.use, order: p.order, opacity: p.opacity, flipY: m[3] < 0 };
   });
   const paths = shapesOf(parsed, pm);
   if (cls === 'picture') return { kind: 'picture', images, paths, clipStats };

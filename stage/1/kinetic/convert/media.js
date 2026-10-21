@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, unlinkSync } from 'node:fs';
 import { basename, join } from 'node:path';
+import { inflateSync } from 'node:zlib';
 
 export const MUTOOL = process.env.MUTOOL || 'mutool';
 export const PDFTOCAIRO = process.env.PDFTOCAIRO || 'pdftocairo';
@@ -53,6 +54,34 @@ export function imageSize(buf) {
   return null;
 }
 
+/**
+ * A key for the pixels of a PNG or JPEG buffer, or null: the sha256 of a JPEG's bytes, or of a PNG's IHDR
+ * and inflated IDAT. mutool writes one image stream with the same pixels through `draw -F svg` (a data URI)
+ * and `extract` without -a; only the ancillary chunks (iCCP) differ. The key ties a placement to its stream.
+ */
+export function imageDataKey(buf) {
+  if (buf.length > 24 && buf[0] === 0x89 && buf[1] === 0x50) {
+    let ihdr = null;
+    const idat = [];
+    for (let p = 8; p + 8 <= buf.length; ) {
+      const len = buf.readUInt32BE(p);
+      const type = buf.toString('latin1', p + 4, p + 8);
+      if (type === 'IHDR') ihdr = buf.subarray(p + 8, p + 8 + len);
+      else if (type === 'IDAT') idat.push(buf.subarray(p + 8, p + 8 + len));
+      else if (type === 'IEND') break;
+      p += 12 + len;
+    }
+    if (!ihdr || !idat.length) return null;
+    try {
+      return sha256Hex(Buffer.concat([ihdr, inflateSync(Buffer.concat(idat))]));
+    } catch {
+      return null;
+    }
+  }
+  if (buf.length > 4 && buf[0] === 0xff && buf[1] === 0xd8) return sha256Hex(buf);
+  return null;
+}
+
 /** Object numbers of the image XObjects of page `pageIndex` (0-based), through `mutool show`. */
 export function pageImageObjects(pdfPath, pageIndex) {
   const out = run(MUTOOL, ['show', pdfPath, `pages/${pageIndex + 1}/Resources/XObject`]);
@@ -62,15 +91,16 @@ export function pageImageObjects(pdfPath, pageIndex) {
 /**
  * Extract every image stream of a page into `scratchDir` with `mutool extract -a` (SMask folded in as
  * alpha), then delete every font file written there. Returns { images: [{ object, file, ext, width,
- * height, bytes }], fontFilesDeleted }. The caller copies what it needs and removes the scratch.
+ * height, bytes, key }], fontFilesDeleted }. With `keys`, `key` is the `imageDataKey` of the stream
+ * without its SMask, else null. The caller copies what it needs and removes the scratch.
  */
-export function extractPageImages(pdfPath, pageIndex, scratchDir) {
+export function extractPageImages(pdfPath, pageIndex, scratchDir, { keys = false } = {}) {
   const objects = pageImageObjects(pdfPath, pageIndex);
   rmSync(scratchDir, { recursive: true, force: true });
   mkdirSync(scratchDir, { recursive: true });
   if (!objects.length) return { images: [], fontFilesDeleted: 0 };
   run(MUTOOL, ['extract', '-a', pdfPath, ...objects.map(String)], { cwd: scratchDir });
-  const fontFilesDeleted = deleteFontFiles(scratchDir);
+  let fontFilesDeleted = deleteFontFiles(scratchDir);
   const images = [];
   for (const f of readdirSync(scratchDir)) {
     const m = /^image-(\d+)\.(png|jpg|jpeg)$/i.exec(f);
@@ -78,9 +108,21 @@ export function extractPageImages(pdfPath, pageIndex, scratchDir) {
     const file = join(scratchDir, f);
     const buf = readFileSync(file);
     const size = imageSize(buf);
-    images.push({ object: Number(m[1]), file, ext: /^png$/i.test(m[2]) ? 'png' : 'jpg', width: size?.width ?? null, height: size?.height ?? null, bytes: buf.length });
+    images.push({ object: Number(m[1]), file, ext: /^png$/i.test(m[2]) ? 'png' : 'jpg', width: size?.width ?? null, height: size?.height ?? null, bytes: buf.length, key: null });
   }
   images.sort((a, b) => a.object - b.object);
+  if (keys && images.length) {
+    // the same streams without the SMask fold: their pixels equal the SVG data URI of each placement (D-023 R-1)
+    const rawDir = join(scratchDir, 'raw');
+    mkdirSync(rawDir, { recursive: true });
+    run(MUTOOL, ['extract', pdfPath, ...objects.map(String)], { cwd: rawDir });
+    fontFilesDeleted += deleteFontFiles(rawDir);
+    for (const f of readdirSync(rawDir)) {
+      const m = /^image-(\d+)\.(png|jpg|jpeg)$/i.exec(f);
+      const img = m && images.find((i) => i.object === Number(m[1]));
+      if (img) img.key = imageDataKey(readFileSync(join(rawDir, f)));
+    }
+  }
   return { images, fontFilesDeleted };
 }
 
