@@ -1,5 +1,7 @@
+import { createReadStream } from 'node:fs';
 import { mkdir, open, readFile, rename } from 'node:fs/promises';
 import { join } from 'node:path';
+import { createInterface } from 'node:readline';
 
 const FILES = {
   'session-header': 'sessions.jsonl',
@@ -45,6 +47,17 @@ export async function openArchive(dir) {
       }
       for (const [file, text] of Object.entries(lines)) {
         await writeDurably(join(dir, file), text, 'a');
+      }
+    },
+
+    async *records(kind) {
+      const lines = createInterface({ input: createReadStream(join(dir, FILES[kind])), crlfDelay: Infinity });
+      try {
+        for await (const line of lines) {
+          if (line) yield JSON.parse(line);
+        }
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
       }
     },
 

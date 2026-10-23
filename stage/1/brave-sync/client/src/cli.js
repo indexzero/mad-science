@@ -7,16 +7,18 @@ import { openArchive } from './archive.js';
 import { createTransport } from './transport.js';
 import { pull } from './pull.js';
 import { tokenMtime } from './proto.js';
+import { latestTabs, renderTabs } from './tabs-view.js';
 
 const DEV_SERVER = 'http://localhost:8295/v2';
 const PRODUCTION = 'https://sync-v2.brave.com/v2';
 
-const USAGE = `usage: brave-sync <pull|watch|status> [options]
+const USAGE = `usage: brave-sync <pull|watch|status|tabs> [options]
   --archive DIR     archive directory (default: archive)
   --server URL      sync server (default: ${DEV_SERVER})
   --production      use ${PRODUCTION}
   --interval SECS   watch: seconds between pulls (default: 300)
   --reset           pull: forget progress markers and re-read everything
+tabs prints the newest snapshot of each tab in tabs.jsonl, by device.
 The sync code is read from the file named by BRAVE_SYNC_CODE_FILE.`;
 
 function die(message) {
@@ -36,9 +38,10 @@ async function readSyncCode() {
   return (await readFile(path, 'utf8')).trim();
 }
 
-async function connect(options, state) {
+async function connect(options, archive, state) {
   const server = serverUrl(options);
   const chain = await openChain(await readSyncCode());
+  await archive.saveState(state);
   const post = createTransport({ server, chain, cacheGuid: state.cacheGuid });
   return { chain, post };
 }
@@ -46,13 +49,13 @@ async function connect(options, state) {
 const commands = {
   async pull(options, archive, state) {
     if (options.reset) Object.assign(state, { markers: {}, storeBirthday: null });
-    const { chain, post } = await connect(options, state);
+    const { chain, post } = await connect(options, archive, state);
     const { records } = await pull({ chain, post, archive, state });
     console.log(`archived ${records} records in ${archive.dir}`);
   },
 
   async watch(options, archive, state) {
-    const { chain, post } = await connect(options, state);
+    const { chain, post } = await connect(options, archive, state);
     const interval = Number(options.interval);
     for (;;) {
       try {
@@ -76,6 +79,10 @@ const commands = {
     }
     console.log(`devices ${Object.values(state.index.devices).map((d) => d.name).join(', ') || '(none yet)'}`);
   },
+
+  async tabs(options, archive) {
+    console.log(renderTabs(await latestTabs(archive.records('tab'))));
+  },
 };
 
 const { values: options, positionals } = parseArgs({
@@ -93,5 +100,4 @@ const command = commands[positionals[0]];
 if (!command) die(USAGE);
 const archive = await openArchive(options.archive);
 const state = await archive.loadState();
-await archive.saveState(state);
 await command(options, archive, state).catch((error) => die(error.message));

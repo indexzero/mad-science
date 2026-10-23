@@ -1,6 +1,6 @@
 ---
 title: "brave-sync: a literate read-only client"
-status: "Complete. Every chunk tangles, the 27 tests pass, and a pull of the throwaway chain from a local go-sync decrypted every entity."
+status: "Complete. Every chunk tangles, the 30 tests pass, and a pull of the throwaway chain from a local go-sync decrypted every entity."
 written: 2026-10-22
 sources:
   - "brave/go-sync ca8d4e1e60faec3cbfac295b0c4d81eb463bccdf, vendored at vendor/go-sync (citations use the upstream files, git show HEAD:<path>, not the patched tree)"
@@ -83,7 +83,8 @@ state.json ─► markers ─► GetUpdates loop ─► transport ─► POST {s
 | `src/history.js`, `src/time.js` | HISTORY to visits, and time conversion (§8) | portable |
 | `src/archive.js` | The append-only archive and the state file (§9) | Node only |
 | `src/pull.js` | One pull, from markers to archived records (§10) | portable |
-| `src/cli.js` | `pull`, `watch`, `status` (§11) | Node only |
+| `src/cli.js` | `pull`, `watch`, `status`, `tabs` (§11) | Node only |
+| `src/tabs-view.js` | The `tabs` viewer: newest snapshot of each tab (§11.1) | portable |
 
 The core uses only `fetch`, Web Crypto, protobufjs and three small pure-JS
 crypto packages. The two Node-only files are the adapter that A8 calls for.
@@ -1367,8 +1368,10 @@ outside Q-001.
 ### 9.1 Files and records
 
 ```js file=src/archive.js
+import { createReadStream } from 'node:fs';
 import { mkdir, open, readFile, rename } from 'node:fs/promises';
 import { join } from 'node:path';
+import { createInterface } from 'node:readline';
 
 const FILES = {
   'session-header': 'sessions.jsonl',
@@ -1446,7 +1449,32 @@ export async function openArchive(dir) {
         await writeDurably(join(dir, file), text, 'a');
       }
     },
+```
 
+`append` groups a batch by file and makes one durable write per file.
+`saveState` writes a temporary file, fsyncs it and renames it over the old
+one, so `state.json` is always a whole old version or a whole new one. The
+directory itself is not fsynced. After a power cut the rename may be lost,
+which costs only a re-fetch and some duplicates (§9.1).
+
+```js file=src/archive.js
+    async *records(kind) {
+      const lines = createInterface({ input: createReadStream(join(dir, FILES[kind])), crlfDelay: Infinity });
+      try {
+        for await (const line of lines) {
+          if (line) yield JSON.parse(line);
+        }
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+      }
+    },
+```
+
+`records` reads one kind back, one line at a time, so a reader's memory does
+not grow with the archive. A file that does not exist yet reads as empty.
+Nothing in the client reads a record back except the viewers (§11.1).
+
+```js file=src/archive.js
     async loadState() {
       try {
         return JSON.parse(await readFile(statePath, 'utf8'));
@@ -1464,11 +1492,7 @@ export async function openArchive(dir) {
 }
 ```
 
-`append` groups a batch by file and makes one durable write per file.
-`saveState` writes a temporary file, fsyncs it and renames it over the old
-one, so `state.json` is always a whole old version or a whole new one. The
-directory itself is not fsynced. After a power cut the rename may be lost,
-which costs only a re-fetch and some duplicates (§9.1).
+`loadState` returns a fresh state when there is no file yet (§9.2).
 
 ## 10. One pull
 
@@ -1533,16 +1557,18 @@ import { openArchive } from './archive.js';
 import { createTransport } from './transport.js';
 import { pull } from './pull.js';
 import { tokenMtime } from './proto.js';
+import { latestTabs, renderTabs } from './tabs-view.js';
 
 const DEV_SERVER = 'http://localhost:8295/v2';
 const PRODUCTION = 'https://sync-v2.brave.com/v2';
 
-const USAGE = `usage: brave-sync <pull|watch|status> [options]
+const USAGE = `usage: brave-sync <pull|watch|status|tabs> [options]
   --archive DIR     archive directory (default: archive)
   --server URL      sync server (default: ${DEV_SERVER})
   --production      use ${PRODUCTION}
   --interval SECS   watch: seconds between pulls (default: 300)
   --reset           pull: forget progress markers and re-read everything
+tabs prints the newest snapshot of each tab in tabs.jsonl, by device.
 The sync code is read from the file named by BRAVE_SYNC_CODE_FILE.`;
 ```
 
@@ -1576,28 +1602,31 @@ read only when a command needs the network, and it passes straight to
 `openChain`.
 
 ```js file=src/cli.js
-async function connect(options, state) {
+async function connect(options, archive, state) {
   const server = serverUrl(options);
   const chain = await openChain(await readSyncCode());
+  await archive.saveState(state);
   const post = createTransport({ server, chain, cacheGuid: state.cacheGuid });
   return { chain, post };
 }
 ```
 
 `connect` checks the server before it reads the sync code, so a refused URL
-never touches the code. Then it opens the chain and builds the transport.
+never touches the code. Then it opens the chain, saves the state so a new
+archive keeps its cache GUID from the first request on, and builds the
+transport. Only `pull` and `watch` call it.
 
 ```js file=src/cli.js
 const commands = {
   async pull(options, archive, state) {
     if (options.reset) Object.assign(state, { markers: {}, storeBirthday: null });
-    const { chain, post } = await connect(options, state);
+    const { chain, post } = await connect(options, archive, state);
     const { records } = await pull({ chain, post, archive, state });
     console.log(`archived ${records} records in ${archive.dir}`);
   },
 
   async watch(options, archive, state) {
-    const { chain, post } = await connect(options, state);
+    const { chain, post } = await connect(options, archive, state);
     const interval = Number(options.interval);
     for (;;) {
       try {
@@ -1621,7 +1650,6 @@ const commands = {
     }
     console.log(`devices ${Object.values(state.index.devices).map((d) => d.name).join(', ') || '(none yet)'}`);
   },
-};
 ```
 
 - `pull` pages until the server has nothing more, then exits. `--reset` clears
@@ -1632,6 +1660,15 @@ const commands = {
   Everything else ends the process.
 - `status` reads only local state. It prints each saved marker as the mtime it
   encodes (§3.4), and the device names the index knows.
+
+```js file=src/cli.js
+  async tabs(options, archive) {
+    console.log(renderTabs(await latestTabs(archive.records('tab'))));
+  },
+};
+```
+
+- `tabs` shows the archived tabs (§11.1).
 
 ```js file=src/cli.js
 const { values: options, positionals } = parseArgs({
@@ -1649,13 +1686,70 @@ const command = commands[positionals[0]];
 if (!command) die(USAGE);
 const archive = await openArchive(options.archive);
 const state = await archive.loadState();
-await archive.saveState(state);
 await command(options, archive, state).catch((error) => die(error.message));
 ```
 
-The state is loaded and saved once before any command runs, so a new archive
-gets its cache GUID before the first request. Every failure ends in `die`
-with `error.message` and nothing more (§2.6).
+The state is loaded once, and only `pull` and `watch` write it, so `status`
+and `tabs` never change the archive. Every failure ends in `die` with
+`error.message` and nothing more (§2.6).
+
+### 11.1 The tabs viewer
+
+`brave-sync tabs` answers "what was open, and where?" from `tabs.jsonl`
+alone. It reads no other archive file and never touches the network or the
+sync code.
+
+```js file=src/tabs-view.js
+export async function latestTabs(records) {
+  const latest = new Map();
+  for await (const record of records) {
+    const seen = latest.get(record.entity.id);
+    if (!seen || BigInt(record.entity.version ?? 0) >= BigInt(seen.entity.version ?? 0)) {
+      latest.set(record.entity.id, record);
+    }
+  }
+  return [...latest.values()];
+}
+```
+
+`tabs.jsonl` holds every version of every tab entity (§7.1), so the viewer
+keeps only the newest version of each, by `entity.version`. go-sync sets
+every committed version to the mtime of that write, so newer is larger (go-sync
+`command/command.go:544-548`) **[code]**. In the dev store, each row's version
+equals its mtime **[test]**. The map grows with the number of tab entities,
+not with the archive.
+
+```js file=src/tabs-view.js
+const minute = (iso) => (iso ? `${iso.slice(0, 16).replace('T', ' ')}Z` : '(no time)');
+const activity = (tab) => tab.lastActiveAt ?? tab.navigatedAt ?? '';
+
+export function renderTabs(tabs) {
+  if (tabs.length === 0) return 'no tabs archived yet';
+  const devices = Map.groupBy(tabs, (tab) => tab.device ?? `session ${tab.sessionTag}`);
+  const sections = [];
+  for (const device of [...devices.keys()].sort()) {
+    const group = devices.get(device).sort((a, b) => activity(b).localeCompare(activity(a)));
+    const lines = [`${device}  (${group.length} ${group.length === 1 ? 'tab' : 'tabs'})`];
+    for (const tab of group) {
+      const pinned = tab.specifics?.tab?.pinned ? '  [pinned]' : '';
+      lines.push(`  ${minute(activity(tab))}  ${tab.title || '(untitled)'}${pinned}`);
+      lines.push(`  ${' '.repeat(17)}  ${tab.url ?? '(no url)'}`);
+    }
+    sections.push(lines.join('\n'));
+  }
+  return sections.join('\n\n');
+}
+```
+
+Tabs are grouped by device name, or by session tag when no header named the
+device (§7.3). Within a device, the most recently active tab comes first.
+Each tab takes two lines: the time and title, then the URL under it. Times
+are UTC to the minute.
+
+Reading only `tabs.jsonl` has one cost. A tab whose entity was later deleted,
+for example when a stale session was removed (§7.1), still shows its last
+snapshot, because deletions are in `tombstones.jsonl`. Each line's time shows
+how old that snapshot is.
 
 ## 12. Tests
 
@@ -2096,12 +2190,73 @@ test('pull archives, then saves markers without the NIGORI marker', async () => 
 });
 ```
 
+```js file=test/tabs-view.test.js
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { openArchive } from '../src/archive.js';
+import { latestTabs, renderTabs } from '../src/tabs-view.js';
+
+const tab = (id, version, fields) => ({
+  kind: 'tab',
+  sessionTag: 'session_sync_1',
+  tabNodeId: 0,
+  device: 'Test Laptop',
+  entity: { id, version: String(version) },
+  ...fields,
+});
+
+test('keeps only the newest version of each tab entity', async () => {
+  const records = [
+    tab('a', 1, { url: 'https://example.com/old' }),
+    tab('b', 5, { url: 'https://example.org/' }),
+    tab('a', 3, { url: 'https://example.com/new' }),
+    tab('a', 2, { url: 'https://example.com/middle' }),
+  ];
+  const latest = await latestTabs(records);
+  assert.deepEqual(latest.map((t) => t.url).sort(), ['https://example.com/new', 'https://example.org/']);
+});
+
+test('groups by device, newest activity first, and falls back to the session tag', () => {
+  const text = renderTabs([
+    tab('a', 1, { title: 'Older', url: 'https://example.com/a', lastActiveAt: '2026-10-21T21:18:14.757Z' }),
+    tab('b', 1, { title: 'Newer', url: 'https://example.com/b', lastActiveAt: '2026-10-21T21:19:00.000Z', specifics: { tab: { pinned: true } } }),
+    tab('c', 1, { device: null, title: '', url: 'https://example.net/', navigatedAt: '2026-10-20T08:00:00.000Z' }),
+  ]);
+  assert.equal(
+    text,
+    [
+      'Test Laptop  (2 tabs)',
+      '  2026-10-21 21:19Z  Newer  [pinned]',
+      '                     https://example.com/b',
+      '  2026-10-21 21:18Z  Older',
+      '                     https://example.com/a',
+      '',
+      'session session_sync_1  (1 tab)',
+      '  2026-10-20 08:00Z  (untitled)',
+      '                     https://example.net/',
+    ].join('\n'),
+  );
+  assert.equal(renderTabs([]), 'no tabs archived yet');
+});
+
+test('the archive streams tabs.jsonl, and a missing file is no tabs', async () => {
+  const archive = await openArchive(await mkdtemp(join(tmpdir(), 'brave-sync-')));
+  assert.deepEqual(await latestTabs(archive.records('tab')), []);
+  await archive.append([tab('a', 1, { url: 'https://example.com/' }), { kind: 'visit', url: 'x' }], 't0');
+  const tabs = await latestTabs(archive.records('tab'));
+  assert.deepEqual(tabs.map((t) => [t.archivedAt, t.url]), [['t0', 'https://example.com/']]);
+});
+```
+
 ## 13. What was run, and what it means for archiving
 
 ### 13.1 Runs on 2026-10-22
 
 1. **Unit tests.** I tangled this document into a scratch directory, ran
-   `npm install`, `npm run proto` and `npm test`, and got 27 passing, 0
+   `npm install`, `npm run proto` and `npm test`, and got 30 passing, 0
    failing.
 2. **Token vectors.** A Go program calling `binary.PutVarint` on
    1792617531700 and on 0 printed `6KSmhaxoAAAAAA==` and `AAAAAAAAAAAAAA==`,
