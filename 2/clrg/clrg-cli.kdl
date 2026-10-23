@@ -1,0 +1,393 @@
+// clrg — search Claude Code history across one or more ~/.claude roots.
+//
+// Model: every query is   ROOTS  →  SELECT sessions/messages  →  PROJECT a view.
+//   - ROOTS:   one or more ~/.claude-shaped directories (live, backups, merged).
+//   - SELECT:  filters over per-message transcript metadata (gitBranch, cwd,
+//              timestamp, model, version, tool use, touched paths, text).
+//   - PROJECT: the subcommand picks the view: sessions, messages, files,
+//              artifacts, facets, or extracted file contents.
+//
+// The transcripts (projects/**/<sessionId>.jsonl) are the only place that
+// records gitBranch/cwd. Every other store (file-history, todos, tasks, plans)
+// is reached by joining on sessionId (or the plan slug) after selection.
+//
+// All inputs are treated as untrusted data: clrg never executes anything it
+// reads, and only `extract` writes, into a new or empty directory.
+
+min_usage_version "2.0.0"
+name "clrg"
+bin "clrg"
+version "0.1.0"
+author "Charlie Robbins"
+license "MIT"
+about "Search Claude Code session history (~/.claude) by branch, project, time, tool, and file"
+long_about #"""
+clrg indexes one or more ~/.claude-shaped roots and answers questions like
+"which files did Claude create on branch X?" by selecting sessions/messages
+from transcript metadata, then joining on sessionId to file-history, todos,
+tasks, plans, and subagent transcripts.
+"""#
+usage "clrg [GLOBAL OPTIONS] <COMMAND> [SELECTORS] [OPTIONS]"
+
+exit_code 0 "one or more results"
+exit_code 1 "no results matched"
+exit_code 2 "usage or configuration error"
+exit_code 3 "a root is unreadable or a transcript failed to parse (see --strict)"
+exit_code 5 "not implemented (yet)"
+
+// ─── Global: where to look and how to read it ─────────────────────────────────
+
+flag "-r --root <dir>" var=#true global=#true env="CLRG_ROOTS" default="~/.claude" {
+  help "A ~/.claude-shaped directory to search (repeatable; CLRG_ROOTS is ':'-separated)"
+  long_help #"""
+  Each root is scanned for projects/, file-history/, todos/, tasks/, plans/,
+  history.jsonl and sessions/. Results always carry the root they came from,
+  so the same session found in two backups is visible as such (see --dedupe).
+  """#
+  arg "<dir>" {
+    complete type="dir"
+  }
+}
+flag "--dedupe <mode>" global=#true default="uuid" {
+  help "How to collapse the same session/message seen in several roots"
+  long_help #"""
+  uuid     merge transcripts by message uuid (union; best for partial backups)
+  session  keep the single longest copy of each session
+  none     report every copy, tagged by root
+
+  Not implemented (yet): every mode is accepted and behaves like none.
+  """#
+  choices "uuid" "session" "none"
+}
+flag "--index <path>" global=#true env="CLRG_INDEX" default="~/.cache/clrg/index.sqlite" help="Metadata cache; rebuilt incrementally from file mtimes (not implemented yet: accepted, no effect)"
+flag "--no-index" global=#true help="Stream transcripts directly; slower, but never uses a stale cache (the only mode yet: accepted, no effect)"
+flag "--strict" global=#true help="Exit 3 on any unparsable line or unreadable root instead of warning"
+flag "-v --verbose" global=#true count=#true help="Log scan progress and skipped lines to stderr (-vv for per-file)"
+flag "-q --quiet" global=#true help="Suppress warnings on stderr"
+flag "--color" global=#true negate="--no-color" default=#true env="CLRG_COLOR" help="Colorize human output"
+flag "--usage-spec" hide=#true help="Print the usage spec (KDL) that clap generates for this binary"
+
+// ─── Shared selectors (what to match) ─────────────────────────────────────────
+
+flagset "select" {
+  flag "-b --branch <name>" var=#true help="Match gitBranch exactly (repeatable; OR'd)" {
+    arg "<name>" {
+      complete run="clrg facets branch --format=values" descriptions=#true
+    }
+  }
+  flag "--branch-glob <glob>" var=#true help="Match gitBranch by glob, e.g. 'onboarding.*'"
+  flag "-d --cwd <path>" var=#true help="Match message cwd (prefix match; repeatable)" {
+    arg "<path>" {
+      complete run="clrg facets cwd --format=values" descriptions=#true
+    }
+  }
+  flag "-p --project <name>" var=#true help="Match the encoded projects/<dir> name (glob)" {
+    arg "<name>" {
+      complete run="clrg facets project --format=values" descriptions=#true
+    }
+  }
+  flag "--session <id>" var=#true help="Restrict to session ids (prefixes accepted)" {
+    arg "<id>" {
+      complete run="clrg sessions --format=values" descriptions=#true
+    }
+  }
+  flag "--since <when>" help="Messages at or after this time (ISO-8601 date/time or relative: 30d, 6h)"
+  flag "--until <when>" help="Messages before this time (ISO-8601 date/time or relative)"
+  flag "--model <model>" var=#true help="Match assistant message model id (glob)"
+  flag "--cli-version <semver-range>" help="Match the Claude Code version that wrote the message, e.g. '>=1.0.40'"
+  flag "--tool <name>" var=#true help="Only messages that use these tools (Write, Edit, MultiEdit, Bash, Task, ...)"
+  flag "--touched <glob>" var=#true help="Only messages whose tool input touched a path matching this glob"
+  flag "--subagents" negate="--no-subagents" default=#true help="Include subagent (sidechain) transcripts"
+  flag "--scope <scope>" default="message" {
+    help "Whether selectors filter individual messages or whole sessions"
+    long_help #"""
+    message  only messages that match count (branch can change mid-session)
+    session  a session matches if any message matches; all its messages count
+    """#
+    choices "message" "session"
+  }
+  flag "--infer-branch" {
+    help "Also include sessions with no gitBranch when their cwd and time window fit a matched session"
+    long_help #"""
+    Older Claude Code builds didn't record gitBranch. With this flag, a
+    session with no branch is included when its cwd equals a matched session's
+    cwd and its time range falls within --infer-window of it. Such results are
+    tagged confidence=inferred in every output format.
+    """#
+  }
+  flag "--infer-window <duration>" default="24h" help="Time tolerance for --infer-branch"
+}
+
+// ─── Shared output controls ───────────────────────────────────────────────────
+
+flagset "output" {
+  flag "-f --format <format>" default="human" {
+    help "Output format"
+    choices "human" "json" "jsonl" "tsv" "values"
+  }
+  flag "--fields <list>" help="Comma-separated columns for tsv/human (see each command's FIELDS)"
+  flag "--sort <field>" help="Sort key; prefix with '-' for descending"
+  flag "-n --limit <n>" help="Stop after n results"
+  flag "-0 --null" help="NUL-terminate records (for 'values' and 'tsv'; pairs with xargs -0)"
+}
+
+// ─── Commands ─────────────────────────────────────────────────────────────────
+
+cmd "sessions" help="List sessions that match the selectors" {
+  alias "ls"
+  use "select" "output"
+  after_long_help #"""
+  FIELDS: root, session, project, cwd, cwd_exists, branches, first_ts, last_ts,
+          messages, tools, files_touched, models, cli_versions,
+          has_file_history, subagents, confidence, last
+  """#
+  output "human" default=#true help="One row per session"
+  output "json" framing="json" help="Array of session objects"
+  output "jsonl" framing="jsonl" help="One session object per line"
+  output "tsv" help="Tab-separated columns from --fields"
+  output "values" help="<session>:<cwd> per session, for completion and pipes"
+  select "--format"
+  example "clrg sessions -b onboarding.gonzo" header="Find sessions on a branch"
+  example "clrg sessions -d ~/src/app --since 2026-06-01 --sort=-last_ts" header="Recent sessions in a repo"
+}
+
+cmd "grep" help="Search the decoded text of every store; show each hit in its session's context" {
+  alias "messages" "m"
+  use "select" "output"
+  arg "[pattern]" help="Literal text to find in decoded text (use -E for a regex)"
+  flag "-E --regex" help="Treat [pattern] as a regex"
+  flag "-i --ignore-case" help="Case-insensitive [pattern]"
+  flag "-s --case-sensitive" help="Case-sensitive [pattern] (default: smart case; an uppercase letter makes it case-sensitive)"
+  flag "-l --files-with-matches" help="Print only the paths of files that match, like rg -l"
+  flag "--store <kind>" var=#true {
+    help "Only search these stores (repeatable; default: every store)"
+    long_help #"""
+    transcripts   projects/**: transcripts (including subagents/), tool-results/,
+                  and every other file there that no store claims
+    history       history.jsonl
+    plans         plans/
+    todos         todos/
+    tasks         tasks/
+    file-history  file-history/
+    sessions      sessions/
+    workflows     projects/<dir>/<session>/workflows/ (workflow run records)
+    other         every other file under a root (settings.json, CLAUDE.md,
+                  commands/, loose files in file-history/, ...)
+    """#
+    choices "transcripts" "history" "plans" "todos" "tasks" "file-history" "sessions" "workflows" "other"
+  }
+  flag "--in <sel>" var=#true default="all" help="Only hits with these raw labels: a line type (user), a part type (tool_result), or type/part (user/text); repeatable"
+  flag "--agree <value>" var=#true {
+    help "Only user/text and history hits with this agreement (repeatable; other hits are kept)"
+    long_help #"""
+    both             the history line and the user/text line agree
+    transcript-only  a user/text line with no agreeing history line
+    history-only     a history line with no agreeing user/text line
+    unlinked         a history line with no sessionId
+    unknown          the other source is not in any searched root
+    """#
+    choices "both" "transcript-only" "history-only" "unlinked" "unknown"
+  }
+  flag "-C --context <n>" default="0" help="Also show n messages before/after each match within the session"
+  flag "-u" count=#true hide=#true help="Accepted and ignored, for rg muscle memory (hidden and ignored files are always searched)"
+  flag "--raw" help="Emit the original JSONL lines unchanged (implies --format=jsonl)"
+  after_long_help #"""
+  FIELDS: root, store, path, session, cwd, cwd_exists, branch, ts, type, part,
+          line, excerpt, match_start, match_end, last, agreement, agreement_rule
+  type and part are the raw line type and content-part type (user/text,
+  assistant/tool_use, ...). last, agreement, and agreement_rule are clrg's:
+  see COGNETICS.md.
+  """#
+  output "human" default=#true help="Session/timestamp header and a text excerpt per match"
+  output "jsonl" framing="jsonl" help="One normalized message per line"
+  output "json" framing="json" help="Array of normalized messages"
+  output "tsv" help="Tab-separated columns from --fields"
+  output "values" help="<session>:<cwd> per matched session (deduped), for resuming and completion"
+  select "--format"
+  example "clrg grep -b onboarding.gonzo --in user/text --agree both 'seed data'" header="What did I type on that branch?"
+}
+
+cmd "files" help="List files Claude read, created, or modified in the selected messages" {
+  alias "f"
+  use "select" "output"
+  flag "--op <op>" var=#true {
+    help "Which tool operations to count (repeatable; default: write and edit)"
+    long_help #"""
+    write   Write / NotebookEdit, with rejected writes and returned text
+    edit    Edit / MultiEdit, with rejected edits
+    read    Read inputs
+    bash    Paths that appear in Bash commands (heuristic; not implemented yet)
+    """#
+    choices "write" "edit" "read" "bash"
+  }
+  flag "--path <glob>" var=#true help="Only report paths matching this glob (the resolved absolute path)"
+  flag "--relative" help="Print paths relative to the session cwd"
+  flag "--created-only" help="Only paths whose first event is a write (or rejected write), with no earlier backup holding content"
+  after_long_help #"""
+  FIELDS: path, cwd, ops, first_ts, last_ts, sessions, branches, versions,
+          outcome (written|rejected|returned|unknown),
+          recoverable (full|diff-only|none), root, roots
+  ops are event kinds: write, edit, backup, rejected, returned, read.
+  A path has one timeline across roots (copies counted once); roots lists
+  every root it came from, and root is the first of them (for compatibility).
+  Selectors choose paths; every event on a chosen path is replayed.
+  versions, outcome, and recoverable are clrg's: see COGNETICS.md.
+  """#
+  output "human" default=#true help="One row per path with ops and recoverability"
+  output "json" framing="json"
+  output "jsonl" framing="jsonl"
+  output "tsv"
+  output "values" help="Bare paths"
+  select "--format"
+  example "clrg files -b onboarding.gonzo --created-only" header="Files created on a branch"
+}
+
+cmd "artifacts" help="List ~/.claude artifacts joined to the selected sessions" {
+  alias "a"
+  use "select" "output"
+  flag "-k --kind <kind>" var=#true default="all" {
+    help "Artifact stores to include"
+    choices "file-history" "todos" "tasks" "plans" "subagents" "sessions" "history" "all"
+  }
+  flag "--missing" help="Report expected artifacts that are absent (e.g. snapshot entries with no backup file)"
+  after_long_help #"""
+  Joins: file-history/<sessionId>/, todos/<sessionId>*.json, tasks/<sessionId>/,
+  plans/<slug>.md (slug taken from the transcript), projects/*/<sessionId>/subagents/,
+  history.jsonl entries matched by project path and timestamp.
+  FIELDS: root, session, kind, path, bytes, mtime, refers_to
+  """#
+  output "human" default=#true
+  output "json" framing="json"
+  output "jsonl" framing="jsonl"
+  output "tsv"
+  output "values" help="Bare artifact paths"
+  select "--format"
+}
+
+cmd "show" help="Render one session's transcript" {
+  arg "<session>" help="Session id or unique prefix" {
+    complete run="clrg sessions --format=values" descriptions=#true
+  }
+  flag "--from-root <dir>" help="Which root's copy to show when --dedupe=none finds several"
+  flag "--tools" negate="--no-tools" default=#true help="Include tool calls and results"
+  flag "--thinking" help="Include thinking blocks"
+  flag "--raw" help="Print the original JSONL"
+  flag "--pager" negate="--no-pager" default=#true env="CLRG_PAGER" help="Page human output"
+}
+
+cmd "extract" help="Recover file contents from the selected messages into a new directory" {
+  alias "x"
+  use "select"
+  flag "-o --out <dir>" required=#true help="Destination; must not exist or must be empty" {
+    arg "<dir>" {
+      complete type="dir"
+    }
+  }
+  flag "--path <glob>" var=#true help="Only extract paths matching this glob"
+  flag "--created-only" help="Only paths whose first operation in scope is a Write to a path not seen earlier"
+  flag "--source <source>" default="best" {
+    help "Where file content comes from"
+    long_help #"""
+    file-history  backups in file-history/<sessionId>/<hash>@vN
+    transcript    Write tool inputs (full content), replaying Edit/MultiEdit on top
+    best          every event (backups, writes, edits, rejected, returned), replayed in time order
+    """#
+    choices "file-history" "transcript" "best"
+  }
+  flag "--version <which>" default="last" {
+    help "Which version of each file to write"
+    long_help #"""
+    first  the earliest state with full content
+    last   the last state that was on disk (write, edit, backup) or returned;
+           a newer rejected draft is listed, not written
+    all    every distinct state, as <name>.v<N> (rejected drafts included)
+    """#
+    choices "first" "last" "all"
+  }
+  flag "--layout <layout>" default="cwd" {
+    help "How to arrange output paths"
+    long_help #"""
+    cwd      <out>/<cwd with / → _>/<path relative to cwd>
+             (outside the cwd: <out>/_abs/<absolute path minus leading />)
+    absolute <out>/<absolute path minus leading />
+    session  <out>/<sessionId>/<path relative to cwd>
+             (outside the cwd: <out>/<sessionId>/_abs/<absolute path ...>)
+    """#
+    choices "cwd" "absolute" "session"
+  }
+  flag "--dry-run" help="Print the plan without writing"
+  flag "--manifest" negate="--no-manifest" default=#true help="Write <out>/MANIFEST.jsonl with provenance per file (session, ts, source_event, outcome, sha256, ...)"
+  after_long_help #"""
+  FIELDS (MANIFEST.jsonl and --format jsonl): path, out_path, session, agent_id,
+          root, roots, version, ts,
+          source_event (write|edit|backup|rejected|returned),
+          outcome (written|rejected|returned|unknown), verified (agree|disagree),
+          similarity, journal (agree|disagree|none), sha256, bytes
+  root is the first of roots (every root the path came from).
+  -o must not exist or be empty, and must not be inside a root (else exit 2,
+  nothing written). A path whose output would leave -o (a .. component) is
+  skipped and listed, and the rest are written (exit 4). Output paths that
+  collide case-insensitively get ~2, ~3, ... before the first write.
+  See COGNETICS.md.
+  """#
+  output "human" default=#true help="Summary of written / rejected / returned / verified / unrecoverable files"
+  output "jsonl" framing="jsonl" help="One record per file, same shape as MANIFEST.jsonl"
+  flag "-f --format <format>" default="human" {
+    help "Output format"
+    choices "human" "jsonl"
+  }
+  select "--format"
+  exit_code 4 "some selected files could not be recovered (diff-only or none) or had an unsafe output path; the rest were written"
+  example "clrg extract -b onboarding.gonzo --created-only -o ./recovered/onboarding.gonzo" header="Recover everything created on a branch"
+}
+
+cmd "facets" help="Count distinct values of a metadata field across the selection" {
+  use "select" "output"
+  arg "<field>" help="Field to count" {
+    choices "branch" "cwd" "project" "model" "cli-version" "tool" "root" "day"
+  }
+  after_long_help #"""
+  Use this to find the right spelling before you search (e.g. 'onboarding.gonzo'
+  vs 'onboarding/gonzo'). FIELDS: value, sessions, messages, first_ts, last_ts
+  """#
+  output "human" default=#true
+  output "json" framing="json"
+  output "jsonl" framing="jsonl"
+  output "tsv"
+  output "values" help="value:description lines, used by shell completion"
+  select "--format"
+  example "clrg facets branch --branch-glob '*gonzo*'" header="Which branches look like gonzo?"
+}
+
+cmd "doctor" help="Check roots for problems that would hide matches" {
+  use "output"
+  flag "-f --format <format>" default="human" {
+    help "Output format"
+    choices "human" "json" "jsonl"
+  }
+  flag "--fix-index" help="Rebuild index entries for any root that fails a check"
+  after_long_help #"""
+  Checks: unparsable JSONL lines; truncated transcripts (same session shorter in
+  one root than another); duplicate sessions across roots; file-history snapshot
+  entries whose backup file is missing; sessions with no gitBranch (candidates
+  for --infer-branch); orphaned file-history/todos with no transcript.
+  """#
+  output "human" default=#true
+  output "json" framing="json"
+  output "jsonl" framing="jsonl" help="One finding per line"
+  select "--format"
+}
+
+cmd "index" help="Manage the metadata cache" subcommand_required=#true {
+  cmd "build" help="Scan roots and update the cache incrementally" {
+    flag "--full" help="Discard and rebuild from scratch"
+  }
+  cmd "status" help="Show cache location, size, roots, and staleness"
+  cmd "clear" help="Delete the cache file"
+}
+
+cmd "completion" help="Print shell completion script" {
+  arg "<shell>" help="Shell to generate completions for" {
+    choices "bash" "zsh" "fish"
+  }
+}
