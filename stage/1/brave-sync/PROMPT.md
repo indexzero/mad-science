@@ -13,13 +13,14 @@ overrides:
   - "Production access is approved, read-only, for the owner's throwaway chain and the types NIGORI, SESSIONS, HISTORY only (Q-001)."
   - "Phases run without owner go-ahead gates between them. The live pull waits only for the chain file."
   - "Tests use public vectors only. The throwaway chain's words never enter a test or a fixture."
+  - "BOOKMARKS (type 32904) is intended scope as of 2026-10-23, not built (A9). Until it is built and Q-001 names it, the client requests NIGORI, SESSIONS and HISTORY only."
 ---
 
 # brave-sync
 
 brave-sync is a custom Brave Sync v2 client that joins the owner's sync chain as one more member, read-only, and keeps every device's open tabs and synced history with no retention limit. Brave keeps hosting the sync. Read the Architecture section first.
 
-## Architecture (owner decisions, 2026-10-21)
+## Architecture (owner decisions, 2026-10-21, updated 2026-10-23)
 
 This section maps the choices. It wins over anything below it that disagrees.
 
@@ -28,6 +29,7 @@ This section maps the choices. It wins over anything below it that disagrees.
 - "I want to have Brave sync my things." Brave's own sync service stays the server of record for the chain. Every device keeps syncing to Brave as it does today.
 - "I do want a custom client that's part of my sync cluster." brave-sync is one more member of that chain. It reads what the other devices sync.
 - "I want that sync client to have infinite storage, as opposed to the local SQLite database that Brave uses, which truncates after a certain period of time." The client's value is retention: it keeps what Brave's own local history drops.
+- Bookmarks belong in the archive too (2026-10-23). They are intended, not built yet.
 - Long term, capture runs at the edge, like everything in yourbytes, and the hardest sources get three to five capture implementations so the owner can choose.
 
 ### The choices
@@ -42,6 +44,17 @@ This section maps the choices. It wins over anything below it that disagrees.
 | A6 | Dev server backends | First the upstream compose stack (dynamo-local plus Redis). Then a SQLite backend for both datastore and cache, so the dev server is one native binary. | Dev only. SQLite for both is fine for testing (owner). |
 | A7 | Runtime of the client | Node, unless a Zig or JS Brave Sync client exists that Bun can reuse | Owner: "an exploratory node.js (or bun if there's like a Zig Brave Sync client already) implementation." |
 | A8 | Portability | Web Crypto and `fetch` in the core, Node-only APIs behind one adapter | The client moves to the edge later. |
+| A9 | Data types | NIGORI, SESSIONS and HISTORY now. BOOKMARKS intended next, not built. | Owner, 2026-10-23: "include bookmarks (but do not implement it)". |
+
+### Bookmarks, intended and not built (A9)
+
+Nothing in the client requests or decodes bookmarks yet. When they are built:
+
+- First, an override in the frontmatter extends Q-001 and the ground rule "Request only NIGORI, SESSIONS, and the history data type" to name BOOKMARKS. The verbatim prompt stays as written. Then `TYPES` in `client/src/transport.js` gains 32904. The read-only guard refuses every type not in `TYPES` (LITERATE.md §4.1).
+- Bookmarks will arrive encrypted: the throwaway chain's NIGORI sets `encrypt_everything`. They use ChainCrypto's `decrypt` unchanged, then a new decoder for `BookmarkSpecifics`.
+- Bookmarks form a tree: each entity names its parent folder, and a unique position orders siblings. The archive appends every version, as for tabs and visits, and rebuilding the tree at a given time is a read-side job.
+- go-sync expires only HISTORY and its delete directives (LITERATE.md §8.4). Bookmarks stay on the server until deleted, so the archive protects against deletions and edits, not expiry.
+- The throwaway chain has only the four folders go-sync creates for every chain. Testing needs real bookmarks added in the throwaway profile first.
 
 ### Other capture approaches, all valid, each its own future implementation
 
