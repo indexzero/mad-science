@@ -1,0 +1,18 @@
+[package]
+name = "clrg-benchgen"
+description = "Deterministic, seeded generator of a synthetic ~/.claude tree for the clrg speed gate (P1); not shipped"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "clrg-benchgen"
+path = "src/main.rs"
+
+[dependencies]
+
+[lints]
+workspace = true

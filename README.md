@@ -24,21 +24,26 @@ A project moves to a stage when it meets the entrance criteria of that stage:
 | Stage | Status | Entrance criteria | Purpose |
 |---|---|---|---|
 | 0 | Idea. Not built. | None. | Refine the idea. |
-| 1 | Designed. Not built. | A sound approach, stack, and architecture, written as a PROMPT.md or an orckit. | Plan the build. |
+| 1 | Designed. Not built. | A sound approach, stack, and architecture, written as a PROMPT.md, an INTENT.md, or an orckit. | Plan the build. |
 | 2 | Tried. Nothing depends on it. | An agent can build it unattended. A machine can check Done. | Build it one time and see. |
 | 3 | Used. The design can change. | The build passes its Done. I use it like my skunkworks. | Learn from use. |
 | 4 | Relied on. | It has dependents, mostly me. I use it regularly. | Grow it with care. |
 | 5 | Stable. | Version 1.0.0 in semver. | Maintain it. |
 
-The stage records maturity, not importance or potential value which are stored along with other metadata in the frontmatter of the `PROMPT.md` or `orckit`
+The stage records maturity, not importance or potential value which are stored along with other metadata in the frontmatter of the `PROMPT.md`, `INTENT.md`, or `orckit`
+
+A project's plan is a `PROMPT.md` or an `INTENT.md`. A `PROMPT.md` tells an
+agent how to build the project. An `INTENT.md` records what the project must
+do, why, and how Done is checked, and the agent plans the build from it. Use
+one or the other, not both. Either one carries the frontmatter.
 
 The scale of a project sets the form of its plan. If one agent can finish the
-project unattended from one `PROMPT.md`, the project is a toy. All other work
-needs an [orckit](https://github.com/indexzero/orckit). The orckit lets that
-work finish with little or no oversight.
+project unattended from one `PROMPT.md` or `INTENT.md`, the project is a toy.
+All other work needs an [orckit](https://github.com/indexzero/orckit). The
+orckit lets that work finish with little or no oversight.
 
-A stage 0 directory can hold a long `PROMPT.md`. The stage records whether the
-idea is sound. It does not record how much text exists.
+A stage 0 directory can hold a long `PROMPT.md` or `INTENT.md`. The stage
+records whether the idea is sound. It does not record how much text exists.
 
 ## Examples
 

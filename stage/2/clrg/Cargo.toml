@@ -1,0 +1,54 @@
+[workspace]
+resolver = "3"
+members = ["crates/clrg-core", "crates/clrg", "crates/clrg-benchgen"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+license = "MIT"
+authors = ["Charlie Robbins"]
+publish = false
+
+# Exact pins, as in the sibling projects. Slice 2 added serde, ignore,
+# grep-searcher, grep-regex, grep-matcher, globset, time (RFC 3339 and
+# --since/--until), and tempfile (test fixtures). Slice 3 added anstyle (the
+# terminal-color crate; already in the tree via clap), terminal_size (the
+# excerpt fits the terminal width; already in the tree via clap's wrap_help),
+# and time's local-offset feature (headers show local time) in the bin.
+# Slice 9 added sha2 (the RustCrypto SHA-256 that cargo itself uses): the
+# extract manifest records each written file's sha256, and hand-rolling a
+# hash is worse than one small, audited, widely used crate.
+# Slice 10a added memchr (already in the tree via grep-searcher): the session
+# header reads transcript lines' structure from raw bytes (rawjson.rs), so
+# human-mode grep decodes only `user` messages (R8, P1).
+[workspace.dependencies]
+clrg-core = { path = "crates/clrg-core" }
+clap = { version = "=4.6.7", features = ["derive", "env", "wrap_help"] }
+clap_usage = "=5.0.0"
+anyhow = "=1.0.104"
+thiserror = "=2.0.21"
+serde_json = "=1.0.154"
+serde = { version = "=1.0.229", features = ["derive"] }
+ignore = "=0.4.33"
+grep-searcher = "=0.1.17"
+grep-regex = "=0.1.14"
+grep-matcher = "=0.1.9"
+globset = "=0.4.20"
+time = { version = "=0.3.55", features = ["parsing", "formatting", "macros"] }
+tempfile = "=3.27.0"
+anstyle = "=1.0.14"
+terminal_size = "=0.4.4"
+assert_cmd = "=2.2.2"
+predicates = "=3.1.4"
+sha2 = "=0.10.9"
+memchr = "=2.8.3"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+
+[profile.release]
+panic = "abort"
