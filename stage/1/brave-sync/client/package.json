@@ -1,0 +1,27 @@
+{
+  "name": "brave-sync",
+  "version": "0.0.0",
+  "description": "Read-only Brave Sync v2 chain member that archives open tabs and history",
+  "scripts": {
+    "proto": "mkdir -p src/proto && pbjs -t json -p ../vendor/go-sync/schema/protobuf/sync_pb -o src/proto/sync_pb.json sync.proto",
+    "test": "node --test"
+  },
+  "type": "module",
+  "dependencies": {
+    "@noble/ed25519": "3.2.0",
+    "@noble/hashes": "2.4.0",
+    "@scure/bip39": "2.4.0",
+    "long": "5.3.2",
+    "protobufjs": "8.8.1"
+  },
+  "devDependencies": {
+    "protobufjs-cli": "2.7.1"
+  },
+  "private": true,
+  "bin": {
+    "brave-sync": "src/cli.js"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
