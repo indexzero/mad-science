@@ -104,9 +104,9 @@ async function importOnPage(source) {
   const url = URL.createObjectURL(new Blob([source], { type: 'text/javascript' }));
   try {
     const m = await import(url);
-    return { refused: false, value: String(m.default ?? Object.keys(m)) };
+    return { url, refused: false, value: String(m.default ?? Object.keys(m)) };
   } catch (err) {
-    return { refused: true, error: errorOf(err) };
+    return { url, refused: true, error: errorOf(err) };
   } finally {
     URL.revokeObjectURL(url);
   }

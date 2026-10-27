@@ -52,7 +52,7 @@ Other scripts:
 | `node scripts/check-citations.mjs` | HTTP status and anchor check for every citation link |
 | `node scripts/inspect-component.mjs` | preamble, custom sections, WIT and canon lines of guest.wasm |
 | `node scripts/requests.ts <browser>` | every request event the browser reports, page and worker |
-| `node scripts/explore.ts` | raw `window.__poc` per browser |
+| `node scripts/explore.ts [--json] [browser…]` | each expected CSP refusal checked by its event and by the policy that refused it (page or worker); each console line tagged with the probe that caused it; anything no probe explains listed as unexpected, with exit 1. `--json` adds the raw `window.__poc` |
 | `node scripts/smoke-node.mjs` | guest.wasm through jco in Node, no browser |
 
 ## What it proves
