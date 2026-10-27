@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>jco-worker-csp</title>
+    <link rel="stylesheet" href="/style.css">
+    <script defer src="/prism-manual.js"></script>
+    <script defer src="/vendor/prism/prism-core.min.js"></script>
+    <script defer src="/vendor/prism/prism-clike.min.js"></script>
+    <script defer src="/vendor/prism/prism-javascript.min.js"></script>
+    <script type="module" src="/main.js"></script>
+  </head>
+  <body>
+    <div id="app">
+      <header id="top">
+        <p class="titlebar"><span class="name">jco-worker-csp</span> <span id="page-no">1/4</span> <span id="page-title">The component</span> <span id="status" class="dim">loading</span></p>
+        <pre id="diagram" aria-label="Data path: page, loader, worker, glue, guest.wasm, log import, postMessage, page"><span data-node="page-in">page</span> <span data-edge="page-loader">─►</span> <span data-node="loader">loader</span> <span data-edge="loader-worker">─►</span> <span data-node="worker">worker</span> <span data-edge="worker-glue">─►</span> <span data-node="glue">glue</span> <span data-edge="glue-guest">─►</span> <span data-node="guest">guest.wasm</span>
+                                    <span data-edge="guest-log">│</span>
+<span data-node="page-out">page</span> <span data-edge="postmessage-page">◄─</span> <span data-node="postMessage">postMessage</span> <span data-edge="log-postmessage">◄─</span> <span data-node="log">log import</span> <span data-edge="guest-log">◄─┘</span>
+<span id="diagram-note"></span></pre>
+      </header>
+
+      <main id="pages">
+        <section class="page" data-page="1" data-title="The component">
+          <div class="box">
+            <h2>guest.wasm</h2>
+            <div class="body">
+              <p><strong>jco-worker-csp shows that JavaScript generated from a WebAssembly component can run in a Web Worker whose CSP allows it, on a page whose CSP refuses it.</strong></p>
+              <p>This page: the bytes of guest.wasm, the WIT read back from those bytes, and the glue that jco generates from them.</p>
+              <dl>
+                <dt>size</dt><dd id="c-size">...</dd>
+                <dt>bytes 0-7</dt><dd id="c-magic">...</dd>
+                <dt>check</dt><dd id="c-magic-check">...</dd>
+              </dl>
+              <p>guest.wasm is one WebAssembly component: a binary whose preamble is <code>00 61 73 6D</code> · version <code>0d 00</code> · layer <code>01 00</code> (a core module's layer is <code>00 00</code>). Its interface types are part of the binary. <code>componentEmbed</code>, jco-transpile's build of <code>wasm-tools component embed</code>, encodes the WIT world <code>guest</code> into a <code>component-type</code> custom section of the core module. <code>componentNew</code> (<code>wasm-tools component new</code>) then reads that section and wraps the core module in component-level type, import and export definitions, joined to the core functions by <code>canon lift</code> / <code>canon lower</code> (the Canonical ABI). The page recovers the WIT from the bytes alone with <code>componentWit</code> (<code>wasm-tools component wit</code>), so no .wit file ships. The recovered world is named <code>root</code> in package <code>root:component</code>: the name <code>guest</code> does not come back. The signature of <code>log</code> is in the component's type section, in the <code>print</code> lines in the next box.</p>
+            </div>
+          </div>
+          <div class="box">
+            <h2>WIT and types, read from the bytes</h2>
+            <div class="body">
+              <p class="dim">componentWit(guest.wasm):</p>
+              <pre id="c-wit">...</pre>
+              <p class="dim">print(guest.wasm), type, import and canon lines:</p>
+              <pre id="c-print">...</pre>
+            </div>
+          </div>
+          <div class="box">
+            <h2>glue (jco generate)</h2>
+            <div class="body">
+              <dl>
+                <dt>file</dt><dd id="glue-size">...</dd>
+                <dt>sha256</dt><dd id="glue-sha">...</dd>
+              </dl>
+              <pre class="code"><code id="glue-excerpt" class="language-javascript">...</code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" data-page="2" data-title="Refused on the page" hidden>
+          <div class="box">
+            <h2>page CSP: Content-Security-Policy of GET /</h2>
+            <div class="body">
+              <pre id="page-csp">...</pre>
+              <p class="dim">Copied from charlie.dev render/site/src/app.ts lines 119-131. No <code>blob:</code> in script-src, no <code>'unsafe-eval'</code>.</p>
+            </div>
+          </div>
+          <div class="box">
+            <h2>the glue on the page</h2>
+            <div class="body">
+              <p>sha256 <span id="p2-sha">...</span></p>
+              <p><button id="run-here" type="button" disabled>import(blob: glue)</button></p>
+              <div id="run-here-out" class="out">...</div>
+              <p class="dim">Controls on the same page:</p>
+              <div id="page-controls" class="out">...</div>
+            </div>
+          </div>
+          <div class="box">
+            <h2>loader code that tried (main.js)</h2>
+            <div class="body">
+              <pre class="code"><code id="src-import-on-page" class="language-javascript">...</code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" data-page="3" data-title="Run in the worker" hidden>
+          <div class="box">
+            <h2>worker CSP: Content-Security-Policy of GET /guest-worker.js</h2>
+            <div class="body">
+              <pre id="csp-diff">...</pre>
+            </div>
+          </div>
+          <div class="box">
+            <h2>the glue in the worker</h2>
+            <div class="body">
+              <div id="turn-sha" class="out">...</div>
+              <div id="turn-import" class="out">...</div>
+              <p class="row">
+                <label for="live">run(</label><input id="live" type="text" value="a b c" autocomplete="off" spellcheck="false"><span>)</span>
+                <span id="live-out" class="big">...</span>
+              </p>
+              <p class="row" id="log-modes">
+                <span class="dim">log import:</span>
+                <label><input type="radio" name="log-mode" value="plain" checked> plain</label>
+                <label><input type="radio" name="log-mode" value="shout"> SHOUT</label>
+                <label><input type="radio" name="log-mode" value="count"> count calls</label>
+              </p>
+              <pre id="host-log" aria-live="polite"></pre>
+            </div>
+          </div>
+          <div class="box">
+            <h2>worker code that supplies log (guest-worker.js)</h2>
+            <div class="body">
+              <pre class="code"><code id="src-instantiate" class="language-javascript">...</code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" data-page="4" data-title="What got out" hidden>
+          <div class="box">
+            <h2>escape attempts from the worker</h2>
+            <div class="body">
+              <ul id="ledger"><li class="dim">...</li></ul>
+              <p><button id="rerun" type="button" disabled>run the attempts again</button></p>
+            </div>
+          </div>
+          <div class="box">
+            <h2>postMessage to the page</h2>
+            <div class="body">
+              <div id="door" class="out big">...</div>
+              <p id="door-note" class="dim"></p>
+            </div>
+          </div>
+          <div class="box">
+            <h2>Known gaps (2026-10-21)</h2>
+            <div class="body">
+              <ul id="gaps">
+                <li>OffscreenCanvas with a 2d context is available in the worker: <span id="gap-canvas">...</span>.</li>
+                <li>IndexedDB and BroadcastChannel reach the page's origin from the worker: <span id="gap-storage">...</span>. connect-src does not cover them.</li>
+                <li>WebKit fires no securitypolicyviolation event for eval in the worker. It throws an EvalError that quotes the worker's script-src.</li>
+                <li>Workaround 1: a <code>self.fetch</code> shim in the worker answers only the two bindgen URLs (<code>js-component-bindgen-component.core.wasm</code>, <code>.core2.wasm</code>) with bytes the loader transferred, then the real <code>fetch</code> is put back.</li>
+                <li>Workaround 2: the server rewrites the bare specifiers <code>@bytecodealliance/preview2-shim/{cli,filesystem,io,random}</code> in jco's prebuilt glue to <code>/vendor/preview2-shim/*.js</code>. Module workers have no import maps.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <nav id="controls" aria-label="pages and panels">
+        <button id="prev" type="button" aria-label="previous page">←</button>
+        <span id="page-no-nav">1/4</span>
+        <button id="next" type="button" aria-label="next page">→</button>
+        <span class="spacer"></span>
+        <button id="toggle-devtools" type="button" aria-expanded="false" aria-controls="devtools">devtools</button>
+        <button id="toggle-citations" type="button" aria-expanded="false" aria-controls="citations">citations</button>
+      </nav>
+
+      <section id="devtools" class="panel" hidden>
+        <div class="box" id="ping">
+          <h2>postMessage (ONE PING ONLY)</h2>
+          <div class="body">
+            <p class="row">
+              <input id="ping-in" type="text" value="Vasili" autocomplete="off" spellcheck="false" aria-label="ping message">
+              <button id="ping-btn" type="button" disabled>ping</button>
+            </p>
+            <pre id="pong">...</pre>
+          </div>
+        </div>
+        <div class="box">
+          <h2>BUNDLE STATS</h2>
+          <div class="body">
+            <pre id="numbers">...</pre>
+          </div>
+        </div>
+      </section>
+
+      <section id="citations" class="panel" hidden>
+        <div class="box">
+          <h2>citations</h2>
+          <div class="body">
+            <ul id="citation-list">
+              <li><a target="_blank" rel="noopener noreferrer" href="https://html.spec.whatwg.org/multipage/browsers.html#initialize-worker-policy-container">WHATWG HTML, initialize a worker global scope's policy container</a>: a worker's policy comes from its own response (creating a policy container from a fetch response), unless its URL is local and not blob:.</li>
+              <li><a target="_blank" rel="noopener noreferrer" href="https://www.w3.org/TR/CSP3/#run-global-object-csp-initialization">W3C CSP3, §4.2.6 Run CSP initialization for a global object</a>: CSP runs on the worker's global object with that policy list.</li>
+              <li><a target="_blank" rel="noopener noreferrer" href="https://html.spec.whatwg.org/multipage/workers.html#run-a-worker">WHATWG HTML, run a worker</a>: the worker script is fetched, then its response initializes the worker's policy container.</li>
+              <li><a target="_blank" rel="noopener noreferrer" href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/worker-src">MDN, CSP worker-src</a>: the page's worker-src decides which URLs may start a worker.</li>
+              <li><a target="_blank" rel="noopener noreferrer" href="https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/iframe#sandbox">MDN, iframe sandbox</a>: the other isolation primitive, an opaque origin; not used here.</li>
+              <li><a target="_blank" rel="noopener noreferrer" href="https://github.com/WebAssembly/component-model/blob/d095e2f60ddae1f9a1e9b1e2fb547ec1114da677/design/mvp/Binary.md#component-definitions">component-model Binary.md, preamble and layer field</a>: a component starts 00 61 73 6D · 0d 00 · 01 00; a core module's layer is 0x0.</li>
+              <li><a target="_blank" rel="noopener noreferrer" href="https://github.com/WebAssembly/component-model/blob/d095e2f60ddae1f9a1e9b1e2fb547ec1114da677/design/mvp/WIT.md#wit-worlds">component-model WIT.md, WIT worlds</a>: a world lists the imports (host) and exports (run) of guest.</li>
+              <li><a target="_blank" rel="noopener noreferrer" href="https://github.com/WebAssembly/component-model/blob/d095e2f60ddae1f9a1e9b1e2fb547ec1114da677/design/mvp/Explainer.md#js-api">component-model Explainer.md, §JS API</a>: browsers do not run components natively; JS glue such as jco's does it.</li>
+              <li><a target="_blank" rel="noopener noreferrer" href="https://github.com/WebAssembly/component-model/blob/d095e2f60ddae1f9a1e9b1e2fb547ec1114da677/design/mvp/Linking.md#L60-L65">component-model Linking.md, the WIT custom section</a>: toolchains carry WIT type information in a custom section until a component is built.</li>
+              <li><a target="_blank" rel="noopener noreferrer" href="https://wasmcloud.com/docs/overview/interfaces/">wasmCloud, Interfaces</a>: custom WIT interfaces such as washe:poc/host are contracts the host supplies.</li>
+              <li><a target="_blank" rel="noopener noreferrer" href="https://github.com/bytecodealliance/jco/blob/0c03780b6f1a8b7c1f4c4ff6d9e2ce20b8bfcbb8/packages/jco/src/browser.ts">jco packages/jco/src/browser.ts</a>: generate() in the browser awaits $init of the bindgen glue first.</li>
+              <li><a target="_blank" rel="noopener noreferrer" href="https://github.com/bytecodealliance/jco/blob/0c03780b6f1a8b7c1f4c4ff6d9e2ce20b8bfcbb8/crates/js-component-bindgen-component/wit/js-component-bindgen.wit#L37-L63">jco js-component-bindgen.wit, generate-options</a>: the instantiation, map, no-nodejs-compat and base64-cutoff options the worker passes.</li>
+              <li><a target="_blank" rel="noopener noreferrer" href="https://github.com/bytecodealliance/jco/blob/0c03780b6f1a8b7c1f4c4ff6d9e2ce20b8bfcbb8/crates/wasm-tools-component/src/lib.rs#L280-L291">jco crates/wasm-tools-component/src/lib.rs</a>: componentEmbed writes the encoded WIT to a custom section named component-type.</li>
+              <li><a target="_blank" rel="noopener noreferrer" href="https://github.com/bytecodealliance/jco/blob/0c03780b6f1a8b7c1f4c4ff6d9e2ce20b8bfcbb8/packages/preview2-shim/src/browser/cli.ts#L83-L119">jco preview2-shim src/browser/cli.ts</a>: the wasi:cli module the bindgen glue imports; stdout and stderr go to console.log and console.error.</li>
+              <li><a target="_blank" rel="noopener noreferrer" href="https://bytecodealliance.org/articles/WASI-0.3">Bytecode Alliance, WASI 0.3 Launched (2026-06-11)</a>: WASI 0.3 is ratified; guest imports no WASI interface at all.</li>
+              <li><a target="_blank" rel="noopener noreferrer" href="https://bytecodealliance.org/articles/the-road-to-component-model-1-0">Bytecode Alliance, The Road to Component Model 1.0 (2026-06-08)</a>: the Component Model is not 1.0 yet; the version field 0d 00 is pre-1.0.</li>
+              <li><a target="_blank" rel="noopener noreferrer" href="https://github.com/indexzero/charlie.dev/blob/7541d9792eaabb1ac75c7e27edba2f5a86087bc6/render/site/src/app.ts#L119-L131">charlie.dev render/site/src/app.ts lines 119-131</a>: the page CSP, copied verbatim.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>

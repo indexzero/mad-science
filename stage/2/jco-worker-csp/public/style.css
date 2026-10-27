@@ -1,0 +1,193 @@
+/* Flat boxes, like a TUI. Monospace everywhere. Light and dark follow the OS.
+   The document never scrolls: #app is exactly one viewport tall, and any box
+   whose content is taller than its share scrolls inside itself. */
+:root {
+  color-scheme: light dark;
+  --bg: #f6f6f2;
+  --fg: #1b1b1b;
+  --dim: #6b6b6b;
+  --line: #1b1b1b;
+  --ok: #0a7a2f;
+  --bad: #b3261e;
+  --accent: #6b3fa0;
+  --flash: #fff2a8;
+  --hl-bg: #e6dcf5;
+  --bad-bg: #f8dcd8;
+  /* Prism tokens */
+  --tok-comment: #7a7a72;
+  --tok-keyword: #6b3fa0;
+  --tok-string: #0a7a2f;
+  --tok-number: #9a5b00;
+  --tok-function: #1d5fa8;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111314;
+    --fg: #d8d8d0;
+    --dim: #858580;
+    --line: #5f6360;
+    --ok: #6fd08c;
+    --bad: #ff7a6e;
+    --accent: #c4a2f0;
+    --flash: #4a4320;
+    --hl-bg: #2e2440;
+    --bad-bg: #3f1d1a;
+    --tok-comment: #7d7f7a;
+    --tok-keyword: #c4a2f0;
+    --tok-string: #6fd08c;
+    --tok-number: #e6b45a;
+    --tok-function: #7fb6f0;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+html, body, input, button, pre, code { font: 13px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+body { background: var(--bg); color: var(--fg); }
+
+#app {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  padding: 0.5em 1ch;
+  max-width: 160ch;
+  margin: 0 auto;
+}
+
+/* ---- header: title line and diagram ---- */
+#top { flex: none; }
+.titlebar { margin: 0 0 0.3em; display: flex; gap: 2ch; flex-wrap: wrap; }
+.titlebar .name { color: var(--accent); font-weight: bold; }
+#page-title { font-weight: bold; }
+#status { margin-left: auto; }
+#diagram {
+  margin: 0;
+  padding: 0.3em 1ch;
+  border: 1px solid var(--line);
+  font-size: min(13px, 3.1vw);
+  line-height: 1.3;
+  white-space: pre;
+  overflow: hidden;
+}
+#diagram [data-node], #diagram [data-edge] { color: var(--dim); }
+#diagram .hl { color: var(--accent); background: var(--hl-bg); font-weight: bold; }
+#diagram .refused { color: var(--bad); background: var(--bad-bg); font-weight: bold; text-decoration: line-through; }
+#diagram-note .refused { text-decoration: none; }
+
+/* ---- pages ---- */
+#pages { flex: 1 1 auto; min-height: 0; display: flex; }
+.page {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: 1.2em 1.5ch;
+  padding-top: 0.8em;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 44ch), 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+}
+.page[hidden] { display: none; }
+
+/* ---- boxes: title sits in the top border; the body scrolls ---- */
+.box {
+  position: relative;
+  border: 1px solid var(--line);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.box > h2 {
+  position: absolute; top: -0.75em; left: 1ch; margin: 0; padding: 0 1ch;
+  max-width: calc(100% - 2ch); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  background: var(--bg); font-size: 1em; font-weight: bold;
+}
+.box > .body { flex: 1; min-height: 0; overflow: auto; padding: 0.8em 1.5ch 0.5em; }
+
+/* ---- nav and panels ---- */
+#controls { flex: none; display: flex; gap: 1.5ch; align-items: center; }
+#controls .spacer { flex: 1; }
+.panel {
+  flex: none;
+  min-height: 0;
+  display: grid;
+  gap: 1.2em 1.5ch;
+  padding-top: 0.8em;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 44ch), 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+}
+.panel[hidden] { display: none; }
+#devtools { height: 30vh; height: 30dvh; }
+#citations { height: 24vh; height: 24dvh; }
+@media (max-width: 700px) {
+  /* two devtools boxes stack; give them a little more room */
+  #devtools { height: 34dvh; }
+}
+
+/* ---- text ---- */
+p { margin: 0 0 0.6em; }
+pre { margin: 0.3em 0 0.6em; padding: 0.5em 1ch; border: 1px dashed var(--line); white-space: pre-wrap; word-break: break-all; }
+pre.code { white-space: pre; word-break: normal; overflow: auto; }
+code { color: var(--accent); }
+pre.code code { color: var(--fg); }
+.dim { color: var(--dim); }
+.big { font-weight: bold; }
+.row { display: flex; gap: 1ch; align-items: center; flex-wrap: wrap; }
+dl { display: grid; grid-template-columns: 12ch 1fr; margin: 0 0 0.6em; }
+dt { color: var(--dim); }
+dd { margin: 0; word-break: break-all; }
+ul { margin: 0 0 0.6em; padding-left: 2ch; }
+li { margin-bottom: 0.3em; }
+a { color: var(--accent); }
+
+input[type="text"] {
+  background: transparent; color: var(--fg); border: 1px solid var(--line);
+  padding: 0.15em 1ch; min-width: 0; width: 22ch;
+}
+button {
+  background: transparent; color: var(--fg); border: 1px solid var(--line);
+  padding: 0.15em 1ch; cursor: pointer;
+}
+button::before { content: "[ "; color: var(--dim); }
+button::after { content: " ]"; color: var(--dim); }
+button:hover:not(:disabled), button[aria-expanded="true"] { background: var(--fg); color: var(--bg); }
+button:disabled { color: var(--dim); cursor: default; }
+input:focus-visible, button:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+label { cursor: pointer; }
+
+.out { margin: 0 0 0.6em; }
+.stamp { font-weight: bold; white-space: nowrap; }
+.ok { color: var(--ok); }
+.bad { color: var(--bad); }
+.del { color: var(--bad); }
+.add { color: var(--ok); }
+.event { color: var(--dim); display: block; white-space: pre-wrap; word-break: break-all; }
+
+#ledger { list-style: none; padding: 0; }
+#ledger li { border-left: 1px solid var(--line); padding: 0 0 0.2em 1ch; }
+#ledger .why { color: var(--dim); display: block; }
+
+#host-log { min-height: 4.2em; }
+.flash { animation: flash 0.8s ease-out; }
+@keyframes flash { from { background: var(--flash); } to { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .flash { animation: none; } }
+
+/* ---- Prism tokens, on the same colour variables ---- */
+.token.comment, .token.prolog { color: var(--tok-comment); font-style: italic; }
+.token.keyword, .token.boolean, .token.null { color: var(--tok-keyword); }
+.token.string, .token.template-string, .token.regex { color: var(--tok-string); }
+.token.number { color: var(--tok-number); }
+.token.function, .token.class-name { color: var(--tok-function); }
+.token.punctuation, .token.operator { color: var(--dim); }
+
+/* Grid and flex items default to min-width: auto, which lets a wide <pre>
+   push the layout past the viewport. Zero it so wide content scrolls inside
+   its box instead. */
+#app > *, #pages, .page, .panel, .box, .box > .body { min-width: 0; }
+button { white-space: nowrap; }
+@media (max-width: 480px) {
+  #controls { gap: 0.6ch; }
+  button { padding: 0.15em 0.3ch; }
+  button::before { content: "["; }
+  button::after { content: "]"; }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@(!!)/jco-worker-csp",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@bytecodealliance/jco-transpile": "0.20.0",
+    "@bytecodealliance/preview2-shim": "0.30.0",
+    "@hono/node-server": "2.1.5",
+    "hono": "4.13.13"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  },
+  "scripts": {
+    "build": "node scripts/build-component.mjs",
+    "start": "node src/server.ts",
+    "test": "playwright test",
+    "explore": "node scripts/explore.ts",
+    "install-browsers": "playwright install chromium firefox webkit"
+  }
+}
