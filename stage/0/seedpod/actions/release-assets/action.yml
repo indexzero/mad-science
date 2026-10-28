@@ -1,0 +1,56 @@
+# seedpod/release-assets — attach files to a GitHub Release.
+#
+# This is the ONLY seedpod step that runs under contents:write. By contract it
+# is code-free: no project checkout, no package-manager install, a single
+# pinned `gh release upload`. The calling job (upload / snapshot-upload in
+# workflows/release.yml) holds contents:write and NO drive key — the two
+# authorities never meet.
+#
+# GitHub requires contents:write to attach Release assets (no assets-only
+# scope). The token is read from the environment (GH_TOKEN), the standard gh
+# convention — it is NOT an action input, keeping the I/O contract = {tag,
+# files} exactly as the design's table specifies.
+
+name: seedpod release-assets
+description: >
+  Upload one or more files as assets on an existing GitHub Release.
+
+inputs:
+  tag:
+    description: "Release tag to attach the assets to."
+    required: true
+  files:
+    description: "Newline-separated list of file paths or globs to upload."
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Upload release assets
+      shell: bash
+      env:
+        TAG: ${{ inputs.tag }}
+        FILES: ${{ inputs.files }}
+      run: |
+        set -euo pipefail
+        : "${GH_TOKEN:?release-assets requires GH_TOKEN in the environment}"
+
+        args=()
+        while IFS= read -r pattern; do
+          [ -n "$pattern" ] || continue
+          # Intentional word-splitting/globbing to expand patterns like dist/*.
+          # shellcheck disable=SC2206
+          matches=($pattern)
+          for f in "${matches[@]}"; do
+            [ -e "$f" ] && args+=("$f")
+          done
+        done <<< "$FILES"
+
+        if [ "${#args[@]}" -eq 0 ]; then
+          echo "::error::no files matched the provided patterns"
+          exit 1
+        fi
+
+        printf 'Uploading to %s:\n' "$TAG"
+        printf '  %s\n' "${args[@]}"
+        gh release upload "$TAG" "${args[@]}" --clobber

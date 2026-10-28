@@ -1,0 +1,199 @@
+# seedpod/pear-publish — assemble the pear by-arch layout and stage the drive
+# with the pinned `pear-ci` npm tool.
+#
+# Runs in the SEED plane, in a job that declares `environment: pear-publish`
+# and `permissions: contents: read` (workflows/release.yml, stage job). This
+# action holds the drive's primary key; it MUST NEVER run in a job that also
+# holds contents:write. It STAGES ONLY — it contains no upload step. The
+# refreshed snapshot is returned as an output file for a separate, key-free
+# job to attach to the Release.
+#
+# Substrate: the drive is staged with the
+# `pear-ci` npm tool, NOT the `pear` CLI. `pear touch` mints a *random* link and
+# `pear stage` needs the writer keypair in a local Pear keystore absent on
+# ephemeral runners; `pear-ci` instead derives the SAME `pear://` link from
+# `--primary-key` + `--name` across runs (deterministic, per pear-ci's docs) and round-
+# trips the incremental snapshot via `--snapshot`. Installing the single pinned
+# tool over the audited npm-registry egress satisfies THREAT.MODEL RR-2.
+#
+# A composite CANNOT set permissions:/environment: — those are on the calling
+# job.
+
+name: seedpod pear-publish
+description: >
+  Build the pear by-arch/<host>/app/<name> layout from verified binaries and
+  stage the drive with the pinned pear-ci npm tool. Produces snapshot-path +
+  pear-link outputs; performs NO upload.
+
+inputs:
+  tag:
+    description: "Release tag being published (recorded in the drive package)."
+    required: true
+  name:
+    description: "Drive package name (the <name> in by-arch/<host>/app/<name>)."
+    required: true
+  namespace:
+    description: >
+      The pear-ci drive namespace (`--name`). Together with the primary key it
+      deterministically determines the drive's pear:// link across runs, so it
+      MUST be stable for a given drive. Defaults, at the call site, to the
+      artifact name / repository name.
+    required: true
+  primary-key:
+    description: >
+      64-hex (32-byte) Corestore primary key (the drive writer identity).
+      Supplied ONLY from the pear-publish Environment secret; never a repo/
+      build-plane secret.
+    required: true
+  pear-ci-version:
+    description: >
+      Pinned pear-ci npm version to install (supply-chain: the seed plane's one
+      tool is version-pinned, not floating latest).
+    required: false
+    default: "0.1.1"
+  assets-dir:
+    description: "Directory of verified assets (binaries + SHA256SUMS + seedpod.json)."
+    required: true
+  prev-snapshot:
+    description: "Path to the previous release's snapshot.json, or empty for genesis."
+    required: false
+    default: ""
+
+outputs:
+  snapshot-path:
+    description: "Path to the refreshed snapshot.json produced by staging."
+    value: ${{ steps.stage.outputs.snapshot-path }}
+  pear-link:
+    description: "The pear://<key> link the drive was staged to."
+    value: ${{ steps.stage.outputs.pear-link }}
+
+runs:
+  using: composite
+  steps:
+    # The ONLY install in the seed plane: the single version-pinned pear-ci tool
+    # over the audited npm-registry egress. No project checkout, no project or
+    # transitive dependencies — the RR-2 compensating-controls boundary.
+    - name: Install pinned pear-ci
+      shell: bash
+      env:
+        PEAR_CI_VERSION: ${{ inputs.pear-ci-version }}
+      # The version-PINNED pear-ci tool is the seed plane's substrate; this
+      # install is the intended, documented RR-2 control (pinned tooling over the
+      # audited npm-registry egress), not an ad-hoc convenience fetch — so the
+      # adhoc-packages audit is suppressed on this step with justification.
+      run: | # zizmor: ignore[adhoc-packages]
+        set -euo pipefail
+        npm install -g "pear-ci@${PEAR_CI_VERSION}"
+        command -v pear-ci
+        echo "Installed pear-ci@${PEAR_CI_VERSION}"
+
+    - name: Assemble layout and stage drive
+      id: stage
+      shell: bash
+      env:
+        TAG: ${{ inputs.tag }}
+        NAME: ${{ inputs.name }}
+        NAMESPACE: ${{ inputs.namespace }}
+        PRIMARY_KEY: ${{ inputs.primary-key }}
+        ASSETS_DIR: ${{ inputs.assets-dir }}
+        PREV_SNAPSHOT: ${{ inputs.prev-snapshot }}
+      run: |
+        set -euo pipefail
+
+        if ! printf '%s' "$PRIMARY_KEY" | grep -Eq '^[a-fA-F0-9]{64}$'; then
+          echo "::error::primary-key must be 64 hex characters (32-byte Corestore identity)"
+          exit 1
+        fi
+        if [ -z "$NAMESPACE" ]; then
+          echo "::error::namespace is required (with the primary key it determines the drive link)"
+          exit 1
+        fi
+
+        HOSTS="darwin-arm64 darwin-x64 linux-arm64 linux-x64 win32-arm64 win32-x64"
+        VERSION="${TAG#v}"
+
+        # Assemble pear's by-arch/<host>/app/<name> layout under deploy/, one host
+        # per verified binary — the same layout `pear build` emits, built directly
+        # (no pear CLI in CI, see header). deploy/package.json carries the
+        # version/tag coordinates.
+        mkdir -p deploy
+        jq -n --arg name "$NAME" --arg version "$VERSION" \
+          '{name:$name, version:$version, pear:{name:$name}}' > deploy/package.json
+
+        shopt -s nullglob
+        found=0
+        for f in "$ASSETS_DIR"/*; do
+          base=$(basename "$f")
+          case "$base" in
+            SHA256SUMS|seedpod.json|snapshot.json) continue ;;
+          esac
+          host=""
+          for h in $HOSTS; do
+            case "$base" in
+              *-"$h") host="$h" ;;
+            esac
+          done
+          if [ -z "$host" ]; then
+            echo "::error::cannot map asset '${base}' to a known host"
+            exit 1
+          fi
+          echo "Adding ${base} as ${host} app"
+          mkdir -p "deploy/by-arch/${host}/app"
+          cp "$f" "deploy/by-arch/${host}/app/${NAME}"
+          found=$((found + 1))
+        done
+
+        if [ "$found" -eq 0 ]; then
+          echo "::error::no host binaries found in ${ASSETS_DIR}"
+          exit 1
+        fi
+
+        # Seed the incremental-sync position from the previous release, or start
+        # from empty on genesis. `pear-ci --snapshot` READS the prior snapshot and
+        # WRITES the refreshed one back to the same path (the round-trip). A
+        # missing/incompatible snapshot fails closed to a full re-stage (RR-3),
+        # never to a wrong drive.
+        SNAPSHOT="snapshot.json"
+        if [ -n "$PREV_SNAPSHOT" ] && [ -f "$PREV_SNAPSHOT" ]; then
+          echo "Resuming from previous snapshot ${PREV_SNAPSHOT}"
+          cp "$PREV_SNAPSHOT" "$SNAPSHOT"
+        else
+          echo "Genesis stage — no previous snapshot"
+        fi
+
+        # Stage with the pinned pear-ci tool. The pear:// link is derived from
+        # --primary-key + --name across runs (deterministic, per pear-ci's docs), so
+        # every release stages the SAME drive and the 1-to-1 anchor holds. pear-ci
+        # logs `starting stage for key <drive-key>`; that key IS the pear:// link.
+        # Export the key in the env too — pear-ci's keystore convention reads
+        # PEAR_PRIMARY_KEY (as documented for the pear-ci action).
+        export PEAR_PRIMARY_KEY="$PRIMARY_KEY"
+        pear-ci \
+          --primary-key "$PRIMARY_KEY" \
+          --name "$NAMESPACE" \
+          --target deploy \
+          --snapshot "$SNAPSHOT" \
+          --storage "${RUNNER_TEMP:-.}/corestore" 2>&1 | tee pear-ci.log
+
+        # Scrape the drive key from pear-ci's log line. UNVERIFIED stdout format
+        # (THREAT.MODEL RR-4) — fails closed here if the line is absent/renamed.
+        KEY=$(sed -n 's/.*starting stage for key \([0-9A-Za-z]*\).*/\1/p' pear-ci.log | tail -n1)
+        if [ -z "$KEY" ]; then
+          echo "::error::could not scrape the drive key from pear-ci output (see THREAT.MODEL RR-4)"
+          exit 1
+        fi
+        case "$KEY" in
+          pear://*) LINK="$KEY" ;;
+          *) LINK="pear://${KEY}" ;;
+        esac
+
+        if [ ! -f "$SNAPSHOT" ]; then
+          echo "::error::pear-ci did not produce the refreshed ${SNAPSHOT}"
+          exit 1
+        fi
+
+        echo "Staged ${LINK}"
+        {
+          echo "snapshot-path=${SNAPSHOT}"
+          echo "pear-link=${LINK}"
+        } >> "$GITHUB_OUTPUT"

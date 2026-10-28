@@ -1,0 +1,536 @@
+# seedpod — release-triggered, split-plane publishing workflow.
+#
+# ONE workflow, two authority planes ordered by `needs:`:
+#   build plane  — checkout at the tag's *resolved* commit, contents:read,
+#                  zero publish secrets; produces binaries + SHA256SUMS +
+#                  seedpod.json, attests them, then a code-free job uploads
+#                  them as Release assets.
+#   seed plane   — no project code, ever; downloads the assets back off the
+#                  Release, verifies each against the attestation, stages the
+#                  pear:// drive with the Environment-scoped key, and hands the
+#                  refreshed snapshot to a separate code-free, key-free job.
+#
+# INVARIANT: no job holds both `contents: write` and the drive key. The only
+# two `contents: write` jobs (upload, snapshot-upload) check out nothing and
+# run no project code. The key lives ONLY in the `pear-publish` Environment,
+# consumed ONLY by `stage`, which never holds `contents: write`.
+#
+# seedpod's own composite actions are referenced by the named placeholder
+# `OWNER/seedpod/actions/<name>@SEEDPOD_PIN_SHA # seedpod vv0.1.0` — the
+# standalone repo does not exist yet (README § Pin conventions).
+
+name: seedpod-release
+run-name: >
+  seedpod release ${{ inputs.tag || github.event.release.tag_name }}
+
+on:
+  release:
+    types: [published]
+  workflow_call:
+    inputs:
+      name:
+        description: "Artifact name (defaults to the repository name)."
+        required: false
+        type: string
+      namespace:
+        description: >
+          pear-ci drive namespace. With PEAR_PRIMARY_KEY it deterministically
+          fixes the drive's pear:// link, so keep it stable for a given drive.
+          Defaults to the artifact name / repository name.
+        required: false
+        type: string
+      entrypoint:
+        description: "Build entrypoint passed to bare-build."
+        required: false
+        type: string
+        default: bin.mjs
+      tag:
+        description: "Release tag to publish (defaults to the triggering release)."
+        required: false
+        type: string
+      signer-workflow:
+        description: >
+          [host/]owner/repo/path to the workflow that signs the attestation, as
+          accepted by `gh attestation verify --signer-workflow`. Leave empty for
+          in-tree adoption (defaults to <this-repo>/.github/workflows/release.yml);
+          set to OWNER/seedpod/.github/workflows/release.yml for reusable-call
+          adoption, where the attest job runs under seedpod's identity.
+        required: false
+        type: string
+    # `environment:` binds env-scoped VARS but NOT env-scoped SECRETS into a
+    # called reusable workflow, so the caller MUST pass the drive key. The
+    # consumer passes `secrets: inherit` (or names it explicitly); see
+    # examples/consumer-release.yml and docs/OPERATIONS.md.
+    secrets:
+      PEAR_PRIMARY_KEY:
+        description: "64-hex Corestore primary key; consumed only by the stage job's Environment."
+        required: true
+
+# Serialize releases for this repo: two Releases published close together would
+# otherwise run two `stage` jobs writing the same single-writer Hypercore
+# concurrently (forked log + snapshot lost-update). `cancel-in-progress: false`
+# serializes rather than aborts, so no partial stage is interrupted.
+concurrency:
+  group: seedpod-release-${{ github.repository }}
+  cancel-in-progress: false
+
+# Least privilege by default; every job re-grants exactly what it needs.
+permissions: {}
+
+jobs:
+  # ── build plane ──────────────────────────────────────────────────────────
+  resolve:
+    name: resolve tag to commit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # gh api reads over the token
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
+      tag: ${{ steps.resolve.outputs.tag }}
+      version: ${{ steps.resolve.outputs.version }}
+      release_url: ${{ steps.resolve.outputs.release_url }}
+    steps:
+      - name: Harden the runner (block egress)
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            github.com:443
+
+      # Resolve the TAG's commit — never target_commitish. The tag
+      # name is attacker-influenceable, so it enters `run:` via env only, never
+      # `${{ }}` interpolation (TanStack lockdown #3).
+      - name: Resolve tag to commit sha
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          TAG="${INPUT_TAG:-$RELEASE_TAG}"
+          if [ -z "$TAG" ]; then
+            echo "::error::no release tag on event '${EVENT_NAME}' and no tag input"
+            exit 1
+          fi
+
+          SHA=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TAG}" --jq '.object.sha')
+          TYPE=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TAG}" --jq '.object.type')
+          # Dereference an annotated tag object to the commit it points at.
+          if [ "$TYPE" = "tag" ]; then
+            SHA=$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${SHA}" --jq '.object.sha')
+          fi
+
+          RELEASE_URL=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" --jq '.html_url')
+
+          {
+            echo "sha=${SHA}"
+            echo "tag=${TAG}"
+            echo "version=${TAG#v}"
+            echo "release_url=${RELEASE_URL}"
+          } >> "$GITHUB_OUTPUT"
+          echo "Resolved ${TAG} -> ${SHA}"
+
+  build:
+    name: build ${{ matrix.host }}
+    needs: resolve
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # checkout at the resolved sha; no write, no secrets
+    strategy:
+      fail-fast: false
+      matrix:
+        host:
+          - darwin-arm64
+          - darwin-x64
+          - linux-arm64
+          - linux-x64
+          - win32-arm64
+          - win32-x64
+    steps:
+      - name: Harden the runner (block egress)
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            *.actions.githubusercontent.com:443
+            *.blob.core.windows.net:443
+            api.github.com:443
+            codeload.github.com:443
+            github.com:443
+            nodejs.org:443
+            objects.githubusercontent.com:443
+            registry.npmjs.org:443
+
+      - name: Checkout at the resolved commit
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ needs.resolve.outputs.sha }}
+          persist-credentials: false
+
+      # Fail closed if the checked-out tree is not the sha we resolved (B-1).
+      - name: Assert checkout matches resolved sha
+        env:
+          EXPECTED_SHA: ${{ needs.resolve.outputs.sha }}
+        run: |
+          set -euo pipefail
+          ACTUAL_SHA=$(git rev-parse HEAD)
+          if [ "$ACTUAL_SHA" != "$EXPECTED_SHA" ]; then
+            echo "::error::checkout drift: HEAD=${ACTUAL_SHA} expected=${EXPECTED_SHA}"
+            exit 1
+          fi
+          echo "Checkout verified at ${ACTUAL_SHA}"
+
+      - name: Build host binary
+        id: build
+        uses: OWNER/seedpod/actions/build-binaries@SEEDPOD_PIN_SHA # seedpod vv0.1.0
+        with:
+          name: ${{ inputs.name || github.event.repository.name }}
+          host: ${{ matrix.host }}
+          entrypoint: ${{ inputs.entrypoint || 'bin.mjs' }}
+
+      - name: Upload host binary artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: binary-${{ matrix.host }}
+          path: ${{ steps.build.outputs.binary-path }}
+          if-no-files-found: error
+          retention-days: 1
+
+  manifest:
+    name: assemble manifest
+    needs: [resolve, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Harden the runner (block egress)
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            *.actions.githubusercontent.com:443
+            *.blob.core.windows.net:443
+            api.github.com:443
+            github.com:443
+
+      - name: Download host binaries
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: dist
+          pattern: binary-*
+          merge-multiple: true
+
+      # SHA256SUMS covers the binaries only; seedpod.json embeds the literal git
+      # URI including the resolved sha (goal: source coordinates). Both files —
+      # plus every binary — become attestation subjects in the next job.
+      - name: Assemble SHA256SUMS and seedpod.json
+        env:
+          NAME: ${{ inputs.name || github.event.repository.name }}
+          VERSION: ${{ needs.resolve.outputs.version }}
+          TAG: ${{ needs.resolve.outputs.tag }}
+          SHA: ${{ needs.resolve.outputs.sha }}
+          RELEASE_URL: ${{ needs.resolve.outputs.release_url }}
+        run: |
+          set -euo pipefail
+          cd dist
+          # Glob expands before SHA256SUMS/seedpod.json exist, so it covers only binaries.
+          sha256sum -- * > SHA256SUMS
+
+          ASSETS=$(jq -Rn '
+            [ inputs
+              | capture("(?<h>[0-9a-f]{64})\\s+(?<f>.+)")
+              | { (.f): ("sha256-" + .h) }
+            ] | add' < SHA256SUMS)
+
+          jq -n \
+            --arg name "$NAME" \
+            --arg version "$VERSION" \
+            --arg tag "$TAG" \
+            --arg source "git+https://github.com/${GITHUB_REPOSITORY}.git#${SHA}" \
+            --arg release "$RELEASE_URL" \
+            --argjson assets "$ASSETS" \
+            '{name:$name, version:$version, tag:$tag, source:$source, release:$release, assets:$assets}' \
+            > seedpod.json
+
+          echo "── SHA256SUMS ──"; cat SHA256SUMS
+          echo "── seedpod.json ──"; cat seedpod.json
+
+      - name: Upload manifest artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: manifest
+          path: |
+            dist/SHA256SUMS
+            dist/seedpod.json
+          if-no-files-found: error
+          retention-days: 1
+
+  attest:
+    name: attest provenance
+    # manifest already needs [resolve, build]; attest references no resolve
+    # output, so ordering via manifest suffices.
+    needs: [manifest]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # sigstore OIDC
+      attestations: write # write to the repo attestation store
+      contents: read
+    steps:
+      - name: Harden the runner (block egress)
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            *.actions.githubusercontent.com:443
+            *.blob.core.windows.net:443
+            api.github.com:443
+            fulcio.sigstore.dev:443
+            github.com:443
+            rekor.sigstore.dev:443
+            storage.googleapis.com:443
+            tuf-repo-cdn.sigstore.dev:443
+
+      - name: Download binaries
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: dist
+          pattern: binary-*
+          merge-multiple: true
+
+      - name: Download manifest
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: manifest
+          path: dist
+
+      # Subjects = every binary AND SHA256SUMS AND seedpod.json.
+      # The attestation store — public, append-only, outside the repo — is the
+      # integrity root; a swapped Release asset fails subject-digest verify no
+      # matter what the (attacker-rewritable) manifest claims.
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-path: |
+            dist/*
+
+  upload:
+    name: upload release assets
+    needs: [resolve, attest]
+    runs-on: ubuntu-latest
+    # The build plane's ONLY contents:write. Checks out nothing, runs no
+    # project code — a single pinned `gh release upload` via the composite.
+    permissions:
+      contents: write # attach attested assets to the Release; code-free, no key
+    steps:
+      - name: Harden the runner (block egress)
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            *.actions.githubusercontent.com:443
+            *.blob.core.windows.net:443
+            api.github.com:443
+            github.com:443
+            uploads.github.com:443
+
+      - name: Download binaries
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: dist
+          pattern: binary-*
+          merge-multiple: true
+
+      - name: Download manifest
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: manifest
+          path: dist
+
+      - name: Upload assets to the Release
+        uses: OWNER/seedpod/actions/release-assets@SEEDPOD_PIN_SHA # seedpod vv0.1.0
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          tag: ${{ needs.resolve.outputs.tag }}
+          # dist/ holds the binaries plus SHA256SUMS and seedpod.json — exactly
+          # the attested asset set.
+          files: |
+            dist/*
+
+  # ── seed plane ───────────────────────────────────────────────────────────
+  stage:
+    name: stage pear drive
+    needs: [resolve, upload]
+    runs-on: ubuntu-latest
+    # The drive key lives ONLY here, as an Environment secret. This job never
+    # holds contents:write — the key never meets repo-write.
+    environment: pear-publish
+    permissions:
+      contents: read
+    steps:
+      # `pear-ci` replicates to the hyperswarm DHT (arbitrary UDP peers), so
+      # egress CANNOT be allow-listed here — audit only, with compensating
+      # controls: no project code, no project/transitive dependencies, ONLY the
+      # single version-pinned pear-ci tool (installed from the npm registry
+      # *before* the DHT phase), and the Environment-scoped key. Named residual
+      # risk RR-2 in docs/THREAT.MODEL.md.
+      - name: Harden the runner (audit egress — P2P cannot be allow-listed)
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        with:
+          egress-policy: audit
+          allowed-endpoints: >
+            api.github.com:443
+            github.com:443
+            registry.npmjs.org:443
+            release-assets.githubusercontent.com:443
+
+      # Download THIS release's assets and verify EVERY one against the
+      # attestation before it can enter the drive. snapshot.json is
+      # skipped — it is this run's output, not an attested input.
+      - name: Download and verify release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.resolve.outputs.tag }}
+          SIGNER_WORKFLOW_INPUT: ${{ inputs.signer-workflow }}
+        run: |
+          set -euo pipefail
+          mkdir -p assets
+          gh release download "$TAG" --dir assets --clobber
+
+          SIGNER_WORKFLOW="${SIGNER_WORKFLOW_INPUT:-${GITHUB_REPOSITORY}/.github/workflows/release.yml}"
+          echo "Verifying against --repo ${GITHUB_REPOSITORY} --signer-workflow ${SIGNER_WORKFLOW}"
+
+          for f in assets/*; do
+            base=$(basename "$f")
+            if [ "$base" = "snapshot.json" ]; then
+              continue
+            fi
+            echo "Verifying ${base}"
+            gh attestation verify "$f" \
+              --repo "$GITHUB_REPOSITORY" \
+              --signer-workflow "$SIGNER_WORKFLOW"
+          done
+
+      # Previous-release snapshot for incremental staging. Selection rule (R-2,
+      # docs/OPERATIONS.md): highest semver-ordered non-draft, non-prerelease
+      # release strictly below the current tag; absent ⇒ genesis (empty).
+      - name: Select previous release snapshot
+        id: prev
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CUR_TAG: ${{ needs.resolve.outputs.tag }}
+        run: |
+          set -euo pipefail
+          # Capture to a variable first: `mapfile < <(gh api …)` runs gh in a
+          # process substitution whose failure never trips `set -e`, silently
+          # yielding empty TAGS → genesis. A direct assignment fails loud (n-2).
+          RELEASES=$(
+            gh api "repos/${GITHUB_REPOSITORY}/releases" --paginate \
+              --jq '.[] | select(.draft == false and .prerelease == false) | .tag_name'
+          )
+          mapfile -t TAGS <<< "$RELEASES"
+
+          PREV=""
+          for t in "${TAGS[@]}"; do
+            [ -n "$t" ] || continue
+            [ "$t" = "$CUR_TAG" ] && continue
+            # keep t only if it sorts strictly below the current tag
+            lo=$(printf '%s\n%s\n' "$t" "$CUR_TAG" | sort -V | head -1)
+            [ "$lo" = "$t" ] || continue
+            # track the greatest eligible tag seen so far
+            if [ -z "$PREV" ]; then
+              PREV="$t"
+            else
+              hi=$(printf '%s\n%s\n' "$t" "$PREV" | sort -V | tail -1)
+              PREV="$hi"
+            fi
+          done
+
+          PREV_SNAPSHOT=""
+          if [ -n "$PREV" ]; then
+            echo "Previous release: ${PREV}"
+            if gh release download "$PREV" --dir prev --pattern 'snapshot.json' 2>/dev/null; then
+              PREV_SNAPSHOT="prev/snapshot.json"
+            else
+              echo "No snapshot.json on ${PREV}; proceeding from empty (genesis)."
+            fi
+          else
+            echo "No eligible previous release; genesis path."
+          fi
+          echo "prev-snapshot=${PREV_SNAPSHOT}" >> "$GITHUB_OUTPUT"
+
+      - name: Stage the drive
+        id: publish
+        uses: OWNER/seedpod/actions/pear-publish@SEEDPOD_PIN_SHA # seedpod vv0.1.0
+        with:
+          tag: ${{ needs.resolve.outputs.tag }}
+          name: ${{ inputs.name || github.event.repository.name }}
+          # namespace + primary-key deterministically fix the pear:// link.
+          namespace: ${{ inputs.namespace || inputs.name || github.event.repository.name }}
+          primary-key: ${{ secrets.PEAR_PRIMARY_KEY }}
+          pear-ci-version: "0.1.1" # pinned pear-ci npm tool (npm view pear-ci version, 2026-07-30)
+          assets-dir: assets
+          prev-snapshot: ${{ steps.prev.outputs.prev-snapshot }}
+
+      - name: Upload refreshed snapshot artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: snapshot
+          path: ${{ steps.publish.outputs.snapshot-path }}
+          if-no-files-found: error
+          retention-days: 1
+
+      # Retain the P2P egress audit log as a run artifact (RR-2 compensating
+      # control). harden-runner writes its correlation/process log under
+      # /home/runner/harden-runner/ in audit mode; `if-no-files-found: warn`
+      # (not `ignore`) so a moved/empty path surfaces a loud annotation instead
+      # of silently capturing nothing (n-1). Not `error`: the local artifact
+      # path is a harden-runner internal, and the authoritative audit is also
+      # posted to harden-runner's run insights — a missing local copy must not
+      # fail an otherwise-successful release.
+      - name: Upload egress audit log
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: stage-egress-audit
+          path: /home/runner/harden-runner/
+          if-no-files-found: warn
+          retention-days: 7
+
+  snapshot-upload:
+    name: upload snapshot
+    needs: [resolve, stage]
+    runs-on: ubuntu-latest
+    # Mirrors the build plane's build/upload split: contents:write, but NO
+    # environment, NO key, code-free.
+    permissions:
+      contents: write # attach the refreshed snapshot.json to the Release; no key
+    steps:
+      - name: Harden the runner (block egress)
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            *.actions.githubusercontent.com:443
+            *.blob.core.windows.net:443
+            api.github.com:443
+            github.com:443
+            uploads.github.com:443
+
+      - name: Download snapshot
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: snapshot
+          path: snap
+
+      - name: Upload snapshot.json to the Release
+        uses: OWNER/seedpod/actions/release-assets@SEEDPOD_PIN_SHA # seedpod vv0.1.0
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          tag: ${{ needs.resolve.outputs.tag }}
+          files: |
+            snap/snapshot.json

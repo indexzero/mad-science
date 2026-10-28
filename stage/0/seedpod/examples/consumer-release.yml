@@ -1,0 +1,48 @@
+# Consumer example — drop this into a repo's .github/workflows/ to publish its
+# release binaries to a pear:// drive via seedpod.
+#
+# Prerequisites (see seedpod/docs/OPERATIONS.md):
+#   1. A `pear-publish` Environment in THIS repo holding the PEAR_PRIMARY_KEY
+#      secret, with a deployment branch/tag policy restricting it to v* tags.
+#      For reusable-call adoption the caller MUST pass the secret: `environment:`
+#      binds env-scoped VARS but NOT env-scoped SECRETS into a called workflow,
+#      so the `secrets:` block below is required — without it the stage job reads
+#      an empty key and fails closed on the hex validator. The key
+#      still reaches ONLY the `stage` job, which alone declares the Environment.
+#   2. Releases published by a human, a PAT, or a GitHub App — NOT the default
+#      GITHUB_TOKEN, which does not fire `release:` workflows.
+#
+# All uses: are SHA-pinned. seedpod's own refs use the placeholder pin
+# SEEDPOD_PIN_SHA until the standalone repo is cut (README § Pin conventions).
+
+name: release
+run-name: >
+  publish ${{ github.event.release.tag_name }} to pear
+
+on:
+  release:
+    types: [published]
+
+permissions: {}
+
+jobs:
+  seedpod:
+    # The called workflow narrows these per job; grant the union it needs.
+    permissions:
+      contents: write # code-free upload jobs attach assets to the Release
+      id-token: write # sigstore provenance attestation
+      attestations: write # write the attestation to the repo store
+    uses: OWNER/seedpod/.github/workflows/release.yml@SEEDPOD_PIN_SHA # seedpod vv0.1.0
+    # Forward the drive key into the called workflow. `environment:` binds
+    # env-scoped VARS but not env-scoped SECRETS into a reusable workflow, so the
+    # caller MUST pass the key. Forward ONLY this one secret (least
+    # privilege — `secrets: inherit` would forward ALL of this repo's secrets);
+    # the key is resolved in and reaches only the stage job's Environment.
+    secrets:
+      PEAR_PRIMARY_KEY: ${{ secrets.PEAR_PRIMARY_KEY }}
+    with:
+      name: my-cli
+      entrypoint: bin.mjs
+      # Reusable-call adoption: the attest job runs under seedpod's identity, so
+      # the verify predicate must name seedpod's workflow, not this repo's.
+      signer-workflow: OWNER/seedpod/.github/workflows/release.yml

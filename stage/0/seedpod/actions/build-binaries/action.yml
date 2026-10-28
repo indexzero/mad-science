@@ -1,0 +1,86 @@
+# seedpod/build-binaries — compile one host binary from a checked-out source
+# tree. Runs in the build plane under contents:read with no publish secrets.
+#
+# A composite action CANNOT set job-level permissions:/environment: — those
+# live in the calling job in workflows/release.yml. This action
+# only builds; it never uploads and never touches the drive key.
+
+name: seedpod build-binaries
+description: >
+  Build a single JavaScript-runtime binary for one host with bare-build and
+  return its path. Emits <name>-<host>.
+
+inputs:
+  name:
+    description: "Artifact base name (the drive's package name)."
+    required: true
+  host:
+    description: >
+      Target host triple, one of: darwin-arm64, darwin-x64, linux-arm64,
+      linux-x64, win32-arm64, win32-x64 (pear build host set).
+    required: true
+  entrypoint:
+    description: "Build entrypoint passed to bare-build."
+    required: false
+    default: bin.mjs
+
+outputs:
+  binary-path:
+    description: "Path to the built binary, named <name>-<host>."
+    value: ${{ steps.build.outputs.binary-path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+      with:
+        node-version: 22
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [ -f package-lock.json ]; then
+          npm ci
+        elif [ -f package.json ]; then
+          npm install --no-audit --no-fund
+        fi
+
+    # bare-build produces a standalone runtime binary for the target host. The
+    # exact flag surface tracks the project's bare-build version; the contract
+    # this action guarantees is the OUTPUT: a file named <name>-<host>. Build
+    # feasibility across hosts is smoke-tested per release.
+    - name: Build host binary
+      id: build
+      shell: bash
+      env:
+        NAME: ${{ inputs.name }}
+        HOST: ${{ inputs.host }}
+        ENTRYPOINT: ${{ inputs.entrypoint }}
+        # Pin bare-build (npm view bare-build version, 2026-07-30). The build
+        # plane already runs project code, but pinning the build tool removes the
+        # one floating-latest fetch and matches the design's SHA-pin posture.
+        BARE_BUILD_VERSION: "1.0.4"
+      run: |
+        set -euo pipefail
+        case "$HOST" in
+          darwin-arm64|darwin-x64|linux-arm64|linux-x64|win32-arm64|win32-x64) ;;
+          *) echo "::error::unsupported host '${HOST}'"; exit 1 ;;
+        esac
+
+        mkdir -p out
+        OUT="out/${NAME}-${HOST}"
+
+        npx --yes "bare-build@${BARE_BUILD_VERSION}" \
+          --host "$HOST" \
+          --linked \
+          --out "$OUT" \
+          "$ENTRYPOINT"
+
+        if [ ! -e "$OUT" ]; then
+          echo "::error::bare-build did not produce ${OUT}"
+          exit 1
+        fi
+        echo "binary-path=${OUT}" >> "$GITHUB_OUTPUT"
+        echo "Built ${OUT}"
