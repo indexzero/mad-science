@@ -4,7 +4,7 @@
 //! builds the records, and renders.
 //!
 //! ```text
-//! wrote _work_app/pressure-test/SUMMARY.md  <- /work/app/pressure-test/SUMMARY.md  (v2 from returned, outcome returned, journal agree, similarity 1.00)
+//! wrote _work_app/path/to/a/FILE.md  <- /work/app/path/to/a/FILE.md  (v2 from returned, outcome returned, journal agree, similarity 1.00)
 //! clrg extract: 4 file(s) in /tmp/out, with MANIFEST.jsonl
 //!   outcome: 2 written, 1 rejected, 1 returned
 //!   verified: 0 agree, 0 disagree

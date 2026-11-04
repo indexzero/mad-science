@@ -380,7 +380,7 @@ pub struct Recovery {
 }
 
 pub const CWD: &str = "/work/app";
-pub const SUMMARY: &str = "/work/app/pressure-test/SUMMARY.md";
+pub const SUMMARY: &str = "/work/app/path/to/a/FILE.md";
 pub const APP_RS: &str = "/work/app/src/app.rs";
 pub const NEW_MD: &str = "/work/app/docs/new.md";
 pub const EDITED_ONLY: &str = "/work/app/src/edited-only.rs";
@@ -418,7 +418,7 @@ fn summary_returned() -> String {
     ) + "\n## Appendix\n\nRaw timings are in the run record.\n"
 }
 
-/// A session on `onboarding.gonzo` in `/work/app` with every kind of
+/// A session on `gonzo` in `/work/app` with every kind of
 /// evidence:
 ///
 /// - `src/app.rs`: a relative snapshot path; a backup, an `Edit` with no
@@ -427,7 +427,7 @@ fn summary_returned() -> String {
 /// - `src/edited-only.rs`: an `Edit` with no base (diff-only).
 /// - `blocked.txt`: a `Write` whose result is an error (rejected).
 /// - `README.md`: a `Read`.
-/// - `pressure-test/SUMMARY.md` (the SUMMARY.md case): a workflow subagent's
+/// - `path/to/a/FILE.md` (the SUMMARY.md case): a workflow subagent's
 ///   `Write` is rejected ("Subagents should return findings as text, not
 ///   write report files"), it runs two lint `Bash` calls, then returns a
 ///   revised version in `StructuredOutput.file`; the workflow journal holds
@@ -438,7 +438,7 @@ fn summary_returned() -> String {
 pub fn recovery() -> (Fixture, Recovery) {
     let f = Fixture::new();
     let project = "-work-app";
-    let at = At::new(0x51, CWD, "onboarding.gonzo");
+    let at = At::new(0x51, CWD, "gonzo");
     recovery_main(&f, project, &at);
     let agent = "a5f00d";
     let draft = summary_draft();
@@ -537,7 +537,7 @@ fn recovery_subagent(
                 12,
                 "toolu_b1",
                 "Bash",
-                bash("markdownlint pressure-test/SUMMARY.md"),
+                bash("markdownlint path/to/a/FILE.md"),
             )),
             side(at.result_for(
                 5,
@@ -552,7 +552,7 @@ fn recovery_subagent(
                 13,
                 "toolu_b2",
                 "Bash",
-                bash("markdownlint --fix pressure-test/SUMMARY.md"),
+                bash("markdownlint --fix path/to/a/FILE.md"),
             )),
             side(at.result_for(7, 13, "toolu_b2", false, "", json!({"stdout": ""}))),
             side(at.assistant(

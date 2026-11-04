@@ -353,7 +353,7 @@ mod tests {
         })
         .unwrap();
         assert!(f.message_ok(&meta("main", "/w")));
-        assert!(f.message_ok(&meta("onboarding.gonzo", "/w")));
+        assert!(f.message_ok(&meta("gonzo", "/w")));
         assert!(!f.message_ok(&meta("mainline", "/w")));
         assert!(!f.message_ok(&MessageMeta::default()));
     }

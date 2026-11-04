@@ -3,7 +3,7 @@
 //! the middle of a one-line excerpt (R1), sized to the terminal.
 //!
 //! ```text
-//! 2026-08-02 14:31  ~/src/app  [onboarding.gonzo]  3f2a9c1e  (cwd missing)
+//! 2026-08-02 14:31  ~/src/app  [gonzo]  3f2a9c1e  (cwd missing)
 //!   last: "wire the seed data into the onboarding flow and…"
 //!         "Your response above was stopped by…" (not in history)
 //!   14:02 user/text            …can you move the seed data into a fixture so the…

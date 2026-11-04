@@ -147,7 +147,7 @@ cmd "sessions" help="List sessions that match the selectors" {
   output "tsv" help="Tab-separated columns from --fields"
   output "values" help="<session>:<cwd> per session, for completion and pipes"
   select "--format"
-  example "clrg sessions -b onboarding.gonzo" header="Find sessions on a branch"
+  example "clrg sessions -b gonzo" header="Find sessions on a branch"
   example "clrg sessions -d ~/src/app --since 2026-06-01 --sort=-last_ts" header="Recent sessions in a repo"
 }
 
@@ -204,7 +204,7 @@ cmd "grep" help="Search the decoded text of every store; show each hit in its se
   output "tsv" help="Tab-separated columns from --fields"
   output "values" help="<session>:<cwd> per matched session (deduped), for resuming and completion"
   select "--format"
-  example "clrg grep -b onboarding.gonzo --in user/text --agree both 'seed data'" header="What did I type on that branch?"
+  example "clrg grep -b gonzo --in user/text --agree both 'seed data'" header="What did I type on that branch?"
 }
 
 cmd "files" help="List files Claude read, created, or modified in the selected messages" {
@@ -239,7 +239,7 @@ cmd "files" help="List files Claude read, created, or modified in the selected m
   output "tsv"
   output "values" help="Bare paths"
   select "--format"
-  example "clrg files -b onboarding.gonzo --created-only" header="Files created on a branch"
+  example "clrg files -b gonzo --created-only" header="Files created on a branch"
 }
 
 cmd "artifacts" help="List ~/.claude artifacts joined to the selected sessions" {
@@ -338,7 +338,7 @@ cmd "extract" help="Recover file contents from the selected messages into a new 
   }
   select "--format"
   exit_code 4 "some selected files could not be recovered (diff-only or none) or had an unsafe output path; the rest were written"
-  example "clrg extract -b onboarding.gonzo --created-only -o ./recovered/onboarding.gonzo" header="Recover everything created on a branch"
+  example "clrg extract -b gonzo --created-only -o ./recovered/gonzo" header="Recover everything created on a branch"
 }
 
 cmd "facets" help="Count distinct values of a metadata field across the selection" {
@@ -347,7 +347,7 @@ cmd "facets" help="Count distinct values of a metadata field across the selectio
     choices "branch" "cwd" "project" "model" "cli-version" "tool" "root" "day"
   }
   after_long_help #"""
-  Use this to find the right spelling before you search (e.g. 'onboarding.gonzo'
+  Use this to find the right spelling before you search (e.g. 'gonzo'
   vs 'onboarding/gonzo'). FIELDS: value, sessions, messages, first_ts, last_ts
   """#
   output "human" default=#true

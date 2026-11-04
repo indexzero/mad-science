@@ -129,7 +129,7 @@ history.jsonl entries matched by project path and timestamp.
 FIELDS: root, session, kind, path, bytes, mtime, refers_to";
 
 const FACETS_AFTER: &str =
-    "Use this to find the right spelling before you search (e.g. 'onboarding.gonzo'
+    "Use this to find the right spelling before you search (e.g. 'gonzo'
 vs 'onboarding/gonzo'). FIELDS: value, sessions, messages, first_ts, last_ts";
 
 const DOCTOR_AFTER: &str =

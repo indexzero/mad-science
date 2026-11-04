@@ -33,7 +33,7 @@ clrg grep 'seed data'                    # literal, smart case, every store
 clrg grep -s 'Tatsu'                     # case-sensitive
 clrg grep -E 'deni(ed|al)'               # regex is opt-in
 clrg grep -l 'seed data'                 # bare paths, like rg -l
-clrg grep -b onboarding.gonzo 'fixture'  # one branch, per message
+clrg grep -b gonzo 'fixture'  # one branch, per message
 clrg grep --session 9e36d02c denied      # one session (an id prefix is enough)
 clrg grep --store history 'seed data'    # only what you typed
 clrg grep --in user/text --agree transcript-only -E '.'   # text that Claude Code inserted
@@ -42,7 +42,7 @@ clrg grep --in user/text --agree transcript-only -E '.'   # text that Claude Cod
 Each session prints one block:
 
 ```text
-2026-08-02 14:31  ~/src/app  [onboarding.gonzo]  3f2a9c1e  (cwd missing)
+2026-08-02 14:31  ~/src/app  [gonzo]  3f2a9c1e  (cwd missing)
   last: "wire the seed data into the onboarding flow and…"
   14:02 user/text            …can you move the seed data into a fixture so the…
   14:09 assistant/tool_use   …Write fixtures/seed.json …
@@ -63,7 +63,7 @@ searched and every filter that you set.
 Add roots with `-r`, or set `CLRG_ROOTS`:
 
 ```sh
-clrg -r ~/.claude -r ~/backups/2026.08.13.dotclaude.merged grep 'seed data'
+clrg -r ~/.claude -r ~/.claude-backups grep 'seed data'
 ```
 
 ## Resume a session
@@ -77,9 +77,9 @@ clrg facets branch                       # how is that branch spelled?
 ## Recover a file
 
 ```sh
-clrg files --path '*pressure-test/SUMMARY.md'
-clrg extract --path '*pressure-test/SUMMARY.md' -o ~/recovered/summary
-clrg extract -b onboarding.gonzo --created-only -o ~/recovered/gonzo
+clrg files --path '*path/to/a/FILE.md'
+clrg extract --path '*path/to/a/FILE.md' -o ~/recovered/summary
+clrg extract -b gonzo --created-only -o ~/recovered/gonzo
 ```
 
 `files` shows each path's history:

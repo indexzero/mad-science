@@ -42,7 +42,7 @@ on_conflict: "INTENT.md wins over clrg-cli.kdl. clrg-cli.kdl wins over USAGE.md.
    its backups, and find the folder a session must be resumed from.
 2. **Recovery (next build).** List the files that sessions created on a
    branch (`files`) and restore their contents (`extract`). The first use is
-   the `onboarding.gonzo` branch.
+   the `gonzo` branch.
 
 The north star is the full surface in `clrg-cli.kdl`. Ship the simple thing
 first (Gall's law). Every command in the spec stays in the CLI. A command
@@ -135,7 +135,7 @@ parse and are accepted. They have no effect, and `--help` says so.
 - **Human output (default).** One block per session:
 
   ```
-  2026-08-02 14:31  ~/src/app  [onboarding.gonzo]  3f2a9c1e  (cwd missing)
+  2026-08-02 14:31  ~/src/app  [gonzo]  3f2a9c1e  (cwd missing)
     last: "wire the seed data into the onboarding flow and…"
     14:02 user/text            …can you move the seed data into a fixture so the…
     14:09 assistant/tool_use   …Write fixtures/seed.json …
@@ -350,7 +350,7 @@ in check.sh. A miss of that target is the trigger to build the index.
 ## Build 2: recovery (`files`, `extract`)
 
 Approved by the owner on 2026-10-23. The first case is
-`pressure-test/SUMMARY.md`. A workflow subagent's `Write` of that file was
+`path/to/a/FILE.md`. A workflow subagent's `Write` of that file was
 rejected (`is_error: true`: "Subagents should return findings as text, not
 write report files"), so the file never reached disk. The subagent then
 returned a later, linted version in its final `StructuredOutput.file`. An
@@ -478,7 +478,7 @@ Also:
   `COGNETICS.md`.
 
 Owner acceptance, run by hand: `clrg extract --session 9e36d02c --path
-'*pressure-test/SUMMARY.md' -o <new dir>` writes the 20,920-character
+'*path/to/a/FILE.md' -o <new dir>` writes the 20,920-character
 `StructuredOutput.file` version with `outcome: returned`, and the manifest
 shows the rejected first draft as an earlier state.
 

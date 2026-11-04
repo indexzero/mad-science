@@ -132,7 +132,7 @@ List sessions that match the selectors
 **Find sessions on a branch**
 
 ```
-clrg sessions -b onboarding.gonzo
+clrg sessions -b gonzo
 ```
 
 **Recent sessions in a repo**
@@ -257,7 +257,7 @@ Search the decoded text of every store; show each hit in its session's context
 **What did I type on that branch?**
 
 ```
-clrg grep -b onboarding.gonzo --in user/text --agree both 'seed data'
+clrg grep -b gonzo --in user/text --agree both 'seed data'
 ```
 
 FIELDS: root, store, path, session, cwd, cwd_exists, branch, ts, type, part,
@@ -353,7 +353,7 @@ List files Claude read, created, or modified in the selected messages
 **Files created on a branch**
 
 ```
-clrg files -b onboarding.gonzo --created-only
+clrg files -b gonzo --created-only
 ```
 
 FIELDS: path, cwd, ops, first_ts, last_ts, sessions, branches, versions,
@@ -578,7 +578,7 @@ Recover file contents from the selected messages into a new directory
 **Recover everything created on a branch**
 
 ```
-clrg extract -b onboarding.gonzo --created-only -o ./recovered/onboarding.gonzo
+clrg extract -b gonzo --created-only -o ./recovered/gonzo
 ```
 
 FIELDS (MANIFEST.jsonl and --format jsonl): path, out_path, session, agent_id,
@@ -678,7 +678,7 @@ Count distinct values of a metadata field across the selection
 clrg facets branch --branch-glob '*gonzo*'
 ```
 
-Use this to find the right spelling before you search (e.g. 'onboarding.gonzo'
+Use this to find the right spelling before you search (e.g. 'gonzo'
 vs 'onboarding/gonzo'). FIELDS: value, sessions, messages, first_ts, last_ts
 
 ## `clrg doctor`

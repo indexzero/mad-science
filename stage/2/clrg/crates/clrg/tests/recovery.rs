@@ -235,7 +235,7 @@ fn fl1_files_lists_paths_with_ops_and_outcome() {
     assert_eq!(new_md["versions"], 1);
     assert_eq!(new_md["cwd"], CWD);
     assert_eq!(strs(&new_md["sessions"]), [r.at.session.as_str()]);
-    assert_eq!(strs(&new_md["branches"]), ["onboarding.gonzo"]);
+    assert_eq!(strs(&new_md["branches"]), ["gonzo"]);
     assert_eq!(new_md["first_ts"], "2026-08-02T14:02:00.000Z");
     assert_eq!(new_md["last_ts"], "2026-08-02T14:04:00.000Z");
     assert_eq!(new_md["root"], f.root().display().to_string());
@@ -559,11 +559,11 @@ fn x3_extract_returned_content_for_rejected_subagent_write() {
     let (f, r) = recovery();
     let tmp = tempfile::tempdir().unwrap();
     let sid = r.at.session.as_str();
-    let sel = ["--session", sid, "--path", "*pressure-test/SUMMARY.md"];
+    let sel = ["--session", sid, "--path", "*path/to/a/FILE.md"];
     let out = tmp.path().join("last");
     let run = extract(&f, &out, &sel);
     assert_eq!(run.code, Some(0), "{}", run.stderr);
-    let rel = "_work_app/pressure-test/SUMMARY.md";
+    let rel = "_work_app/path/to/a/FILE.md";
     let t = tree(&out);
     assert_eq!(
         text(&t, rel),
@@ -624,7 +624,7 @@ fn x4_unrecoverable_exits_4_and_lists_it() {
             "MANIFEST.jsonl",
             "_work_app/blocked.txt",
             "_work_app/docs/new.md",
-            "_work_app/pressure-test/SUMMARY.md",
+            "_work_app/path/to/a/FILE.md",
             "_work_app/src/app.rs",
         ])
     );
@@ -665,7 +665,7 @@ fn x4_unrecoverable_exits_4_and_lists_it() {
     assert!(!out.exists());
     // No path matched: exit 1, and stderr says what was searched (R4).
     let out = tmp.path().join("nomatch");
-    let r = extract(&f, &out, &["--path", "*nothing*", "-b", "onboarding.gonzo"]);
+    let r = extract(&f, &out, &["--path", "*nothing*", "-b", "gonzo"]);
     assert_eq!(r.code, Some(1));
     assert!(
         r.stderr
@@ -675,7 +675,7 @@ fn x4_unrecoverable_exits_4_and_lists_it() {
     );
     assert!(
         r.stderr
-            .contains("filters: --path *nothing* --branch onboarding.gonzo\n"),
+            .contains("filters: --path *nothing* --branch gonzo\n"),
         "{}",
         r.stderr
     );
@@ -1047,7 +1047,7 @@ fn x8_version_all_and_first() {
     );
     assert_eq!(t.len(), 3);
     assert!(m.values().all(|v| v["source_event"] == "backup"));
-    let summary = "_work_app/pressure-test/SUMMARY.md";
+    let summary = "_work_app/path/to/a/FILE.md";
     let (t, _) = run("sfirst", &["--version", "first", "--path", "*/SUMMARY.md"]);
     assert_eq!(text(&t, summary), r.draft, "first is the rejected draft");
     let (t, _) = run(
@@ -1601,10 +1601,10 @@ fn x11_last_skips_newer_rejected_draft() {
     // returned version.
     let (rf, rr) = recovery();
     let out = tmp.path().join("summary");
-    let r = extract(&rf, &out, &["--path", "*pressure-test/SUMMARY.md"]);
+    let r = extract(&rf, &out, &["--path", "*path/to/a/FILE.md"]);
     assert_eq!(r.code, Some(0), "{}", r.stderr);
     assert_eq!(
-        text(&tree(&out), "_work_app/pressure-test/SUMMARY.md"),
+        text(&tree(&out), "_work_app/path/to/a/FILE.md"),
         rr.returned
     );
     assert!(!r.stdout.contains("newer rejected"), "{}", r.stdout);

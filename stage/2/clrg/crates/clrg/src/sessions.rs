@@ -2,7 +2,7 @@
 //! first. Answers "which folder do I resume from?" (R2).
 //!
 //! ```text
-//! 2026-08-02 14:31  ~/src/app                  [onboarding.gonzo]  3f2a9c1e  12 msg  "wire the seed…"
+//! 2026-08-02 14:31  ~/src/app                  [gonzo]  3f2a9c1e  12 msg  "wire the seed…"
 //! 2026-08-01 09:12  ~/src/gone (cwd missing)   [main]              7b01d2aa   3 msg  "why does the…" (unverified)
 //! ```
 //!
