@@ -1,0 +1,28 @@
+{
+  "name": "merkle-pkv",
+  "version": "0.0.0",
+  "description": "merkle pkv membership",
+  "keywords": [
+    "merkle",
+    "pkv"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "REDACTED"
+  },
+  "license": "Apache-2.0",
+  "author": "Charlie Robbins <npm@charlie.dev>",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test test.js",
+    "start": "node repl.js",
+    "repl": "node repl.js"
+  },
+  "dependencies": {
+    "sodium-universal": "^5.0.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
